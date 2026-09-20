@@ -1,14 +1,13 @@
 import SwiftUI
+import Combine
 
-@main struct SmartClipboardApp: App {
-    @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
-    var body: some Scene {
-        Settings { EmptyView() }
-            .commands {
-                CommandGroup(replacing: .appSettings) {
-                    Button("Settings…") { delegate.model.showSettings(tab: "shortcuts") }.keyboardShortcut(",")
-                }
-            }
+// An AppKit lifecycle avoids SwiftUI automatically presenting a Settings scene.
+@main enum SmartClipboardApp {
+    @MainActor static func main() {
+        let app = NSApplication.shared
+        let delegate = AppDelegate()
+        app.delegate = delegate
+        withExtendedLifetime(delegate) { app.run() }
     }
 }
 
@@ -16,6 +15,7 @@ import SwiftUI
     private(set) lazy var model = AppModel()
     private var statusItem: NSStatusItem?
     private var started = false
+    private var statusSubscription: AnyCancellable?
     private let readinessItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -36,10 +36,23 @@ import SwiftUI
         started = true
         installStatusItem()
         model.refreshReadiness()
-        if CommandLine.arguments.contains("--show") || !UserDefaults.standard.bool(forKey: "hasLaunched") || !model.captureReady {
-            model.showPanel()
-            UserDefaults.standard.set(true, forKey: "hasLaunched")
+        installMainMenu()
+        if CommandLine.arguments.contains("--show") { model.showPanel() }
+    }
+    private func installMainMenu() {
+        let bar = NSMenu()
+        let appItem = NSMenuItem(); bar.addItem(appItem)
+        let appMenu = NSMenu(); appItem.submenu = appMenu
+        let settings = NSMenuItem(title: "Settings…", action: #selector(openSettings), keyEquivalent: ",")
+        settings.target = self; appMenu.addItem(settings)
+        let quit = NSMenuItem(title: "Quit Smart Clipboard", action: #selector(quit), keyEquivalent: "q")
+        quit.target = self; appMenu.addItem(quit)
+        let editItem = NSMenuItem(title: "Edit", action: nil, keyEquivalent: ""); bar.addItem(editItem)
+        let edit = NSMenu(title: "Edit"); editItem.submenu = edit
+        for (title, action, key) in [("Undo", "undo:", "z"), ("Cut", "cut:", "x"), ("Copy", "copy:", "c"), ("Paste", "paste:", "v"), ("Select All", "selectAll:", "a")] {
+            edit.addItem(NSMenuItem(title: title, action: NSSelectorFromString(action), keyEquivalent: key))
         }
+        NSApp.mainMenu = bar
     }
     private func installStatusItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -64,18 +77,35 @@ import SwiftUI
         add("History…", action: #selector(openHistory), to: menu)
         add("Import Image…", action: #selector(importImage), to: menu)
         menu.addItem(.separator())
+        add("Cancel Capture / Conversion", action: #selector(cancelOperation), to: menu)
         add("Settings & Status…", action: #selector(openSettings), to: menu)
         add("Quit Smart Clipboard", action: #selector(quit), to: menu)
         item.menu = menu
         statusItem = item
         model.menuBarInstalled = item.button != nil
+        statusSubscription = model.objectWillChange.sink { [weak self] in
+            DispatchQueue.main.async { self?.updateStatus() }
+        }
+        updateStatus()
+    }
+    private func updateStatus() {
+        let message: String
+        let suffix: String
+        if model.capturing { message = "Select a region or window"; suffix = " …" }
+        else if model.busy { message = "Converting your capture…"; suffix = " …" }
+        else if let error = model.error { message = error; suffix = " !" }
+        else if model.notice.contains("copied") { message = model.notice + " Ready to paste."; suffix = " ✓" }
+        else { message = model.captureReady ? "Ready · " + model.defaultFormat.title : "Setup needs attention"; suffix = "" }
+        statusItem?.button?.title = " Clip" + suffix
+        statusItem?.button?.toolTip = message
+        readinessItem.title = message
     }
     private func add(_ title: String, action: Selector, to menu: NSMenu) {
         let item = NSMenuItem(title: title, action: action, keyEquivalent: ""); item.target = self; menu.addItem(item)
     }
     func menuWillOpen(_ menu: NSMenu) {
         model.refreshReadiness()
-        readinessItem.title = model.captureReady ? "Running · Ready to capture" : "Running · Setup needs attention"
+        updateStatus()
     }
     func applicationDidBecomeActive(_ notification: Notification) { if started { model.refreshReadiness() } }
     func applicationWillTerminate(_ notification: Notification) { if started { model.persistCurrentOutput(); model.cancel() } }
@@ -89,6 +119,7 @@ import SwiftUI
     @objc private func openClipboard() { model.showPanel() }
     @objc private func openHistory() { model.showHistory() }
     @objc private func importImage() { model.importImage() }
-    @objc private func openSettings() { model.showSettings(tab: "shortcuts") }
+    @objc private func openSettings() { model.showSettings(tab: "general") }
+    @objc private func cancelOperation() { model.cancel() }
     @objc private func quit() { NSApp.terminate(nil) }
 }

@@ -26,11 +26,16 @@ Open Settings > Connection and choose either an OpenAI API key (stored in
 Keychain) or ChatGPT via the official Codex CLI. ChatGPT mode requires the
 CLI to be installed separately and a plan with Codex access. API billing
 is separate. Image copy/save and on-device OCR need neither connection.
-Captures are sent to OpenAI only when you choose Convert with AI.
+Automatic processing sends each capture/import to the configured AI connection.
+Choose Pass through (image) for local PNG copying without extraction.
 
 OUTPUT AND HISTORY
-Choose Pick it for me to let AI decide the best editable format from each
-source. Make it the default under Settings > General > Default output.
+Set Settings > General > Preferred format once. Auto detect lets AI choose
+the best editable format for each source. Add an optional Default direction.
+Capture, wait for Clip ✓, then paste with Command-V. Pass through (image)
+copies the PNG without extraction or AI. Import Image uses the same settings.
+No app window opens automatically, including on startup or errors.
+Open Settings, Clipboard or History explicitly from the Clip menu.
 History in the sidebar or menu bar lets you reopen a capture, select another
 format and convert the original again. Saved formats reuses previous results.
 Settings > History lets you set a clip limit (default 50, maximum 500); click
@@ -45,9 +50,14 @@ login. Closing the capture/settings windows leaves the menu bar app running.
 
 UPDATES AND REMOVAL
 Quit Smart Clipboard from its menu before replacing it with a new version.
+Ad-hoc updates can invalidate Screen Recording approval even if its switch
+is still on. If restarting/toggling does not fix it, quit the app and run:
+  tccutil reset ScreenCapture com.smartclipboard.app
+Then add /Applications/Smart Clipboard.app again in macOS Screen & System
+Audio Recording settings, approve it and reopen the app.
+
 To uninstall, clear history in Settings > History, disable Launch at login,
-remove your saved API key by saving
-an empty key in Settings > Connection, quit, and move the app to Trash.
+remove your saved API key using Remove saved key in Settings > Connection, quit, and move the app to Trash.
 ChatGPT credentials remain with Codex; removing this app does not sign out
 other Codex clients. Exported files and clipboard contents are unchanged.
 

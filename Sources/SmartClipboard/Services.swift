@@ -65,14 +65,30 @@ final class ProcessRunner: @unchecked Sendable {
 }
 
 enum KeyStore {
+    // File-based macOS Keychain ignores some SecItem authentication-UI options.
+    // Serialize our operations while temporarily suppressing its legacy prompts.
+    private static let lock = NSLock()
     static let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: "com.smartclipboard.app", kSecAttrAccount as String: "openai-api-key"]
-    static func read() -> String {
+    static func read(allowInteraction: Bool = false) throws -> String {
+        lock.lock(); defer { lock.unlock() }
+        var previousInteraction = DarwinBoolean(true)
+        let previousStatus = SecKeychainGetUserInteractionAllowed(&previousInteraction)
+        guard previousStatus == errSecSuccess else { throw ClipError.message("Could not check Keychain access. Open Settings → Connection to authorize your saved key.") }
+        let interactionStatus = SecKeychainSetUserInteractionAllowed(allowInteraction)
+        guard interactionStatus == errSecSuccess else { throw ClipError.message("Could not configure Keychain access. Open Settings → Connection to authorize your saved key.") }
+        defer { SecKeychainSetUserInteractionAllowed(previousInteraction.boolValue) }
         var q = query; q[kSecReturnData as String] = true; q[kSecMatchLimit as String] = kSecMatchLimitOne
+        if !allowInteraction { q[kSecUseAuthenticationUI as String] = kSecUseAuthenticationUIFail }
         var result: CFTypeRef?
-        guard SecItemCopyMatching(q as CFDictionary, &result) == errSecSuccess, let data = result as? Data else { return "" }
+        let status = SecItemCopyMatching(q as CFDictionary, &result)
+        if status == errSecItemNotFound { return "" }
+        guard status == errSecSuccess, let data = result as? Data else {
+            throw ClipError.message("The saved API key needs Keychain access. Open Settings → Connection and choose Authorize saved key, or save a new key.")
+        }
         return String(data: data, encoding: .utf8) ?? ""
     }
     static func save(_ key: String) throws {
+        lock.lock(); defer { lock.unlock() }
         if key.isEmpty {
             let status = SecItemDelete(query as CFDictionary)
             guard status == errSecSuccess || status == errSecItemNotFound else { throw ClipError.message("Could not remove the key from Keychain (\(status)).") }; return
@@ -89,17 +105,24 @@ enum KeyStore {
 
 enum CaptureService {
     static func capture(window: Bool) async throws -> Data? {
-        guard CGPreflightScreenCaptureAccess() || CGRequestScreenCaptureAccess() else {
-            throw ClipError.message("Allow Smart Clipboard in System Settings → Privacy & Security → Screen & System Audio Recording, then reopen the app.")
-        }
         let destination = FileManager.default.temporaryDirectory.appendingPathComponent("clip-\(UUID().uuidString).png")
         defer { try? FileManager.default.removeItem(at: destination) }
-        let (status, _) = try await ProcessRunner().run("/usr/sbin/screencapture", (["-i", "-x", "-o", "-t", "png"] + (window ? ["-W"] : []) + [destination.path]), timeout: 300)
+        let (status, output) = try await ProcessRunner().run("/usr/sbin/screencapture", (["-i", "-x", "-o", "-t", "png"] + (window ? ["-W"] : []) + [destination.path]), timeout: 300)
         try Task.checkCancellation()
-        // Escape produces no file and is a normal cancellation.
+        return try readCaptureResult(status: status, output: output, destination: destination)
+    }
+    static func readCaptureResult(status: Int32, output: String, destination: URL) throws -> Data? {
+        // An unsuccessful command is not cancellation, even when it produced no image.
+        guard status == 0 else {
+            throw ClipError.message("Screen capture failed (exit \(status)). \(output.trimmingCharacters(in: .whitespacesAndNewlines).prefix(800)) Check Screen Recording permission and reopen the app if it was just granted.")
+        }
+        // Escape normally exits successfully without writing a file.
         guard FileManager.default.fileExists(atPath: destination.path) else { return nil }
-        guard status == 0 else { throw ClipError.message("Screen capture failed. Check Screen Recording permission.") }
-        return try Data(contentsOf: destination)
+        let data = try Data(contentsOf: destination)
+        guard let bitmap = NSBitmapImageRep(data: data), bitmap.pixelsWide > 0, bitmap.pixelsHigh > 0 else {
+            throw ClipError.message("Screen capture returned an unreadable image. Try capturing again.")
+        }
+        return data
     }
     static func recognize(_ png: Data) async throws -> String {
         try await Task.detached(priority: .userInitiated) {

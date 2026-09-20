@@ -29,7 +29,11 @@ struct CaptureView: View {
                     HStack {
                         Label(model.screenAccess ? "Capture shortcuts need attention" : "Screen Recording permission needed", systemImage: "exclamationmark.triangle.fill")
                         Spacer()
-                        Button("Review setup") { model.showSettings(tab: "shortcuts") }
+                        if model.screenAccess {
+                            Button("Review shortcuts") { model.showSettings(tab: "shortcuts") }
+                        } else {
+                            Button("Open System Settings") { model.openScreenAccessSettings() }
+                        }
                     }.font(.callout).padding(10).background(Color.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 8))
                 }
                 if let data = model.png, let image = NSImage(data: data) {
@@ -45,7 +49,7 @@ struct CaptureView: View {
                 }
                 HStack(spacing: 6) {
                     Image(systemName: model.notice.isEmpty ? "lock.shield" : "checkmark.circle.fill")
-                    Text(model.notice.isEmpty ? "Your capture stays on this Mac until you choose Convert with AI." : model.notice)
+                    Text(model.notice.isEmpty ? (model.defaultFormat != .image ? "Automatic capture uses your AI connection, then copies the result." : "Pass through copies your screenshot directly without extraction.") : model.notice)
                     Spacer()
                 }.font(.caption).foregroundStyle(model.notice.isEmpty ? Color.secondary : accent)
             }.padding(28).frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -60,6 +64,12 @@ struct CaptureView: View {
                     Text("Clipboard").font(.system(size: 17, weight: .medium, design: .rounded))
                 }
             }.padding(.top, 10)
+            Button { model.showSettings(tab: "general") } label: {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("CAPTURE → CLIPBOARD").font(.system(size: 9, weight: .semibold)).tracking(0.6)
+                    Text(model.defaultFormat.title).font(.caption)
+                }.foregroundStyle(accent)
+            }.buttonStyle(.plain).help("Configure your preferred format and capture workflow")
             VStack(spacing: 8) {
                 Button { model.capture() } label: {
                     Label("Capture region", systemImage: "viewfinder").frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 5)
@@ -203,13 +213,38 @@ struct SettingsView: View {
                         Text("ChatGPT via Codex").tag("codex")
                     }
                     if model.provider == "api" {
-                        SecureField("API key", text: $apiKey).onAppear { apiKey = KeyStore.read() }
+                        SecureField("New API key", text: $apiKey)
+                        Text("Your saved key remains in Keychain. Opening Settings does not read it.").font(.caption).foregroundStyle(.secondary)
                         HStack {
                             Button("Save key to Keychain") {
-                                do { try KeyStore.save(apiKey.trimmingCharacters(in: .whitespacesAndNewlines)); message = apiKey.isEmpty ? "Key removed." : "Key saved securely." }
-                                catch { message = error.localizedDescription }
-                            }
+                                let key = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+                                working = true
+                                Task {
+                                    defer { working = false }
+                                    do { try await Task.detached { try KeyStore.save(key) }.value; apiKey = ""; message = "Key saved securely." }
+                                    catch { message = error.localizedDescription }
+                                }
+                            }.disabled(working || apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                             Link("Get an API key ↗", destination: URL(string: "https://platform.openai.com/api-keys")!)
+                        }
+                        HStack {
+                            Button("Authorize saved key") {
+                                working = true
+                                Task {
+                                    defer { working = false }
+                                    do { let exists = try await Task.detached { try !KeyStore.read(allowInteraction: true).isEmpty }.value; message = exists ? "Saved key is accessible." : "No API key saved yet." }
+                                    catch { message = error.localizedDescription }
+                                }
+                            }.disabled(working)
+                            Button("Remove saved key") {
+                                working = true
+                                Task {
+                                    defer { working = false }
+                                    do { try await Task.detached { try KeyStore.save("") }.value; message = "Key removed." }
+                                    catch { message = error.localizedDescription }
+                                }
+                            }.disabled(working)
+                            if working { ProgressView().controlSize(.small) }
                         }
                         TextField("Vision model", text: $model.apiModel)
                         Text("API usage is billed to your OpenAI Platform account. Choose a model that supports images and structured outputs.").font(.caption).foregroundStyle(.secondary)
@@ -228,7 +263,7 @@ struct SettingsView: View {
                 }
                 if !message.isEmpty { Text(message).font(.callout).textSelection(.enabled) }
                 Section("Your captures") {
-                    Text("Only the selected capture and your direction are sent when you choose Convert with AI. Image copying and on-device text extraction work offline. Captured and imported images and their results are saved locally according to your History settings. Set the limit to zero to disable history. Codex uses temporary files removed after conversion.").font(.caption).foregroundStyle(.secondary)
+                    Text("Each selected screenshot or imported image uses your preferred format, then copies the result. AI formats send it to your configured connection. Pass through copies the image locally without extraction. On-device text extraction also works offline. Captured and imported images and their results are saved locally according to your History settings. Set the limit to zero to disable history. Codex uses temporary files removed after conversion.").font(.caption).foregroundStyle(.secondary)
                 }
             }.formStyle(.grouped).tabItem { Label("Connection", systemImage: "network") }.tag("connection")
             Form {
@@ -241,7 +276,7 @@ struct SettingsView: View {
                     Label(model.screenAccess ? "Screen Recording allowed" : "Screen Recording permission needed", systemImage: model.screenAccess ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
                         .foregroundStyle(model.screenAccess ? accent : .orange)
                     if !model.screenAccess {
-                        Text("Enable Smart Clipboard in Privacy & Security → Screen & System Audio Recording. If macOS requests a restart, quit and reopen this app.").font(.caption)
+                        Text("Enable Smart Clipboard in Privacy & Security → Screen & System Audio Recording, then quit and reopen this app. If it is already enabled after an update, turn its permission off and on again.").font(.caption)
                         Button("Request screen access") { model.requestScreenAccess() }
                         Button("Open Screen Recording settings") { model.openScreenAccessSettings() }
                     }
@@ -263,13 +298,19 @@ struct SettingsView: View {
                         catch { message = error.localizedDescription }
                     }))
                     Text("Move Smart Clipboard to Applications before enabling launch at login.").font(.caption).foregroundStyle(.secondary)
-                    Picker("Default output", selection: $model.defaultFormat) { ForEach(OutputFormat.allCases) { Text($0.title).tag($0) } }
-                    Text("Pick it for me lets AI choose the target format from each source image. You can override it for any clip.").font(.caption).foregroundStyle(.secondary)
-                    Toggle("Copy result after conversion", isOn: $model.copyAutomatically)
+                }
+                Section("Capture workflow") {
+                    Picker("Preferred format", selection: $model.defaultFormat) { ForEach(OutputFormat.allCases) { Text($0.title).tag($0) } }
+                    TextField("Default direction", text: $model.defaultInstruction, prompt: Text("Optional — e.g. translate to English"))
+                    Text("Every capture uses this format and direction, then copies the result. No app windows open; progress and errors appear in the menu bar.").font(.caption).foregroundStyle(.secondary)
+                    Text("Auto detect lets AI choose the best format. Pass through copies the original PNG without extraction or AI. Other formats use your configured connection.").font(.caption).foregroundStyle(.secondary)
+                }
+                Section("Manual conversions") {
+                    Toggle("Copy after manual conversion", isOn: $model.copyAutomatically)
                 }
                 Section("Smart Clipboard") {
                     Text("Capture once. Use it anywhere.").font(.headline)
-                    Text("Native macOS · Version 0.2.1\nThe app stays in your menu bar when you close its windows.").foregroundStyle(.secondary)
+                    Text("Native macOS · Version 0.3.0\nThe app stays in your menu bar when you close its windows.").foregroundStyle(.secondary)
                 }
                 if !message.isEmpty { Text(message).font(.callout) }
             }.formStyle(.grouped).tabItem { Label("General", systemImage: "slider.horizontal.3") }.tag("general")
@@ -337,7 +378,7 @@ struct ShortcutRow: View {
             if flags.contains(.option) { modifiers |= UInt32(optionKey); label += "⌥" }
             if flags.contains(.shift) { modifiers |= UInt32(shiftKey); label += "⇧" }
             if flags.contains(.command) { modifiers |= UInt32(cmdKey); label += "⌘" }
-            label += event.charactersIgnoringModifiers?.uppercased() ?? "Key \(event.keyCode)"
+            label += event.characters(byApplyingModifiers: [])?.uppercased() ?? "Key \(event.keyCode)"
             do { try save(Shortcut(key: UInt32(event.keyCode), modifiers: modifiers, label: label)); end() }
             catch { self.error = error.localizedDescription; end() }
             return nil

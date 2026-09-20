@@ -21,6 +21,7 @@ import ClipboardCore
     @Published var codexModel: String { didSet { defaults.set(codexModel, forKey: "codexModel") } }
     @Published var codexExecutable: String { didSet { defaults.set(codexExecutable, forKey: "codexExecutable") } }
     @Published var defaultFormat: OutputFormat { didSet { defaults.set(defaultFormat.rawValue, forKey: "defaultFormat") } }
+    @Published var defaultInstruction: String { didSet { defaults.set(defaultInstruction, forKey: "defaultInstruction") } }
     @Published var copyAutomatically: Bool { didSet { defaults.set(copyAutomatically, forKey: "copyAutomatically") } }
     @Published var regionShortcut: Shortcut
     @Published var windowShortcut: Shortcut
@@ -36,6 +37,10 @@ import ClipboardCore
     @Published private(set) var shortcutProblems: [UInt32: String] = [:]
     @Published private(set) var shortcutsPaused = false
     @Published private(set) var lastShortcutEvent = "No shortcut received yet"
+    private let pasteboard: NSPasteboard
+    private let presentsWindows: Bool
+    private let conversionOverride: ((Data, OutputFormat, String, Bool) async throws -> ConversionResult)?
+    private let captureClient: CaptureClient
     private let registersHotkeys: Bool
     let hotkeys: HotKeyManager
     var captureReady: Bool { screenAccess && !shortcutsPaused && shortcutProblems.isEmpty && hotkeys.isRegistered(1) && hotkeys.isRegistered(2) }
@@ -45,7 +50,7 @@ import ClipboardCore
         return hotkeys.isRegistered(id) ? "Registered and listening" : "Not registered"
     }
     func refreshReadiness() {
-        screenAccess = CGPreflightScreenCaptureAccess()
+        screenAccess = captureClient.hasAccess()
         if registersHotkeys && !shortcutsPaused { registerShortcuts() }
     }
     private func registerShortcuts() {
@@ -57,7 +62,7 @@ import ClipboardCore
     }
     func pauseShortcuts() { shortcutsPaused = true; hotkeys.unregisterAll() }
     func resumeShortcuts() { shortcutsPaused = false; if registersHotkeys { registerShortcuts() } }
-    func requestScreenAccess() { _ = CGRequestScreenCaptureAccess(); refreshReadiness() }
+    func requestScreenAccess() { _ = captureClient.requestAccess(); refreshReadiness() }
     func openScreenAccessSettings() { NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!) }
 
     private let defaults: UserDefaults
@@ -65,7 +70,11 @@ import ClipboardCore
     private var panel: NSWindow?
     private var settings: NSWindow?
 
-    init(defaults: UserDefaults = .standard, historyDirectory: URL? = nil, registerHotkeys: Bool = true, hotkeyManager: HotKeyManager? = nil) {
+    init(defaults: UserDefaults = .standard, historyDirectory: URL? = nil, registerHotkeys: Bool = true, hotkeyManager: HotKeyManager? = nil, captureClient: CaptureClient? = nil, pasteboard: NSPasteboard? = nil, presentsWindows: Bool = true, conversionOverride: ((Data, OutputFormat, String, Bool) async throws -> ConversionResult)? = nil) {
+        self.pasteboard = pasteboard ?? .general
+        self.presentsWindows = presentsWindows
+        self.conversionOverride = conversionOverride
+        self.captureClient = captureClient ?? CaptureClient()
         self.hotkeys = hotkeyManager ?? HotKeyManager()
         self.registersHotkeys = registerHotkeys
         self.defaults = defaults
@@ -75,6 +84,7 @@ import ClipboardCore
         codexModel = defaults.string(forKey: "codexModel") ?? ""
         codexExecutable = defaults.string(forKey: "codexExecutable") ?? ""
         defaultFormat = OutputFormat(rawValue: defaults.string(forKey: "defaultFormat") ?? "") ?? .auto
+        defaultInstruction = defaults.string(forKey: "defaultInstruction") ?? ""
         copyAutomatically = defaults.bool(forKey: "copyAutomatically")
         regionShortcut = Self.loadShortcut("regionShortcut", defaults: defaults) ?? .region
         windowShortcut = Self.loadShortcut("windowShortcut", defaults: defaults) ?? .window
@@ -118,6 +128,7 @@ import ClipboardCore
         }
     }
     func showPanel() {
+        guard presentsWindows else { return }
         if panel == nil {
             let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1000, height: 700), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
             window.title = "Smart Clipboard"
@@ -131,6 +142,7 @@ import ClipboardCore
         panel?.makeKeyAndOrderFront(nil)
     }
     func showSettings(tab: String? = nil) {
+        guard presentsWindows else { return }
         refreshReadiness()
         if let tab { settingsTab = tab }
         if settings == nil {
@@ -144,25 +156,22 @@ import ClipboardCore
     }
     func capture(window: Bool = false) {
         guard !capturing, !busy else { return }
+        let preferred = defaultFormat, direction = defaultInstruction
         refreshReadiness()
-        guard screenAccess else {
-            settingsTab = "shortcuts"
-            showSettings()
-            error = "Screen Recording permission is needed. Settings shows how to enable it."
-            return
-        }
         capturing = true; error = nil; notice = ""
         persistCurrentOutput()
-        panel?.orderOut(nil); settings?.orderOut(nil); historyWindow?.orderOut(nil)
         task = Task {
-            defer { capturing = false; task = nil }
+            defer { capturing = false; busy = false; task = nil }
             do {
-                try await Task.sleep(for: .milliseconds(250))
-                if let data = try await CaptureService.capture(window: window) {
-                    acceptCapture(data, source: window ? "Window capture" : "Region capture")
-                    showPanel()
-                }
-            } catch is CancellationError {} catch { self.error = error.localizedDescription; showPanel() }
+                guard let data = try await captureClient.capture(window: window, willBegin: { [self] in
+                    screenAccess = true
+                    if presentsWindows { for window in NSApp.windows { window.orderOut(nil) } }
+                }) else { notice = "Capture cancelled."; return }
+                try Task.checkCancellation()
+                capturing = false
+                try await finishCapture(data, source: window ? "Window capture" : "Region capture", preferred: preferred, direction: direction)
+            } catch is CancellationError { notice = "Capture cancelled." }
+            catch { self.error = error.localizedDescription; refreshReadiness() }
         }
     }
     func importImage() {
@@ -172,33 +181,62 @@ import ClipboardCore
         do {
             let data = try Data(contentsOf: url)
             guard let bitmap = NSBitmapImageRep(data: data), let normalized = bitmap.representation(using: .png, properties: [:]) else { throw ClipError.message("Could not read this image.") }
-            acceptCapture(normalized, source: url.lastPathComponent)
-            showPanel()
+            processImportedImage(normalized, source: url.lastPathComponent)
         } catch { self.error = error.localizedDescription }
     }
-    func convert(local: Bool = false) {
-        guard let png, !busy else { return }
-        if format == .image && !local { copyImage(); return }
-        let requested = format, extra = instruction, connection = provider, model = apiModel, cliModel = codexModel, executable = codexExecutable
-        persistCurrentOutput()
-        busy = true; error = nil; notice = ""; output = ""
+    func processImportedImage(_ data: Data, source: String) {
+        guard !busy, !capturing else { return }
+        let preferred = defaultFormat, direction = defaultInstruction
+        busy = true
         task = Task {
             defer { busy = false; task = nil }
-            do {
-                let result: ConversionResult
-                if local { result = ConversionResult(format: .text, content: try await CaptureService.recognize(png)) }
-                else if connection == "codex" { result = try await AIService.codex(png: png, executable: executable, model: cliModel, format: requested, instruction: extra) }
-                else { result = try await AIService.api(png: png, key: KeyStore.read(), model: model, format: requested, instruction: extra) }
-                try Task.checkCancellation()
-                resultFormat = result.format; output = result.content; resultInstruction = extra
-                persistCurrentOutput()
-                if copyAutomatically { copyOutput() }
-            } catch is CancellationError { notice = "Conversion cancelled." }
+            do { try await finishCapture(data, source: source, preferred: preferred, direction: direction) }
+            catch is CancellationError { notice = "Conversion cancelled." }
+            catch { self.error = error.localizedDescription }
+        }
+    }
+    private func finishCapture(_ data: Data, source: String, preferred: OutputFormat, direction: String) async throws {
+        acceptCapture(data, source: source)
+        format = preferred; instruction = direction
+        if preferred == .image { copyImage(); return }
+        busy = true
+        try await convertCurrent(local: false, shouldCopy: true)
+        // Success stays in the menu bar so the user can paste into the app they were using.
+    }
+    func convert(local: Bool = false) {
+        guard png != nil, !busy, !capturing else { return }
+        if format == .image && !local { copyImage(); return }
+        let shouldCopy = copyAutomatically
+        error = nil; busy = true
+        task = Task {
+            defer { busy = false; task = nil }
+            do { try await convertCurrent(local: local, shouldCopy: shouldCopy) }
+            catch is CancellationError { notice = "Conversion cancelled." }
             catch { if Task.isCancelled { notice = "Conversion cancelled." } else { self.error = error.localizedDescription } }
         }
     }
+    private func convertCurrent(local: Bool, shouldCopy: Bool) async throws {
+        guard let png else { return }
+        let requested = format, extra = instruction, connection = provider, model = apiModel, cliModel = codexModel, executable = codexExecutable
+        persistCurrentOutput()
+        // Keep a history-save warning visible even when conversion itself succeeds.
+        notice = ""; output = ""
+        let result: ConversionResult
+        if let conversionOverride { result = try await conversionOverride(png, requested, extra, local) }
+        else if local { result = ConversionResult(format: .text, content: try await CaptureService.recognize(png)) }
+        else if connection == "codex" { result = try await AIService.codex(png: png, executable: executable, model: cliModel, format: requested, instruction: extra) }
+        else {
+            let key = try await Task.detached { try KeyStore.read() }.value
+            try Task.checkCancellation()
+            result = try await AIService.api(png: png, key: key, model: model, format: requested, instruction: extra)
+        }
+        try Task.checkCancellation()
+        resultFormat = result.format; output = result.content; resultInstruction = extra
+        persistCurrentOutput()
+        if shouldCopy { copyOutput() }
+    }
     func cancel() { task?.cancel() }
-    func clear() { guard !busy else { return }; persistCurrentOutput(); resetCurrent() }
+    func clear() { guard !busy, !capturing else { return }; persistCurrentOutput(); resetCurrent() }
     private func resetCurrent() { activeHistoryID = nil; png = nil; output = ""; instruction = ""; notice = "" }
     func acceptCapture(_ data: Data, source: String) {
         persistCurrentOutput()
@@ -274,6 +312,7 @@ import ClipboardCore
         refreshHistory()
     }
     func showHistory() {
+        guard presentsWindows else { return }
         persistCurrentOutput()
         if historyWindow == nil {
             let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 620, height: 550), styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
@@ -286,16 +325,16 @@ import ClipboardCore
     }
     func copyImage() {
         guard let png else { return }
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setData(png, forType: .png)
+        pasteboard.clearContents()
+        guard pasteboard.setData(png, forType: .png) else { error = "Could not copy the image. Try Copy image again."; return }
         notice = "Image copied."
     }
     func copyOutput() {
         persistCurrentOutput()
         guard !output.isEmpty else { return }
-        NSPasteboard.general.clearContents()
+        pasteboard.clearContents()
         // Keep generated markup inert; don't put unreviewed HTML on the rich-text pasteboard.
-        NSPasteboard.general.setString(output, forType: .string)
+        guard pasteboard.setString(output, forType: .string) else { error = "Could not copy the result. Try Copy again."; return }
         notice = "\(resultFormat.title) copied."
     }
     func save(image: Bool = false) {

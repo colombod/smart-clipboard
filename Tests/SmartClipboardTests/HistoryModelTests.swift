@@ -111,7 +111,7 @@ import ClipboardCore
             model.defaultFormat = .auto
             model.acceptCapture(Data([1]), source: "Clip")
             #expect(model.format == .auto)
-            #expect(model.format.title == "Pick it for me")
+            #expect(model.format.title == "Auto detect")
             #expect(AppModel(defaults: defaults, historyDirectory: directory, registerHotkeys: false).defaultFormat == .auto)
         }
     }

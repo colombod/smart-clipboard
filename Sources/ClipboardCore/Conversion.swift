@@ -5,8 +5,8 @@ public enum OutputFormat: String, CaseIterable, Codable, Identifiable, Sendable 
     public var id: String { rawValue }
     public var title: String {
         switch self {
-        case .auto: return "Pick it for me"
-        case .image: return "Image"
+        case .auto: return "Auto detect"
+        case .image: return "Pass through (image)"
         case .description: return "Description"
         case .text: return "Plain text"
         case .markdown: return "Markdown"

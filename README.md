@@ -6,12 +6,13 @@ A native SwiftUI/AppKit menu bar app for macOS 14 or later. Capture a rectangle 
 
 ## Download and install
 
-**[Download v0.2.1 preview](https://github.com/colombod/smart-clipboard/releases/tag/v0.2.1)** · Apple Silicon (M1 or newer) · macOS 14+
+**[Download v0.3.0 preview](https://github.com/colombod/smart-clipboard/releases/tag/v0.3.0)** · Apple Silicon (M1 or newer) · macOS 14+
 
 1. Download the `.dmg`, open it, and drag **Smart Clipboard** to **Applications**.
 2. Eject the disk image and open the installed app. Look for the viewfinder button labelled **Clip** in the menu bar.
-3. Open **Review setup → Request screen access**, then approve Screen Recording in macOS. Choose your OpenAI connection in Settings.
-4. Enable **Settings → General → Launch at login** if you want it to start automatically.
+3. Open **Clip → Settings & Status → Shortcuts → Request screen access**, then approve Screen Recording in macOS. Choose your OpenAI connection in Settings.
+4. In **Settings → General**, choose your **Preferred format** and optional **Default direction**. Captures always use this preference and copy automatically.
+5. Enable **Launch at login** if you want it to start automatically.
 
 This initial preview is **ad-hoc signed and not Apple-notarized**. If macOS blocks opening it, review [Apple’s instructions](https://support.apple.com/en-us/102445) and use **System Settings → Privacy & Security → Open Anyway** only if you trust this download. Managed Macs may disallow that exception. A Developer ID certificate and notarization are needed for a future release without this extra step.
 
@@ -28,7 +29,7 @@ open 'dist/Smart Clipboard.app'
 
 Requires Apple Command Line Tools (`xcode-select --install`), Swift 6 or later, and no third-party Swift dependencies. Open `Package.swift` in Xcode to work on the app. The build script creates an ad-hoc-signed app for local use. Set `SIGNING_IDENTITY` to sign with your own identity; a release that passes Gatekeeper without a manual exception also needs Developer ID signing and notarization.
 
-Move the built app into `/Applications` before enabling **Settings → General → Launch at login**. The app opens its capture panel on first launch, then runs in the menu bar without a Dock icon. Opening the running app from Applications brings its panel back. Closing a window leaves the app running; Quit is in the menu bar menu.
+Move the built app into `/Applications` before enabling **Settings → General → Launch at login**. The app starts silently in the menu bar without a Dock icon or any app window. Use Clip → Settings & Status for setup. Opening the running app from Applications brings its panel back. Closing a window leaves the app running; Quit is in the menu bar menu.
 
 ## Capture and convert
 
@@ -36,16 +37,16 @@ Move the built app into `/Applications` before enabling **Settings → General �
 - **⌥⇧⌘4**: start in window selection mode.
 - Press **Space** during capture to switch modes; **Escape** cancels.
 - Configure both global shortcuts in Settings → Shortcuts. Conflicts are reported and the previous shortcut is restored.
-- Choose Image, Description, Plain text, Markdown, HTML, SVG, JSON, YAML, or Pick it for me.
-- Add an optional instruction, such as “Translate to English” or “Use one record per table row.”
-- Choose **Convert with AI**, or **Extract text on device** for offline Apple Vision OCR. Local OCR ignores AI directions and always returns plain text.
-- Edit the output, copy it, or save it using the format’s file extension. The original PNG remains available independently.
+- Set **Settings → General → Preferred format** once: Pass through (image), Description, Plain text, Markdown, HTML, SVG, JSON, YAML, or Auto detect. Add an optional **Default direction**, such as “Translate to English”.
+- Capture a region/window. The app automatically converts it using your configured connection and copies the result. **Clip …** indicates work in progress; **Clip ✓** means it is ready to paste with **⌘V**. Pass through (image) copies the PNG directly without AI. Imported images use the same workflow.
+- Open **Clipboard** or **History** explicitly to review a capture. In the editor, choose **Convert with AI**, or **Extract text on device** for offline Apple Vision OCR. Local OCR always returns plain text. **Copy after manual conversion** controls copying for these manual actions.
+- Errors appear in the menu bar and do not replace the clipboard with a failed conversion. No app window opens automatically, including at startup or on error. Open **History** to review, edit, copy, or export a result, or convert the original into another format.
 
-If screen access is missing, capture opens setup. Choose **Request screen access** to prompt macOS. Grant it in System Settings → Privacy & Security → Screen & System Audio Recording, then restart the app if needed. Capture uses the built-in macOS interactive screenshot selector, including multi-display selection. `screencapture` receives only the selected region/window; there is no continuous screen monitoring.
+Capture requests Screen Recording permission if necessary and continues with the selected mode when permission is granted. If access is denied, the capture window explains how to resolve it. Grant it in System Settings → Privacy & Security → Screen & System Audio Recording, then restart the app if needed. Capture uses the built-in macOS interactive screenshot selector, including multi-display selection. `screencapture` receives only the selected region/window; there is no continuous screen monitoring.
 
-## Pick it for me and capture history
+## Auto detect and capture history
 
-Choose **Pick it for me** in the output sidebar, or set it as **Settings → General → Default output**. On conversion, AI chooses an editable format from the original source: plain text for prose, Markdown for documents/tables, JSON or YAML for records/configuration, HTML for web layouts, SVG for simple diagrams, or a description for photos. The result shows the actual chosen format. You can override it any time.
+Choose **Auto detect** in the output sidebar, or set it as **Settings → General → Preferred format**. On conversion, AI chooses an editable format from the original source: plain text for prose, Markdown for documents/tables, JSON or YAML for records/configuration, HTML for web layouts, SVG for simple diagrams, or a description for photos. The result shows the actual chosen format. You can override it any time.
 
 Open **History** from the sidebar or menu bar. Entries show a thumbnail, capture date, and saved formats. Select **Open**, pick a different output format, and convert the original image again. **Saved formats** retrieves a previous result without a new AI request. Each capture keeps the latest result per format; regenerating one format leaves the others intact. Editor changes are saved when switching clips/results, copying/exporting, starting another conversion, closing the working clip, or quitting normally.
 
@@ -55,7 +56,7 @@ Storage: `~/Library/Application Support/Smart Clipboard/History/`. Original PNGs
 
 ## Connect to OpenAI
 
-**API key:** In Settings → Connection, choose OpenAI API key, paste a key, and save it. Keys are stored in macOS Keychain. The editable default model is `gpt-5.6-luna`; choose an image-capable model supporting structured outputs available to your API account. Requests use the Responses API with a JSON schema and `store: false`. API usage is billed separately through OpenAI Platform.
+**API key:** In Settings → Connection, choose OpenAI API key, paste a key, and save it. Keys are stored in macOS Keychain. Settings never reads a saved key automatically. After an ad-hoc update, use **Authorize saved key** if Keychain access needs approval; background capture reports access errors in the menu bar without opening a dialog. The editable default model is `gpt-5.6-luna`; choose an image-capable model supporting structured outputs available to your API account. Requests use the Responses API with a JSON schema and `store: false`. API usage is billed separately through OpenAI Platform.
 
 **ChatGPT subscription:** Install a recent official Codex CLI, select ChatGPT via Codex, then click Sign in with ChatGPT and complete the browser flow. Alternatively, an existing `codex login` session works. Check connection verifies that Codex reports a ChatGPT login. The CLI must support `--ignore-user-config` (update it if necessary). An optional executable path handles nonstandard installations; an empty model uses the CLI's built-in default.
 
@@ -67,7 +68,7 @@ Official references: [Authentication](https://learn.chatgpt.com/docs/auth), [Non
 
 ## Privacy and output behavior
 
-Captures remain local until **Convert with AI** is chosen. Image copy/save and local OCR work without a connection. By default, the app saves the 50 most recent captures/imports and their generated results locally. Change this in Settings → History; setting the limit to zero removes saved history and disables future saving. Exporting explicitly writes a file; copying explicitly updates the system clipboard. Saved history survives quitting the app. Close a working clip with the × button without deleting its history; delete an entry in History or use Clear history to remove saved originals and results. The system clipboard and exported files survive app exit. OpenAI data handling follows the selected API account or ChatGPT workspace policy; `store: false` does not imply zero retention.
+After capture, each selected screenshot or imported image is sent to your configured AI connection and the result replaces the system clipboard. Selecting **Pass through (image)** copies the PNG locally without AI. Image copy/save and local OCR work without a connection. By default, the app saves the 50 most recent captures/imports and their generated results locally. Change this in Settings → History; setting the limit to zero removes saved history and disables future saving. Exporting writes a file; successful automatic processing and the Copy actions update the system clipboard. Saved history survives quitting the app. Close a working clip with the × button without deleting its history; delete an entry in History or use Clear history to remove saved originals and results. The system clipboard and exported files survive app exit. OpenAI data handling follows the selected API account or ChatGPT workspace policy; `store: false` does not imply zero retention.
 
 AI extraction and vector reconstruction can be imperfect. Screenshot instructions are treated as untrusted data. JSON is validated before acceptance; YAML/HTML/SVG are returned as editable source, not rendered or executed, and require review for correctness. Copying output uses plain-text clipboard content, including markup formats. Large or complex captures may exceed model limits; try a smaller region.
 
@@ -77,7 +78,7 @@ AI extraction and vector reconstruction can be imperfect. Screenshot instruction
 ./scripts/test.sh
 ```
 
-The 37 tests cover conversion envelopes, output selection, JSON validity, refusals/truncation, Responses API payloads, child-process cancellation/timeouts, on-device OCR against a generated fixture, history persistence/eviction/deletion, and converting a reopened capture from its original image. Run the OCR test outside restrictive automation sandboxes so Vision can access macOS image buffers. Live AI calls require a configured account. macOS screen permissions, interactive selection and login-item approval require testing in a logged-in GUI session. Project task tracking lives in Beads (`bd`).
+The 49 tests cover preferred-format capture/import automation, clipboard success/failure/cancellation, permission-request routing, shortcut registration/conflicts, conversion envelopes, output selection, JSON validity, refusals/truncation, Responses API payloads, child-process cancellation/timeouts, on-device OCR against a generated fixture, history persistence/eviction/deletion, and converting a reopened capture from its original image. Run the OCR test outside restrictive automation sandboxes so Vision can access macOS image buffers. Live AI calls require a configured account. macOS screen permissions, interactive selection and login-item approval require testing in a logged-in GUI session. Project task tracking lives in Beads (`bd`).
 
 ## Package a release
 
@@ -87,12 +88,14 @@ The 37 tests cover conversion envelopes, output selection, JSON validity, refusa
 
 This builds for the current Mac’s architecture and writes a DMG, ZIP, and SHA-256 checksums into `dist/`. The DMG includes the app, an Applications shortcut, and installation instructions. The capture-frame application icon is generated from vector drawing code in `scripts/generate-icon.swift`.
 
-The current preview has passed its 31 automated tests and release-build/signature checks. Interactive capture across multiple displays, login-item approval and live API/ChatGPT conversions still need hands-on acceptance testing with configured accounts. No credentials, captures, local issue database, or compiled build cache are published in source.
+A real region capture, live AI conversion and pasting the result into TextEdit have been verified on the development Mac. Interactive window capture across multiple displays, login-item approval and both connection types still need broader hands-on acceptance testing. No credentials, captures, local issue database, or compiled build cache are published in source.
 
 ### Capture readiness and shortcut conflicts
 
-**Clip → Settings & Status → Shortcuts** shows the app's running status, Screen Recording permission, and a separate registration result for each capture shortcut. If screen permission is missing, capture opens this setup page. Use **Request screen access**, approve the macOS prompt yourself, then **Check again**; reopen the app if macOS requests it.
+**Clip → Settings & Status → Shortcuts** shows the app's running status, Screen Recording permission, and a separate registration result for each capture shortcut. The capture action requests permission directly; denial leaves an explanation in the capture window. Use **Request screen access**, approve the macOS prompt yourself, then **Check again**; reopen the app if macOS requests it.
 
 Shortcut recording rejects enabled macOS shortcuts, duplicate capture bindings and conflicting registered hotkeys. **Find available shortcuts** tries alternatives for unavailable bindings without changing working ones. A rejected replacement keeps the previous shortcut. Keyboard utilities that intercept events may not expose their bindings to macOS; the last-received shortcut timestamp helps diagnose those cases. Screen permission and shortcut registration are independent requirements.
 
 The app keeps one instance running even when a development or downloaded copy is opened. The menu bar button has both a native template icon and a text label, and reappears when the running app is reopened. macOS can still hide menu items when the bar is crowded.
+
+Ad-hoc preview updates can invalidate a previous Screen Recording grant even if System Settings still shows the switch enabled. If restarting and toggling the switch does not help, quit Smart Clipboard and run `tccutil reset ScreenCapture com.smartclipboard.app` in Terminal. Then add `/Applications/Smart Clipboard.app` again in System Settings → Privacy & Security → Screen & System Audio Recording, approve it, and reopen the app. This resets only Smart Clipboard’s Screen Recording grant. Stable certificate signing is required before promising permission continuity across releases.
