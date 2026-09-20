@@ -25,6 +25,13 @@ struct CaptureView: View {
                         Button { model.clear() } label: { Image(systemName: "xmark") }.help("Close clip; keep saved history").disabled(model.busy)
                     }
                 }
+                if !model.captureReady {
+                    HStack {
+                        Label(model.screenAccess ? "Capture shortcuts need attention" : "Screen Recording permission needed", systemImage: "exclamationmark.triangle.fill")
+                        Spacer()
+                        Button("Review setup") { model.showSettings(tab: "shortcuts") }
+                    }.font(.callout).padding(10).background(Color.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 8))
+                }
                 if let data = model.png, let image = NSImage(data: data) {
                     captureContent(image)
                 } else { emptyState }
@@ -47,7 +54,7 @@ struct CaptureView: View {
     private var sidebar: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 10) {
-                Image(systemName: "crop.viewfinder").font(.system(size: 23, weight: .medium)).foregroundStyle(accent)
+                Image(systemName: "viewfinder").font(.system(size: 23, weight: .medium)).foregroundStyle(accent)
                 VStack(alignment: .leading, spacing: 1) {
                     Text("Smart").font(.system(size: 17, weight: .bold, design: .rounded))
                     Text("Clipboard").font(.system(size: 17, weight: .medium, design: .rounded))
@@ -185,6 +192,7 @@ struct SettingsView: View {
     @ViewState<String> private var message = ""
     @ViewState<Bool> private var working = false
     @ViewState<Task<Void, Never>?> private var loginTask = nil
+    @ViewState<String?> private var activeRecorder = nil
     @ViewState<Bool> private var loginEnabled = SMAppService.mainApp.status == .enabled
     var body: some View {
         TabView(selection: $model.settingsTab) {
@@ -224,14 +232,28 @@ struct SettingsView: View {
                 }
             }.formStyle(.grouped).tabItem { Label("Connection", systemImage: "network") }.tag("connection")
             Form {
-                Section("Capture shortcuts") {
-                    ShortcutRow(title: "Capture region", shortcut: model.regionShortcut) { try model.setShortcut($0, window: false) }
-                    ShortcutRow(title: "Capture window", shortcut: model.windowShortcut) { try model.setShortcut($0, window: true) }
-                    Text("Click a shortcut and press a new combination with ⌘ or ⌃. Press Escape to cancel. During capture, press Space to switch between a rectangle and a window.").font(.caption).foregroundStyle(.secondary)
+                Section("App status") {
+                    Label("Running in the background", systemImage: "checkmark.circle.fill").foregroundStyle(accent)
+                    Text(model.menuBarInstalled ? "Look for the viewfinder and Clip in the menu bar." : "Menu bar button could not be created. Reopen the app.").font(.caption)
+                    Text("Closing a window keeps the app running. A crowded menu bar or a menu bar manager can hide buttons; opening Smart Clipboard from Applications always brings its window back.").font(.caption).foregroundStyle(.secondary)
                 }
                 Section("Screen access") {
-                    Text("macOS asks for Screen Recording permission the first time you capture. You may need to quit and reopen the app after granting access.").font(.callout)
-                    Button("Open Screen Recording settings") { NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!) }
+                    Label(model.screenAccess ? "Screen Recording allowed" : "Screen Recording permission needed", systemImage: model.screenAccess ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                        .foregroundStyle(model.screenAccess ? accent : .orange)
+                    if !model.screenAccess {
+                        Text("Enable Smart Clipboard in Privacy & Security → Screen & System Audio Recording. If macOS requests a restart, quit and reopen this app.").font(.caption)
+                        Button("Request screen access") { model.requestScreenAccess() }
+                        Button("Open Screen Recording settings") { model.openScreenAccessSettings() }
+                    }
+                    Button("Check again") { model.refreshReadiness() }
+                }
+                Section("Capture shortcuts") {
+                    ShortcutRow(title: "Capture region", shortcut: model.regionShortcut, status: model.shortcutStatus(1), activeRecorder: $activeRecorder, pause: model.pauseShortcuts, resume: model.resumeShortcuts) { try model.setShortcut($0, window: false) }
+                    ShortcutRow(title: "Capture window", shortcut: model.windowShortcut, status: model.shortcutStatus(2), activeRecorder: $activeRecorder, pause: model.pauseShortcuts, resume: model.resumeShortcuts) { try model.setShortcut($0, window: true) }
+                    Button("Find available shortcuts") { model.findAvailableShortcuts() }.disabled(activeRecorder != nil)
+                    Text("Checks enabled macOS shortcuts and registrations held by other apps. macOS does not expose the owner of every shortcut or shortcuts intercepted by keyboard utilities.").font(.caption).foregroundStyle(.secondary)
+                    Text("Click a shortcut and press a combination with ⌘ or ⌃. Escape cancels. Shortcuts pause while you record. During capture, Space switches between region and window.").font(.caption).foregroundStyle(.secondary)
+                    Text(model.lastShortcutEvent).font(.caption.monospaced()).textSelection(.enabled)
                 }
             }.formStyle(.grouped).tabItem { Label("Shortcuts", systemImage: "keyboard") }.tag("shortcuts")
             Form {
@@ -247,7 +269,7 @@ struct SettingsView: View {
                 }
                 Section("Smart Clipboard") {
                     Text("Capture once. Use it anywhere.").font(.headline)
-                    Text("Native macOS · Version 0.2.0\nThe app stays in your menu bar when you close its windows.").foregroundStyle(.secondary)
+                    Text("Native macOS · Version 0.2.1\nThe app stays in your menu bar when you close its windows.").foregroundStyle(.secondary)
                 }
                 if !message.isEmpty { Text(message).font(.callout) }
             }.formStyle(.grouped).tabItem { Label("General", systemImage: "slider.horizontal.3") }.tag("general")
@@ -281,6 +303,10 @@ struct SettingsView: View {
 struct ShortcutRow: View {
     let title: String
     let shortcut: Shortcut
+    let status: String
+    @Binding var activeRecorder: String?
+    let pause: () -> Void
+    let resume: () -> Void
     let save: (Shortcut) throws -> Void
     @ViewState<Bool> private var recording = false
     @ViewState<Any?> private var monitor = nil
@@ -289,14 +315,19 @@ struct ShortcutRow: View {
         VStack(alignment: .leading) {
             HStack {
                 Text(title); Spacer()
-                Button(recording ? "Press shortcut…" : shortcut.label) { begin() }.font(.system(.body, design: .monospaced))
+                Button(recording ? "Press shortcut…" : shortcut.label) { begin() }.font(.system(.body, design: .monospaced)).disabled(activeRecorder != nil && activeRecorder != title)
             }
+            Text(status).font(.caption).foregroundStyle(.secondary)
             if !error.isEmpty { Text(error).font(.caption).foregroundStyle(.red) }
         }.onDisappear { end() }
     }
-    private func end() { if let monitor { NSEvent.removeMonitor(monitor) }; monitor = nil; recording = false }
+    private func end() {
+        guard recording else { return }
+        if let monitor { NSEvent.removeMonitor(monitor) }
+        monitor = nil; recording = false; activeRecorder = nil; resume()
+    }
     private func begin() {
-        end(); recording = true; error = ""
+        end(); pause(); recording = true; activeRecorder = title; error = ""
         monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             if event.keyCode == 53 { end(); return nil }
             let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)

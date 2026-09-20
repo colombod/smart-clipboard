@@ -1,4 +1,5 @@
 import AppKit
+import Carbon
 import SwiftUI
 import ServiceManagement
 import UniformTypeIdentifiers
@@ -30,13 +31,43 @@ import ClipboardCore
     private var resultInstruction = ""
     private var historyStore: HistoryStore?
     private var historyWindow: NSWindow?
-    let hotkeys = HotKeyManager()
+    @Published var menuBarInstalled = false
+    @Published private(set) var screenAccess = false
+    @Published private(set) var shortcutProblems: [UInt32: String] = [:]
+    @Published private(set) var shortcutsPaused = false
+    @Published private(set) var lastShortcutEvent = "No shortcut received yet"
+    private let registersHotkeys: Bool
+    let hotkeys: HotKeyManager
+    var captureReady: Bool { screenAccess && !shortcutsPaused && shortcutProblems.isEmpty && hotkeys.isRegistered(1) && hotkeys.isRegistered(2) }
+    func shortcutStatus(_ id: UInt32) -> String {
+        if shortcutsPaused { return "Paused while recording a shortcut" }
+        if let problem = shortcutProblems[id] { return problem }
+        return hotkeys.isRegistered(id) ? "Registered and listening" : "Not registered"
+    }
+    func refreshReadiness() {
+        screenAccess = CGPreflightScreenCaptureAccess()
+        if registersHotkeys && !shortcutsPaused { registerShortcuts() }
+    }
+    private func registerShortcuts() {
+        // Try each independently: a region conflict must not disable the window shortcut.
+        for (id, shortcut) in [(UInt32(1), regionShortcut), (UInt32(2), windowShortcut)] {
+            do { try hotkeys.register(shortcut, id: id); shortcutProblems[id] = nil }
+            catch { shortcutProblems[id] = error.localizedDescription }
+        }
+    }
+    func pauseShortcuts() { shortcutsPaused = true; hotkeys.unregisterAll() }
+    func resumeShortcuts() { shortcutsPaused = false; if registersHotkeys { registerShortcuts() } }
+    func requestScreenAccess() { _ = CGRequestScreenCaptureAccess(); refreshReadiness() }
+    func openScreenAccessSettings() { NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!) }
+
     private let defaults: UserDefaults
     private var task: Task<Void, Never>?
     private var panel: NSWindow?
     private var settings: NSWindow?
 
-    init(defaults: UserDefaults = .standard, historyDirectory: URL? = nil, registerHotkeys: Bool = true) {
+    init(defaults: UserDefaults = .standard, historyDirectory: URL? = nil, registerHotkeys: Bool = true, hotkeyManager: HotKeyManager? = nil) {
+        self.hotkeys = hotkeyManager ?? HotKeyManager()
+        self.registersHotkeys = registerHotkeys
         self.defaults = defaults
         historyLimit = defaults.object(forKey: "historyLimit") == nil ? HistoryStore.defaultLimit : min(max(0, defaults.integer(forKey: "historyLimit")), HistoryStore.maximumLimit)
         provider = defaults.string(forKey: "provider") ?? "api"
@@ -47,11 +78,12 @@ import ClipboardCore
         copyAutomatically = defaults.bool(forKey: "copyAutomatically")
         regionShortcut = Self.loadShortcut("regionShortcut", defaults: defaults) ?? .region
         windowShortcut = Self.loadShortcut("windowShortcut", defaults: defaults) ?? .window
-        hotkeys.handler = { [weak self] id in self?.capture(window: id == 2) }
-        if registerHotkeys {
-            do { try hotkeys.register(regionShortcut, id: 1); try hotkeys.register(windowShortcut, id: 2) }
-            catch { self.error = error.localizedDescription }
+        hotkeys.handler = { [weak self] id in
+            guard let self else { return }
+            self.lastShortcutEvent = "\(id == 2 ? "Window" : "Region") shortcut received at \(Date().formatted(date: .omitted, time: .standard))"
+            self.capture(window: id == 2)
         }
+        if registerHotkeys { refreshReadiness() }
         do {
             let directory = historyDirectory ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Smart Clipboard/History", isDirectory: true)
             historyStore = try HistoryStore(directory: directory, limit: historyLimit)
@@ -62,13 +94,28 @@ import ClipboardCore
         defaults.data(forKey: key).flatMap { try? JSONDecoder().decode(Shortcut.self, from: $0) }
     }
     func setShortcut(_ shortcut: Shortcut, window: Bool) throws {
-        let old = window ? windowShortcut : regionShortcut
         let other = window ? regionShortcut : windowShortcut
         guard shortcut.key != other.key || shortcut.modifiers != other.modifiers else { throw ClipError.message("Use different shortcuts for region and window capture.") }
-        do { try hotkeys.register(shortcut, id: window ? 2 : 1) }
-        catch { try? hotkeys.register(old, id: window ? 2 : 1); throw error }
+        try hotkeys.register(shortcut, id: window ? 2 : 1)
+        shortcutProblems[window ? 2 : 1] = nil
         if window { windowShortcut = shortcut } else { regionShortcut = shortcut }
         defaults.set(try JSONEncoder().encode(shortcut), forKey: window ? "windowShortcut" : "regionShortcut")
+    }
+    func findAvailableShortcuts() {
+        for id: UInt32 in [1, 2] where shortcutProblems[id] != nil || !hotkeys.isRegistered(id) {
+            let key = id == 1 ? Shortcut.region.key : Shortcut.window.key
+            let digit = id == 1 ? "3" : "4"
+            let options: [(UInt32, String)] = [
+                (UInt32(cmdKey | shiftKey | optionKey), "⌥⇧⌘"),
+                (UInt32(cmdKey | controlKey | optionKey), "⌃⌥⌘"),
+                (UInt32(cmdKey | controlKey | shiftKey), "⌃⇧⌘"),
+                (UInt32(controlKey | optionKey), "⌃⌥")
+            ]
+            for (modifiers, label) in options {
+                do { try setShortcut(Shortcut(key: key, modifiers: modifiers, label: label + digit), window: id == 2); break }
+                catch { shortcutProblems[id] = error.localizedDescription }
+            }
+        }
     }
     func showPanel() {
         if panel == nil {
@@ -84,6 +131,7 @@ import ClipboardCore
         panel?.makeKeyAndOrderFront(nil)
     }
     func showSettings(tab: String? = nil) {
+        refreshReadiness()
         if let tab { settingsTab = tab }
         if settings == nil {
             let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 640, height: 560), styleMask: [.titled, .closable], backing: .buffered, defer: false)
@@ -96,6 +144,13 @@ import ClipboardCore
     }
     func capture(window: Bool = false) {
         guard !capturing, !busy else { return }
+        refreshReadiness()
+        guard screenAccess else {
+            settingsTab = "shortcuts"
+            showSettings()
+            error = "Screen Recording permission is needed. Settings shows how to enable it."
+            return
+        }
         capturing = true; error = nil; notice = ""
         persistCurrentOutput()
         panel?.orderOut(nil); settings?.orderOut(nil); historyWindow?.orderOut(nil)

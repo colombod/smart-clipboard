@@ -6,11 +6,11 @@ A native SwiftUI/AppKit menu bar app for macOS 14 or later. Capture a rectangle 
 
 ## Download and install
 
-**[Download v0.2.0 preview](https://github.com/colombod/smart-clipboard/releases/tag/v0.2.0)** · Apple Silicon (M1 or newer) · macOS 14+
+**[Download v0.2.1 preview](https://github.com/colombod/smart-clipboard/releases/tag/v0.2.1)** · Apple Silicon (M1 or newer) · macOS 14+
 
 1. Download the `.dmg`, open it, and drag **Smart Clipboard** to **Applications**.
-2. Eject the disk image and open the installed app. Look for the capture-frame icon in the menu bar.
-3. Allow Screen Recording when you first capture. Choose your OpenAI connection in Settings.
+2. Eject the disk image and open the installed app. Look for the viewfinder button labelled **Clip** in the menu bar.
+3. Open **Review setup → Request screen access**, then approve Screen Recording in macOS. Choose your OpenAI connection in Settings.
 4. Enable **Settings → General → Launch at login** if you want it to start automatically.
 
 This initial preview is **ad-hoc signed and not Apple-notarized**. If macOS blocks opening it, review [Apple’s instructions](https://support.apple.com/en-us/102445) and use **System Settings → Privacy & Security → Open Anyway** only if you trust this download. Managed Macs may disallow that exception. A Developer ID certificate and notarization are needed for a future release without this extra step.
@@ -41,7 +41,7 @@ Move the built app into `/Applications` before enabling **Settings → General �
 - Choose **Convert with AI**, or **Extract text on device** for offline Apple Vision OCR. Local OCR ignores AI directions and always returns plain text.
 - Edit the output, copy it, or save it using the format’s file extension. The original PNG remains available independently.
 
-macOS requests Screen Recording permission at first capture. Grant it in System Settings → Privacy & Security → Screen & System Audio Recording, then restart the app if needed. Capture uses the built-in macOS interactive screenshot selector, including multi-display selection. `screencapture` receives only the selected region/window; there is no continuous screen monitoring.
+If screen access is missing, capture opens setup. Choose **Request screen access** to prompt macOS. Grant it in System Settings → Privacy & Security → Screen & System Audio Recording, then restart the app if needed. Capture uses the built-in macOS interactive screenshot selector, including multi-display selection. `screencapture` receives only the selected region/window; there is no continuous screen monitoring.
 
 ## Pick it for me and capture history
 
@@ -77,7 +77,7 @@ AI extraction and vector reconstruction can be imperfect. Screenshot instruction
 ./scripts/test.sh
 ```
 
-The 31 tests cover conversion envelopes, output selection, JSON validity, refusals/truncation, Responses API payloads, child-process cancellation/timeouts, on-device OCR against a generated fixture, history persistence/eviction/deletion, and converting a reopened capture from its original image. Run the OCR test outside restrictive automation sandboxes so Vision can access macOS image buffers. Live AI calls require a configured account. macOS screen permissions, interactive selection and login-item approval require testing in a logged-in GUI session. Project task tracking lives in Beads (`bd`).
+The 37 tests cover conversion envelopes, output selection, JSON validity, refusals/truncation, Responses API payloads, child-process cancellation/timeouts, on-device OCR against a generated fixture, history persistence/eviction/deletion, and converting a reopened capture from its original image. Run the OCR test outside restrictive automation sandboxes so Vision can access macOS image buffers. Live AI calls require a configured account. macOS screen permissions, interactive selection and login-item approval require testing in a logged-in GUI session. Project task tracking lives in Beads (`bd`).
 
 ## Package a release
 
@@ -88,3 +88,11 @@ The 31 tests cover conversion envelopes, output selection, JSON validity, refusa
 This builds for the current Mac’s architecture and writes a DMG, ZIP, and SHA-256 checksums into `dist/`. The DMG includes the app, an Applications shortcut, and installation instructions. The capture-frame application icon is generated from vector drawing code in `scripts/generate-icon.swift`.
 
 The current preview has passed its 31 automated tests and release-build/signature checks. Interactive capture across multiple displays, login-item approval and live API/ChatGPT conversions still need hands-on acceptance testing with configured accounts. No credentials, captures, local issue database, or compiled build cache are published in source.
+
+### Capture readiness and shortcut conflicts
+
+**Clip → Settings & Status → Shortcuts** shows the app's running status, Screen Recording permission, and a separate registration result for each capture shortcut. If screen permission is missing, capture opens this setup page. Use **Request screen access**, approve the macOS prompt yourself, then **Check again**; reopen the app if macOS requests it.
+
+Shortcut recording rejects enabled macOS shortcuts, duplicate capture bindings and conflicting registered hotkeys. **Find available shortcuts** tries alternatives for unavailable bindings without changing working ones. A rejected replacement keeps the previous shortcut. Keyboard utilities that intercept events may not expose their bindings to macOS; the last-received shortcut timestamp helps diagnose those cases. Screen permission and shortcut registration are independent requirements.
+
+The app keeps one instance running even when a development or downloaded copy is opened. The menu bar button has both a native template icon and a text label, and reappears when the running app is reopened. macOS can still hide menu items when the bar is crowded.

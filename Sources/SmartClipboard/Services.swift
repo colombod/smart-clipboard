@@ -171,31 +171,3 @@ struct Shortcut: Codable, Equatable {
     static let region = Shortcut(key: 20, modifiers: UInt32(cmdKey | shiftKey | optionKey), label: "⌥⇧⌘3")
     static let window = Shortcut(key: 21, modifiers: UInt32(cmdKey | shiftKey | optionKey), label: "⌥⇧⌘4")
 }
-
-@MainActor final class HotKeyManager {
-    var handler: ((UInt32) -> Void)?
-    private var refs: [UInt32: EventHotKeyRef] = [:]
-    private var eventHandler: EventHandlerRef?
-    init() {
-        var type = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
-        InstallEventHandler(GetApplicationEventTarget(), { _, event, context in
-            guard let event, let context else { return OSStatus(eventNotHandledErr) }
-            var id = EventHotKeyID()
-            GetEventParameter(event, EventParamName(kEventParamDirectObject), EventParamType(typeEventHotKeyID), nil, MemoryLayout<EventHotKeyID>.size, nil, &id)
-            let manager = Unmanaged<HotKeyManager>.fromOpaque(context).takeUnretainedValue()
-            MainActor.assumeIsolated { manager.handler?(id.id) }
-            return noErr
-        }, 1, &type, Unmanaged.passUnretained(self).toOpaque(), &eventHandler)
-    }
-    deinit {
-        for ref in refs.values { UnregisterEventHotKey(ref) }
-        if let eventHandler { RemoveEventHandler(eventHandler) }
-    }
-    func register(_ shortcut: Shortcut, id: UInt32) throws {
-        var ref: EventHotKeyRef?
-        if let old = refs.removeValue(forKey: id) { UnregisterEventHotKey(old) }
-        let status = RegisterEventHotKey(shortcut.key, shortcut.modifiers, EventHotKeyID(signature: 0x53434C50, id: id), GetApplicationEventTarget(), 0, &ref)
-        guard status == noErr, let ref else { throw ClipError.message("\(shortcut.label) is already used by another app or macOS. Record a different shortcut.") }
-        refs[id] = ref
-    }
-}
