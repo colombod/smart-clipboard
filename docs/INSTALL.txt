@@ -1,0 +1,44 @@
+Smart Clipboard — macOS preview
+
+Requirements: macOS 14 or later. Download the arm64 build for Apple Silicon
+(M1 or newer). Intel binaries are not included in this first release.
+
+INSTALL
+1. Open the downloaded DMG.
+2. Drag Smart Clipboard.app onto the Applications shortcut.
+3. Eject the disk image and open Smart Clipboard from Applications.
+4. The capture-frame icon appears in the menu bar. The app has no Dock icon.
+
+This preview is ad-hoc signed, not Developer ID signed or notarized by Apple.
+If macOS blocks it, follow Apple's guidance for opening an app you trust:
+https://support.apple.com/en-us/102445
+After attempting to open the installed app, System Settings > Privacy &
+Security may show Open Anyway. A managed Mac may prohibit this exception.
+
+FIRST CAPTURE
+Use the menu bar icon > Capture Region, or Option-Shift-Command-3.
+For windows use Option-Shift-Command-4. Space switches selection modes;
+Escape cancels. macOS will ask for Screen Recording permission. Grant it
+for Smart Clipboard and reopen the app if necessary.
+
+AI SETUP
+Open Settings > Connection and choose either an OpenAI API key (stored in
+Keychain) or ChatGPT via the official Codex CLI. ChatGPT mode requires the
+CLI to be installed separately and a plan with Codex access. API billing
+is separate. Image copy/save and on-device OCR need neither connection.
+Captures are sent to OpenAI only when you choose Convert with AI.
+
+START AT LOGIN
+After installing in Applications, enable Settings > General > Launch at
+login. Closing the capture/settings windows leaves the menu bar app running.
+
+UPDATES AND REMOVAL
+Quit Smart Clipboard from its menu before replacing it with a new version.
+To uninstall, disable Launch at login, remove your saved API key by saving
+an empty key in Settings > Connection, quit, and move the app to Trash.
+ChatGPT credentials remain with Codex; removing this app does not sign out
+other Codex clients. Exported files and clipboard contents are unchanged.
+
+SOURCE AND DOWNLOADS
+https://github.com/colombod/smart-clipboard
+https://github.com/colombod/smart-clipboard/releases
