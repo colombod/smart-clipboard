@@ -74,6 +74,8 @@ AI extraction and vector reconstruction can be imperfect. Screenshot instruction
 
 ## Validate
 
+The intended background workflow and observable release gates are defined in [User experience and UAT](docs/UAT.md). Automated tests and imported-image checks do not replace a real global-shortcut → selection → paste run. Current acceptance results and unresolved gates are tracked in Beads.
+
 ```sh
 ./scripts/test.sh
 ```
