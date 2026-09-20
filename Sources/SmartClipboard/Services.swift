@@ -187,6 +187,10 @@ struct Shortcut: Codable, Equatable {
             return noErr
         }, 1, &type, Unmanaged.passUnretained(self).toOpaque(), &eventHandler)
     }
+    deinit {
+        for ref in refs.values { UnregisterEventHotKey(ref) }
+        if let eventHandler { RemoveEventHandler(eventHandler) }
+    }
     func register(_ shortcut: Shortcut, id: UInt32) throws {
         var ref: EventHotKeyRef?
         if let old = refs.removeValue(forKey: id) { UnregisterEventHotKey(old) }

@@ -22,7 +22,7 @@ struct CaptureView: View {
                     }
                     Spacer()
                     if model.png != nil {
-                        Button { model.clear() } label: { Image(systemName: "trash") }.help("Discard capture").disabled(model.busy)
+                        Button { model.clear() } label: { Image(systemName: "xmark") }.help("Close clip; keep saved history").disabled(model.busy)
                     }
                 }
                 if let data = model.png, let image = NSImage(data: data) {
@@ -45,7 +45,7 @@ struct CaptureView: View {
         }.tint(accent).background(Color(nsColor: .windowBackgroundColor))
     }
     private var sidebar: some View {
-        VStack(alignment: .leading, spacing: 24) {
+        VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 10) {
                 Image(systemName: "crop.viewfinder").font(.system(size: 23, weight: .medium)).foregroundStyle(accent)
                 VStack(alignment: .leading, spacing: 1) {
@@ -64,7 +64,7 @@ struct CaptureView: View {
                     Label("Import image", systemImage: "square.and.arrow.down").frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 5)
                 }
             }.disabled(model.busy || model.capturing)
-            VStack(alignment: .leading, spacing: 9) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text("OUTPUT FORMAT").font(.system(size: 10, weight: .semibold)).tracking(1.6).foregroundStyle(.secondary)
                 ForEach(OutputFormat.allCases) { format in
                     Button { model.format = format } label: {
@@ -82,8 +82,11 @@ struct CaptureView: View {
             }
             Spacer(minLength: 0)
             Divider()
+            Button { model.showHistory() } label: {
+                HStack { Label("History", systemImage: "clock.arrow.circlepath"); Spacer(); Text("\(model.history.count)").foregroundStyle(.secondary) }
+            }.buttonStyle(.plain)
             Button { model.showSettings() } label: { Label("Settings", systemImage: "gearshape").foregroundStyle(.secondary) }.buttonStyle(.plain)
-        }.padding(20).frame(width: 190).frame(maxHeight: .infinity)
+        }.padding(20).frame(width: 200).frame(maxHeight: .infinity)
             .background(Color(nsColor: .controlBackgroundColor).opacity(0.65))
             .overlay(alignment: .trailing) { Divider() }
     }
@@ -125,6 +128,9 @@ struct CaptureView: View {
                 }.frame(width: 150).padding(.top, 12)
             }
             if model.format != .image {
+                if model.format == .auto {
+                    Text("AI picks the most useful format from the source: prose, tables, code, layouts or diagrams.").font(.caption).foregroundStyle(.secondary)
+                }
                 HStack {
                     Image(systemName: "text.bubble").foregroundStyle(.secondary)
                     TextField("Optional direction — e.g. translate to English, preserve table columns…", text: $model.instruction).textFieldStyle(.plain).disabled(model.busy)
@@ -146,6 +152,13 @@ struct CaptureView: View {
                 HStack {
                     Text(model.output.isEmpty ? "RESULT" : model.resultFormat.title.uppercased()).font(.system(size: 10, weight: .semibold)).tracking(1)
                     Spacer()
+                    if !model.savedConversions.isEmpty {
+                        Menu("Saved formats") {
+                            ForEach(model.savedConversions) { result in
+                                Button(result.format.title) { model.useSavedConversion(result) }
+                            }
+                        }.fixedSize().disabled(model.busy)
+                    }
                     if !model.output.isEmpty {
                         Button("Save…") { model.save() }
                         Button { model.copyOutput() } label: { Label("Copy", systemImage: "doc.on.doc") }.keyboardShortcut("c", modifiers: [.command, .shift])
@@ -174,7 +187,7 @@ struct SettingsView: View {
     @ViewState<Task<Void, Never>?> private var loginTask = nil
     @ViewState<Bool> private var loginEnabled = SMAppService.mainApp.status == .enabled
     var body: some View {
-        TabView {
+        TabView(selection: $model.settingsTab) {
             Form {
                 Section("AI connection") {
                     Picker("Connect with", selection: $model.provider) {
@@ -207,9 +220,9 @@ struct SettingsView: View {
                 }
                 if !message.isEmpty { Text(message).font(.callout).textSelection(.enabled) }
                 Section("Your captures") {
-                    Text("Only the selected capture and your direction are sent when you choose Convert with AI. Image copying and on-device text extraction work offline. Captures and results stay in memory until discarded or the app quits; Codex uses temporary files that are removed after conversion.").font(.caption).foregroundStyle(.secondary)
+                    Text("Only the selected capture and your direction are sent when you choose Convert with AI. Image copying and on-device text extraction work offline. Captured and imported images and their results are saved locally according to your History settings. Set the limit to zero to disable history. Codex uses temporary files removed after conversion.").font(.caption).foregroundStyle(.secondary)
                 }
-            }.formStyle(.grouped).tabItem { Label("Connection", systemImage: "network") }
+            }.formStyle(.grouped).tabItem { Label("Connection", systemImage: "network") }.tag("connection")
             Form {
                 Section("Capture shortcuts") {
                     ShortcutRow(title: "Capture region", shortcut: model.regionShortcut) { try model.setShortcut($0, window: false) }
@@ -220,7 +233,7 @@ struct SettingsView: View {
                     Text("macOS asks for Screen Recording permission the first time you capture. You may need to quit and reopen the app after granting access.").font(.callout)
                     Button("Open Screen Recording settings") { NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!) }
                 }
-            }.formStyle(.grouped).tabItem { Label("Shortcuts", systemImage: "keyboard") }
+            }.formStyle(.grouped).tabItem { Label("Shortcuts", systemImage: "keyboard") }.tag("shortcuts")
             Form {
                 Section("General") {
                     Toggle("Launch at login", isOn: Binding(get: { loginEnabled }, set: { enabled in
@@ -229,14 +242,16 @@ struct SettingsView: View {
                     }))
                     Text("Move Smart Clipboard to Applications before enabling launch at login.").font(.caption).foregroundStyle(.secondary)
                     Picker("Default output", selection: $model.defaultFormat) { ForEach(OutputFormat.allCases) { Text($0.title).tag($0) } }
+                    Text("Pick it for me lets AI choose the target format from each source image. You can override it for any clip.").font(.caption).foregroundStyle(.secondary)
                     Toggle("Copy result after conversion", isOn: $model.copyAutomatically)
                 }
                 Section("Smart Clipboard") {
                     Text("Capture once. Use it anywhere.").font(.headline)
-                    Text("Native macOS · Version 0.1.0\nThe app stays in your menu bar when you close its windows.").foregroundStyle(.secondary)
+                    Text("Native macOS · Version 0.2.0\nThe app stays in your menu bar when you close its windows.").foregroundStyle(.secondary)
                 }
                 if !message.isEmpty { Text(message).font(.callout) }
-            }.formStyle(.grouped).tabItem { Label("General", systemImage: "slider.horizontal.3") }
+            }.formStyle(.grouped).tabItem { Label("General", systemImage: "slider.horizontal.3") }.tag("general")
+            HistorySettingsView(model: model).tabItem { Label("History", systemImage: "clock.arrow.circlepath") }.tag("history")
         }.padding(12).frame(width: 640, height: 550).tint(accent)
     }
     private func signIn() {
@@ -296,5 +311,106 @@ struct ShortcutRow: View {
             catch { self.error = error.localizedDescription; end() }
             return nil
         }
+    }
+}
+
+struct HistoryView: View {
+    @ObservedObject var model: AppModel
+    @ViewState<Bool> private var confirmClear = false
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Your recent clips").font(.title2.weight(.semibold))
+                    Text("Reopen a capture. Give it another format.").foregroundStyle(.secondary)
+                }
+                Spacer()
+                Button("Clear history…", role: .destructive) { confirmClear = true }.disabled(model.history.isEmpty || model.busy || model.capturing)
+            }
+            if let error = model.error { Text(error).font(.caption).foregroundStyle(.orange).textSelection(.enabled) }
+            if model.history.isEmpty {
+                VStack(spacing: 12) {
+                    Image(systemName: "clock.arrow.circlepath").font(.largeTitle).foregroundStyle(.secondary)
+                    Text(model.historyLimit == 0 ? "History is turned off" : "No saved captures yet").font(.headline)
+                    Text(model.historyLimit == 0 ? "Increase the history limit in Settings to save future captures." : "Your next capture or imported image will appear here.").foregroundStyle(.secondary)
+                    Button("History settings") { model.showSettings(tab: "history") }
+                }.frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 10) {
+                        ForEach(model.history) { entry in
+                            HStack(spacing: 14) {
+                                HistoryThumbnail(url: model.historyImageURL(entry))
+                                VStack(alignment: .leading, spacing: 5) {
+                                    Text(entry.title).font(.headline).lineLimit(1)
+                                    Text(entry.createdAt, format: .dateTime.month(.abbreviated).day().hour().minute()).font(.caption).foregroundStyle(.secondary)
+                                    Text(entry.conversions.isEmpty ? "Original image" : entry.conversions.map { $0.format.title }.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                                }
+                                Spacer()
+                                Button("Open") { model.openHistory(entry) }
+                                Button(role: .destructive) { model.deleteHistory(entry) } label: { Image(systemName: "trash") }.help("Delete this saved capture and all its formats")
+                            }.padding(12).background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 10))
+                                .disabled(model.busy || model.capturing)
+                        }
+                    }
+                }
+            }
+            HStack {
+                Text("\(model.history.count) of \(model.historyLimit) clips · \(ByteCountFormatter.string(fromByteCount: model.historyBytes, countStyle: .file)) on this Mac").font(.caption).foregroundStyle(.secondary)
+                Spacer()
+                Button("Settings") { model.showSettings(tab: "history") }
+            }
+        }.padding(24).frame(minWidth: 490, minHeight: 330).tint(accent)
+            .confirmationDialog("Delete all saved captures and results?", isPresented: $confirmClear) {
+                Button("Clear history", role: .destructive) { model.clearHistory() }
+            } message: { Text("This removes the app’s saved history and closes the current clip. Exported files and the system clipboard are unchanged.") }
+    }
+}
+
+private struct HistoryThumbnail: View {
+    let url: URL?
+    var body: some View {
+        Group {
+            if let url, let image = NSImage(contentsOf: url) {
+                Image(nsImage: image).resizable().scaledToFit()
+            } else { Image(systemName: "photo").foregroundStyle(.secondary) }
+        }.frame(width: 76, height: 54).background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 6))
+    }
+}
+
+struct HistorySettingsView: View {
+    @ObservedObject var model: AppModel
+    @ViewState<Int> private var draftLimit = HistoryStore.defaultLimit
+    @ViewState<Bool> private var confirmClear = false
+    var body: some View {
+        Form {
+            Section("Capture history") {
+                Stepper(value: $draftLimit, in: 0...HistoryStore.maximumLimit) {
+                    HStack {
+                        Text("Keep up to")
+                        TextField("Clips", value: $draftLimit, format: .number).frame(width: 65)
+                        Text("clips")
+                    }
+                }.disabled(model.busy || model.capturing)
+                Button("Apply limit") { model.setHistoryLimit(draftLimit) }.disabled(model.busy || model.capturing || draftLimit == model.historyLimit || !(0...HistoryStore.maximumLimit).contains(draftLimit))
+                Text("Default: 50 clips. Choose 0 to turn history off and remove saved clips. Applying a lower limit removes the oldest captures immediately.").font(.caption).foregroundStyle(.secondary)
+                LabeledContent("Saved captures", value: "\(model.history.count)")
+                LabeledContent("Disk space", value: ByteCountFormatter.string(fromByteCount: model.historyBytes, countStyle: .file))
+                HStack {
+                    Button("Open history") { model.showHistory() }
+                    Button("Clear history…", role: .destructive) { confirmClear = true }.disabled(model.history.isEmpty || model.busy || model.capturing)
+                }
+            }
+            Section("Stored on this Mac") {
+                Text("History keeps captured and imported images and the latest result for each output format across app restarts. Reopen an entry to copy a saved result or convert the original into another format. The app does not monitor other apps’ clipboard activity.").font(.callout).foregroundStyle(.secondary)
+                Text("Files are saved in your local Application Support folder with access restricted to your macOS user. They are not separately encrypted by this app. Clearing history does not remove exported files or the system clipboard.").font(.caption).foregroundStyle(.secondary)
+            }
+            if let error = model.error { Text(error).foregroundStyle(.orange).font(.caption) }
+        }.formStyle(.grouped)
+            .onAppear { draftLimit = model.historyLimit }
+            .onChange(of: model.historyLimit) { _, limit in draftLimit = limit }
+            .confirmationDialog("Delete all saved captures and results?", isPresented: $confirmClear) {
+                Button("Clear history", role: .destructive) { model.clearHistory() }
+            } message: { Text("This removes local history and closes the current clip. This cannot be undone.") }
     }
 }

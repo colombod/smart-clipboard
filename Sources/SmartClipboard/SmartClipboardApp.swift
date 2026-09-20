@@ -8,6 +8,7 @@ import SwiftUI
             Button("Capture Window…") { delegate.model.capture(window: true) }
             Divider()
             Button("Open Clipboard…") { delegate.model.showPanel() }
+            Button("History…") { delegate.model.showHistory() }
             Button("Import Image…") { delegate.model.importImage() }
             Divider()
             Button("Settings…") { delegate.model.showSettings() }.keyboardShortcut(",")
@@ -25,5 +26,6 @@ import SwiftUI
             UserDefaults.standard.set(true, forKey: "hasLaunched")
         }
     }
+    func applicationWillTerminate(_ notification: Notification) { model.persistCurrentOutput(); model.cancel() }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
 }

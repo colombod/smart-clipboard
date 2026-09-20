@@ -5,7 +5,7 @@ public enum OutputFormat: String, CaseIterable, Codable, Identifiable, Sendable 
     public var id: String { rawValue }
     public var title: String {
         switch self {
-        case .auto: return "Smart format"
+        case .auto: return "Pick it for me"
         case .image: return "Image"
         case .description: return "Description"
         case .text: return "Plain text"

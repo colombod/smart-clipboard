@@ -28,13 +28,25 @@ CLI to be installed separately and a plan with Codex access. API billing
 is separate. Image copy/save and on-device OCR need neither connection.
 Captures are sent to OpenAI only when you choose Convert with AI.
 
+OUTPUT AND HISTORY
+Choose Pick it for me to let AI decide the best editable format from each
+source. Make it the default under Settings > General > Default output.
+History in the sidebar or menu bar lets you reopen a capture, select another
+format and convert the original again. Saved formats reuses previous results.
+Settings > History lets you set a clip limit (default 50, maximum 500); click
+Apply limit to save it. Zero clears and disables history. Clear history or
+delete individual clips to remove saved original images and results.
+Saved captures persist locally in ~/Library/Application Support/Smart
+Clipboard/History/. The app does not monitor other apps' clipboard activity.
+
 START AT LOGIN
 After installing in Applications, enable Settings > General > Launch at
 login. Closing the capture/settings windows leaves the menu bar app running.
 
 UPDATES AND REMOVAL
 Quit Smart Clipboard from its menu before replacing it with a new version.
-To uninstall, disable Launch at login, remove your saved API key by saving
+To uninstall, clear history in Settings > History, disable Launch at login,
+remove your saved API key by saving
 an empty key in Settings > Connection, quit, and move the app to Trash.
 ChatGPT credentials remain with Codex; removing this app does not sign out
 other Codex clients. Exported files and clipboard contents are unchanged.
