@@ -28,7 +28,7 @@ open 'dist/Smart Clipboard.app'
 
 Requires Apple Command Line Tools (`xcode-select --install`), Swift 6 or later, and no third-party Swift dependencies. Open `Package.swift` in Xcode to work on the app. The build script creates an ad-hoc-signed app for local use. Set `SIGNING_IDENTITY` to sign with your own identity; a release that passes Gatekeeper without a manual exception also needs Developer ID signing and notarization.
 
-Move the built app into `/Applications` before enabling **Settings → General → Launch at login**. The app opens its capture panel on first launch, then runs in the menu bar without a Dock icon. Closing a window leaves the app running; Quit is in the menu bar menu.
+Move the built app into `/Applications` before enabling **Settings → General → Launch at login**. The app opens its capture panel on first launch, then runs in the menu bar without a Dock icon. Opening the running app from Applications brings its panel back. Closing a window leaves the app running; Quit is in the menu bar menu.
 
 ## Capture and convert
 

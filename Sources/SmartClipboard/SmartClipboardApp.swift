@@ -27,5 +27,9 @@ import SwiftUI
         }
     }
     func applicationWillTerminate(_ notification: Notification) { model.persistCurrentOutput(); model.cancel() }
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        model.showPanel()
+        return false
+    }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
 }
