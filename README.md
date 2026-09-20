@@ -1,5 +1,7 @@
 # Smart Clipboard
 
+<img src="docs/app-icon.png" alt="Smart Clipboard capture-frame icon" width="100">
+
 A native SwiftUI/AppKit menu bar app for macOS 14 or later. Capture a rectangle or window, then keep the image or convert it into editable content with OpenAI.
 
 ## Download and install
