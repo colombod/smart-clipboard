@@ -72,6 +72,11 @@ class ReleaseUpdateTests(unittest.TestCase):
             release.prepare(self.args)
         return release.verify_local()
 
+    def remote_info(self, manifest, draft=False):
+        return {'tagName': manifest['tag'], 'isDraft': draft, 'isPrerelease': True,
+                'assets': [{'name': asset['name']} for asset in manifest['assets']],
+                'body': self.args.notes.read_text()}
+
     def test_preview_signs_archive_and_feed_without_exporting_key(self):
         output, manifest = self.prepare()
         item = ET.parse(output / 'appcast.xml').find('channel/item')
@@ -168,10 +173,108 @@ class ReleaseUpdateTests(unittest.TestCase):
         def wrong(url, path, **kwargs):
             path.write_bytes(b'wrong public bytes')
             return True
-        with patch.object(release, 'release_info', return_value={'isDraft': False}), \
+        with patch.object(release, 'release_info', return_value=self.remote_info(manifest)), \
              patch.object(release, 'verify_release_identity'), patch.object(release, 'download', side_effect=wrong):
             with self.assertRaisesRegex(ValueError, 'Public asset does not match'):
                 release.verify_public(manifest)
+
+    def test_draft_extra_or_duplicate_assets_stop_before_writes(self):
+        _, manifest = self.prepare()
+        args = types.SimpleNamespace(approve_tag=manifest['tag'])
+        for added_name in ['private-debug-log.txt', manifest['assets'][0]['name']]:
+            with self.subTest(added_name=added_name):
+                info = self.remote_info(manifest, draft=True)
+                info['assets'].append({'name': added_name})
+                with patch.object(release, 'gh_json', side_effect=[{'visibility': 'PUBLIC'}, [[{'tag_name': manifest['tag']}]]]), \
+                     patch.object(release, 'release_info', return_value=info), \
+                     patch.object(release, 'verify_release_identity'), patch.object(release, 'run') as command, \
+                     patch.object(release, 'verify_public') as public:
+                    with self.assertRaisesRegex(ValueError, 'unexpected or duplicate assets'):
+                        release.publish_release(args)
+                    command.assert_not_called()
+                    public.assert_not_called()
+
+    def test_draft_notes_mismatch_stops_before_writes(self):
+        _, manifest = self.prepare()
+        info = self.remote_info(manifest, draft=True)
+        info['body'] = 'Stale notes containing unreviewed personal metadata.\n'
+        with patch.object(release, 'gh_json', side_effect=[{'visibility': 'PUBLIC'}, [[{'tag_name': manifest['tag']}]]]), \
+             patch.object(release, 'release_info', return_value=info), \
+             patch.object(release, 'verify_release_identity'), patch.object(release, 'run') as command:
+            with self.assertRaisesRegex(ValueError, 'Release notes differ'):
+                release.publish_release(types.SimpleNamespace(approve_tag=manifest['tag']))
+            command.assert_not_called()
+
+    def test_valid_partial_draft_resumes_then_verifies_public_contents(self):
+        _, manifest = self.prepare()
+        partial = self.remote_info(manifest, draft=True)
+        partial['assets'] = partial['assets'][:1]
+        complete = self.remote_info(manifest, draft=True)
+        public = self.remote_info(manifest)
+        events = []
+
+        def command(*args, **kwargs):
+            args = tuple(str(arg) for arg in args)
+            events.append(args[:3])
+            if args[:3] == ('gh', 'release', 'download'):
+                name = args[args.index('--pattern') + 1]
+                directory = pathlib.Path(args[args.index('--dir') + 1])
+                (directory / name).write_bytes((self.root / 'dist' / name).read_bytes())
+            return ''
+
+        def public_download(url, path, **kwargs):
+            self.assertIn(('gh', 'release', 'edit'), events)
+            path.write_bytes((self.root / 'dist' / path.name).read_bytes())
+            events.append(('public-download', path.name))
+            return True
+
+        with patch.object(release, 'gh_json', side_effect=[{'visibility': 'PUBLIC'}, [[{'tag_name': manifest['tag']}]]]), \
+             patch.object(release, 'release_info', side_effect=[partial, complete, public]), \
+             patch.object(release, 'verify_release_identity'), patch.object(release, 'run', side_effect=command), \
+             patch.object(release, 'download', side_effect=public_download):
+            release.publish_release(types.SimpleNamespace(approve_tag=manifest['tag']))
+        self.assertEqual(events.count(('gh', 'release', 'download')), 1)
+        self.assertEqual(events.count(('gh', 'release', 'upload')), 2)
+        self.assertEqual(events.count(('gh', 'release', 'edit')), 1)
+        self.assertEqual(sum(event[0] == 'public-download' for event in events), 3)
+
+    def test_draft_metadata_is_rechecked_after_uploads_before_publication(self):
+        _, manifest = self.prepare()
+        for change in ['extra-asset', 'notes']:
+            with self.subTest(change=change):
+                initial = self.remote_info(manifest, draft=True)
+                initial['assets'] = []
+                changed = self.remote_info(manifest, draft=True)
+                if change == 'extra-asset':
+                    changed['assets'].append({'name': 'unreviewed.txt'})
+                else:
+                    changed['body'] = 'Changed during upload.'
+                with patch.object(release, 'gh_json', side_effect=[{'visibility': 'PUBLIC'}, [[{'tag_name': manifest['tag']}]]]), \
+                     patch.object(release, 'release_info', side_effect=[initial, changed]), \
+                     patch.object(release, 'verify_release_identity'), patch.object(release, 'run') as command:
+                    with self.assertRaises(ValueError):
+                        release.publish_release(types.SimpleNamespace(approve_tag=manifest['tag']))
+                    self.assertEqual(command.call_count, 3)
+                    self.assertTrue(all(call.args[:3] == ('gh', 'release', 'upload') for call in command.call_args_list))
+
+    def test_public_extra_duplicate_missing_assets_and_notes_fail_before_download(self):
+        _, manifest = self.prepare()
+        for change in ['extra-asset', 'duplicate-asset', 'missing-asset', 'notes']:
+            with self.subTest(change=change):
+                info = self.remote_info(manifest)
+                if change == 'extra-asset':
+                    info['assets'].append({'name': 'unreviewed.txt'})
+                elif change == 'duplicate-asset':
+                    info['assets'].append(info['assets'][0])
+                elif change == 'missing-asset':
+                    info['assets'].pop()
+                else:
+                    info['body'] = 'Unreviewed notes.'
+                with patch.object(release, 'release_info', return_value=info), \
+                     patch.object(release, 'verify_release_identity'), patch.object(release, 'download') as download:
+                    with self.assertRaises(ValueError):
+                        release.verify_public(manifest)
+                    download.assert_not_called()
 
     def test_feed_write_follows_public_verification_and_requires_unchanged_branch(self):
         _, manifest = self.prepare()

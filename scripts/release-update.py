@@ -225,7 +225,7 @@ def gh_json(*args):
 
 def release_info(manifest):
     return gh_json('release', 'view', manifest['tag'], '--repo', GITHUB,
-                   '--json', 'tagName,isDraft,isPrerelease,assets,targetCommitish')
+                   '--json', 'tagName,isDraft,isPrerelease,assets,targetCommitish,body')
 
 
 def verify_release_identity(info, manifest):
@@ -240,11 +240,24 @@ def verify_release_identity(info, manifest):
         fail('Public release tag does not resolve to the exact reviewed build commit.')
 
 
+def verify_release_contents(info, manifest, allow_missing_assets=False):
+    names = [asset['name'] for asset in info['assets']]
+    expected = {asset['name'] for asset in manifest['assets']}
+    if len(names) != len(set(names)) or set(names) - expected:
+        fail('Release contains unexpected or duplicate assets; review and remove them before publishing. No assets were deleted.')
+    if not allow_missing_assets and set(names) != expected:
+        fail('Release is missing reviewed assets.')
+    body = info.get('body') or ''
+    if hashlib.sha256(body.encode('utf-8')).hexdigest() != manifest['notesSHA256']:
+        fail('Release notes differ from the reviewed release-notes.txt; review and correct the release body before publishing. No notes were overwritten.')
+
+
 def verify_public(manifest):
     info = release_info(manifest)
     verify_release_identity(info, manifest)
     if info['isDraft']:
         fail('Release is still a draft; the feed cannot be published.')
+    verify_release_contents(info, manifest)
     with tempfile.TemporaryDirectory(prefix='smart-clipboard-public-') as tmp:
         for asset in manifest['assets']:
             path = pathlib.Path(tmp) / asset['name']
@@ -273,6 +286,7 @@ def publish_release(args):
     info = release_info(manifest)
     verify_release_identity(info, manifest)
     if info['isDraft']:
+        verify_release_contents(info, manifest, allow_missing_assets=True)
         names = {a['name'] for a in info['assets']}
         with tempfile.TemporaryDirectory(prefix='smart-clipboard-draft-') as tmp:
             for asset in manifest['assets']:
@@ -282,6 +296,13 @@ def publish_release(args):
                         fail('Draft asset differs; refusing to overwrite it.')
                 else:
                     run('gh', 'release', 'upload', manifest['tag'], REPO / 'dist' / asset['name'], '--repo', GITHUB)
+        # Re-read before exposing the draft: uploads can take time and someone
+        # may have edited the notes or attached another file in the meantime.
+        info = release_info(manifest)
+        verify_release_identity(info, manifest)
+        verify_release_contents(info, manifest)
+        if not info['isDraft']:
+            fail('Release was published during preparation; verify its public contents before retrying.')
         run('gh', 'release', 'edit', manifest['tag'], '--repo', GITHUB, '--draft=false',
             '--latest=false' if manifest['channel'] == 'preview' else '--latest=true')
     verify_public(manifest)

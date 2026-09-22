@@ -1,0 +1,109 @@
+{
+  "date": "2026-09-22",
+  "scope": "Synthetic-image live API and windowless import/history/private-clipboard checks only. Automated syntax/value checks do not establish semantic or visual quality; inspect every output. Native capture, shortcuts, focus, actual paste, and packaged-app LAN permission require separate UAT.",
+  "fixture": "fixture.png",
+  "svgPreview": "svg-render-white.png",
+  "previewMethod": "rsvg-convert with a white inspection background, width1200; original SVG unchanged and retained as a JSON string. Preview is1200x900 because the generated SVG uses4:3.",
+  "overall": "FAIL",
+  "review": [
+    {
+      "phase": "provider",
+      "requestedFormat": "text",
+      "automated": "PASS",
+      "manual": "PASS for this bounded fixture",
+      "observations": [
+        "Exact visible title, code, headers and item/quantity rows, with tabs and no invented Markdown."
+      ]
+    },
+    {
+      "phase": "provider",
+      "requestedFormat": "markdown",
+      "automated": "PASS",
+      "manual": "PASS for this bounded fixture",
+      "observations": [
+        "Correct table values and row associations."
+      ]
+    },
+    {
+      "phase": "provider",
+      "requestedFormat": "json",
+      "automated": "PASS",
+      "manual": "PASS for this bounded fixture",
+      "observations": [
+        "Parseable record with correct code and item/quantity associations."
+      ]
+    },
+    {
+      "phase": "provider",
+      "requestedFormat": "yaml",
+      "automated": "PASS",
+      "manual": "PASS for this bounded fixture",
+      "observations": [
+        "Parseable record with correct title, code and item/quantity associations."
+      ]
+    },
+    {
+      "phase": "provider",
+      "requestedFormat": "html",
+      "automated": "PASS",
+      "manual": "PASS for this bounded fixture",
+      "observations": [
+        "Source preserves title, code, table headers and row associations. HTML source inspected; no browser rendering or pixel-level fidelity claim."
+      ]
+    },
+    {
+      "phase": "provider",
+      "requestedFormat": "svg",
+      "automated": "FAIL",
+      "manual": "FAIL",
+      "observations": [
+        "viewBox 400 by 300 changes the source aspect ratio from 1200 by 680.",
+        "Three internal horizontal rules create an extra empty fourth table row; the source has three rows total including headers.",
+        "Inherited fill=none and stroke=black produce outlined text, unlike the solid black source text.",
+        "Equal-width columns and relocated text differ from the source geometry."
+      ]
+    },
+    {
+      "phase": "provider",
+      "requestedFormat": "description",
+      "automated": "PASS",
+      "manual": "FAIL",
+      "observations": [
+        "Correct visible values and table structure; no invented spelling correction in this attempt.",
+        "Falsely describes the title and code as centered; both are visibly aligned to the left in the source."
+      ]
+    },
+    {
+      "phase": "provider",
+      "requestedFormat": "auto",
+      "automated": "PASS",
+      "manual": "PASS for this bounded fixture",
+      "observations": [
+        "Selected Markdown and retained correct title, code, headers and row associations."
+      ]
+    },
+    {
+      "phase": "import-history-clipboard",
+      "requestedFormat": "text",
+      "automated": "PASS",
+      "manual": "PASS for this bounded fixture",
+      "observations": [
+        "Exact returned text copied to private pasteboard; isolated history retains the original/result. Reopening history makes no provider call or clipboard write, as asserted by the test."
+      ]
+    }
+  ],
+  "preservation": {
+    "modelCatalogRefreshedUsingSupportedLocalAdminAPI": true,
+    "zeroActiveOrWaitingRequestsBeforeRefresh": true,
+    "existingSettingsFilesByteUnchanged": true,
+    "serverDefaultUnchanged": true,
+    "existing8BPreserved": true,
+    "smartClipboardPreferencesChanged": false,
+    "nativeCaptureOrSystemClipboardUsed": false
+  },
+  "notEstablished": [
+    "Native region/window capture, global shortcuts, actual paste and focus restoration",
+    "Quality across other screenshots or provider/model combinations",
+    "Authenticated/LAN operation, updater acceptance or public-release readiness"
+  ]
+}

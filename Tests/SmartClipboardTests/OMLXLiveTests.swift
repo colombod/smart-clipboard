@@ -27,6 +27,26 @@ import Yams
         #expect(!failures(in: ConversionResult(format: .description, content: table), requested: .description, code: "123456").isEmpty)
     }
 
+    @Test func fixtureChecksRejectInventedCorrectionsAndChangedCanvas() {
+        let caption = "The inventory table has code 123456 and two item rows: Juniper with quantity 27, and Quartz with quantity 64."
+        #expect(failures(in: ConversionResult(format: .description, content: caption), requested: .description, code: "123456").isEmpty)
+        for invented in ["Quartz appears to be a misspelling of Quartz.", "Quartz contains a typographical error."] {
+            let result = ConversionResult(format: .description, content: caption + " " + invented)
+            #expect(failures(in: result, requested: .description, code: "123456").contains { $0.contains("invented correction") })
+        }
+
+        // Isolate the canvas check here; full table geometry still requires visual review.
+        let svg = #"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 680"><text x="60" y="60">Code 123456 Juniper 27 Quartz 64</text></svg>"#
+        for viewBox in ["0 0 1200 680", "0 0 600 340"] {
+            let result = ConversionResult(format: .svg, content: svg.replacingOccurrences(of: "0 0 1200 680", with: viewBox))
+            #expect(failures(in: result, requested: .svg, code: "123456").isEmpty)
+        }
+        let square = ConversionResult(format: .svg, content: svg.replacingOccurrences(of: "0 0 1200 680", with: "0 0 600 600"))
+        #expect(failures(in: square, requested: .svg, code: "123456").contains { $0.contains("aspect ratio") })
+        let emptyCanvas = ConversionResult(format: .svg, content: svg.replacingOccurrences(of: "0 0 1200 680", with: "0 0 1200 0"))
+        #expect(!failures(in: emptyCanvas, requested: .svg, code: "123456").isEmpty)
+    }
+
     @Test(.enabled(if: OMLXLiveEnvironment.enabled))
     func generatedImageFormatsAndImportedImageHistory() async throws {
         let profile = ConnectionProfile(provider: .omlx, model: OMLXLiveEnvironment.value("MODEL"), endpoint: OMLXLiveEnvironment.value("URL"))
@@ -104,6 +124,12 @@ import Yams
                 result.content.range(of: #"(?i)\b(table|grid)\b"#, options: .regularExpression) == nil {
                 failures.append("Description transcribed the table without describing its visible structure in prose.")
             }
+            // This generated English fixture contains correctly spelled labels and no corrections.
+            // This is a fixture assertion, not a production filter for arbitrary screenshot prose.
+            let inventedCorrection = #"(?i)\b(misspell(?:ed|ing|ings|s)?|typos?|typographical\s+(?:errors?|mistakes?)|spelling\s+(?:errors?|mistakes?|corrections?))\b"#
+            if result.content.range(of: inventedCorrection, options: .regularExpression) != nil {
+                failures.append("Description added an invented correction or spelling-error claim absent from this fixture.")
+            }
         }
         if result.format == .text {
             // This fixture has a drawn grid, not literal Markdown in its visible text.
@@ -159,6 +185,9 @@ import Yams
             parser.delegate = document
             if !parser.parse() || !document.hasSVGRoot || !document.hasViewBox || document.hasHTML {
                 failures.append("SVG must be well-formed XML with an SVG root, viewBox, and no HTML table elements.")
+            }
+            if let aspectRatio = document.aspectRatio, abs(aspectRatio / (1200.0 / 680.0) - 1) > 0.01 {
+                failures.append("SVG changed the source canvas aspect ratio instead of preserving the 1200 × 680 fixture.")
             }
             for value in [code, "Juniper", "Quartz", "27", "64"] {
                 let pattern = "(?<![A-Za-z0-9])" + NSRegularExpression.escapedPattern(for: value) + "(?![A-Za-z0-9])"
@@ -313,13 +342,18 @@ private final class OMLXLiveSVG: NSObject, XMLParserDelegate {
     var hasSVGRoot = false
     var hasViewBox = false
     var hasHTML = false
+    var aspectRatio: Double?
     var visibleText = ""
     private var depth = 0
     private var textDepth: Int?
     func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName: String?, attributes: [String: String]) {
         if depth == 0 {
             hasSVGRoot = elementName == "svg" && namespaceURI == "http://www.w3.org/2000/svg"
-            hasViewBox = attributes["viewBox"]?.split(whereSeparator: { $0.isWhitespace || $0 == "," }).compactMap { Double($0) }.count == 4
+            if let components = attributes["viewBox"]?.split(whereSeparator: { $0.isWhitespace || $0 == "," }), components.count == 4 {
+                let values = components.compactMap { Double($0) }
+                hasViewBox = values.count == 4 && values.allSatisfy(\.isFinite) && values[2] > 0 && values[3] > 0
+                if hasViewBox { aspectRatio = values[2] / values[3] }
+            }
         }
         depth += 1
         if ["table", "tr", "th", "td", "foreignObject"].contains(elementName) { hasHTML = true }

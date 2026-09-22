@@ -35,6 +35,19 @@ Move the built app into `/Applications` before enabling **Settings → General �
 
 The development build also includes **Clip → About Smart Clipboard** and **Settings → About**. About shows the running app's version/build, Help & README, project/release/issue links, and bundled third-party notices. It opens only when requested and follows the Mac's appearance. The public v0.3.1 download does not include this new page yet.
 
+## Local AI with oMLX — 0.4 preview
+
+The development preview can send images to oMLX on your Mac. Follow the [local setup guide](docs/USER-GUIDE.md#set-up-local-image-processing-with-omlx) for the server address, model selection and image-processing test. These are MLX Community conversions of Qwen vision models:
+
+| Download model ID | Download size | Current Smart Clipboard evidence |
+| --- | --- | --- |
+| [mlx-community/Qwen3-VL-8B-Instruct-4bit](https://huggingface.co/mlx-community/Qwen3-VL-8B-Instruct-4bit) | About 5.78 GB, [publisher-listed](https://huggingface.co/mlx-community/Qwen3-VL-8B-Instruct-4bit/tree/main). | Tested with oMLX 0.7.0.dev2. Text and structured extraction worked on synthetic fixtures, but Description invented observations and SVG distorted geometry. |
+| [mlx-community/Qwen3-VL-32B-Instruct-4bit](https://huggingface.co/mlx-community/Qwen3-VL-32B-Instruct-4bit) | 19.64 GB / 18.29 GiB, measured complete download. | Tested with oMLX 0.7.0.dev2. Description still invented alignment claims and SVG failed canvas/grid checks. A larger model did not resolve quality acceptance. |
+
+For planning, allow **16 GB or more unified memory for 8B**, or **48 GB or more for 32B**. These are conservative estimates, not tested minimums; image size, context, caches and other apps affect memory use. Tests so far used a 128 GiB Mac. Leave extra disk space beyond the model download for caches.
+
+oMLX **0.7.0.dev2 is a prerelease**; it contains the structured-output fix missing from tested 0.6.4. See [test evidence and limitations](docs/testing/OMLX.md), the [model guidance](docs/USER-GUIDE.md#choose-a-local-model) and [unpublished 0.4 preview notes](docs/releases/v0.4.0-preview.md). Description/SVG quality and release acceptance remain unresolved.
+
 ## Capture and convert
 
 - **⌥⇧⌘3**: capture a rectangle.

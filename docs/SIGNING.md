@@ -56,6 +56,7 @@ The isolated orchestration checks use fake signing/notarization tools and do not
 ```sh
 bash Tests/ReleaseScripts/test-release.sh
 python3 Tests/ReleaseScripts/test-release-update.py
+python3 Tests/ReleaseScripts/test-compare-bundles.py
 ```
 
 These checks cover failure and resume behavior; they do not substitute for Apple's actual acceptance or Gatekeeper checks.
@@ -78,7 +79,7 @@ Only the public key belongs in `SUPublicEDKey`. Keep the private key in Keychain
 
 ## Prepare and publish a preview update
 
-The current all-provider and native accessibility release gates remain unaccepted. Publish the approved candidate as a **prerelease on the preview channel only**, with its known limitations in the release notes. These commands do not establish stable-release acceptance.
+The current all-provider and native accessibility release gates remain unaccepted. **Do not publish the candidate until the agreed release gates pass.** The intended first distribution is a prerelease on the preview channel, with accurately scoped support and limitations. Preview status does not waive acceptance, and these commands do not establish that the app is ready.
 
 Commit the reviewed source/version/public-key configuration before the final build, then complete notarization. Builds use positive integer `CFBundleVersion` values. Every new update build must exceed all builds already in the feed, including preview builds. Preview tags are `v<marketing-version>-preview.<build>`; stable tags are `v<marketing-version>`. Stable entries have no channel element; preview entries use `sparkle:channel=preview`. Only users who explicitly opt into previews receive preview entries; a later higher-build stable entry can supersede them. See [Sparkle channels and versioning](https://sparkle-project.org/documentation/publishing/#channels).
 
@@ -116,15 +117,19 @@ python3 scripts/release-update.py verify-feed --sparkle-tools "$SPARKLE_TOOLS"
 
 Verification requires the publicly served feed to match the reviewed signed bytes and every download to match its recorded checksum. A public feed check is separate from the real updater installation test. `verify-public` checks downloads alone. The scripts never promote a preview to stable; a future stable preparation requires a new build plus explicit `--approve-stable` after acceptance.
 
-## Testing an update from the local bootstrap
+## Testing an update privately before publication
 
-A signed/notarized local 0.4.0 build 10 can test updating to published preview build 11 with the same marketing version. Preserve the **entire** bootstrap `dist` directory outside the repository before the final build: filenames use the marketing version, so the final build would replace those assets. Keep each completed notarization state and its checksums with its own build. Never invoke `--resume` against another build or change a submitted binary.
+A signed/notarized local 0.4.0 build 10 can test updating to candidate build 11 with the same marketing version, before either candidate or feed is published. Preserve the **entire** bootstrap `dist` directory outside the repository before the final build: filenames use the marketing version, so the final build would replace those assets. Keep each completed notarization state and its checksums with its own build. Never invoke `--resume` against another build or change a submitted binary.
 
-Install the authorized bootstrap, opt into previews explicitly, and test a real Sparkle update to build 11 while checking preferences/history and the configured local provider. The release scripts do not install the app, enable preview preference, change permissions, or prove this migration succeeded. Returning from a preview to stable also requires a higher stable build number; channel changes do not authorize a downgrade.
+Use a loopback-only test server with a separately prepared appcast pointing to the final notarized ZIP. Sign both the ZIP and test appcast using the same Keychain-backed update key. Sparkle 2.10.0 supports a temporary `SUFeedURL` user-default override for testing; preserve any previous value, stop the app before changing it, and remove/restore the override when testing finishes. Keep signed-feed enforcement, archive verification and Developer ID validation enabled throughout. The public release scripts intentionally generate only public GitHub URLs; never upload the private test feed as the public feed.
+
+Install the authorized bootstrap, opt into previews explicitly, and test a real Sparkle update to build 11 while checking preferences/history, permission continuity and the configured local provider. Confirm quiet scheduled checking separately from an explicitly requested install. Restore the original release preference and public HTTPS feed after the private test. Verify both successful installation and tampered-feed/archive rejection before publication. The release scripts do not install the app, enable preview preference, change permissions, or prove this migration succeeded. Returning from a preview to stable also requires a higher stable build number; channel changes do not authorize a downgrade.
 
 ## Updating the installed preview
 
 The bundle identifier remains `com.smartclipboard.app`. Changing from ad-hoc signing to Developer ID changes its signing identity, so macOS may require renewed Screen Recording or saved-key approval once. Preserve history/settings and validate this migration separately. Do not claim future permission continuity solely from a valid signature.
+
+The local 0.3.0-to-0.4.0 build 10 migration reproduced an enabled Screen Recording switch with denied app access: macOS logged a mismatch between the saved ad-hoc code requirement and the Developer ID identity. Off/on and restart did not repair that record. After the user's approval, a targeted `tccutil reset ScreenCapture com.smartclipboard.app` and adding the exact installed app in System Settings restored the app's permission check. This is a manual recovery for an obsolete development identity, not an automatic update action or evidence that capture-to-paste has passed. Never reset unrelated applications' approvals.
 
 ## Apple references
 
