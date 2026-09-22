@@ -4,6 +4,7 @@ private typealias AboutState<Value> = SwiftUI.State<Value>
 
 struct AboutView: View {
     var bundle: Bundle = .main
+    var updates: UpdateController? = nil
     @AboutState private var showsNotices = false
 
     private let project = URL(string: "https://github.com/colombod/smart-clipboard")!
@@ -44,8 +45,8 @@ struct AboutView: View {
 
             Grid(horizontalSpacing: 22, verticalSpacing: 12) {
                 GridRow {
-                    Link(destination: project.appendingPathComponent("blob/main/README.md")) {
-                        Label("Help & README", systemImage: "questionmark.circle")
+                    Link(destination: URL(string: "https://colombod.github.io/smart-clipboard/")!) {
+                        Label("Help & setup guide", systemImage: "questionmark.circle")
                     }
                     Link(destination: project.appendingPathComponent("releases")) {
                         Label("Releases", systemImage: "arrow.down.circle")
@@ -58,6 +59,11 @@ struct AboutView: View {
                     }
                 }
             }.padding(.vertical, 4)
+
+            if let updates {
+                Divider()
+                UpdateSettingsView(updates: updates)
+            }
 
             if let notices {
                 Button("Third-party notices") { showsNotices = true }

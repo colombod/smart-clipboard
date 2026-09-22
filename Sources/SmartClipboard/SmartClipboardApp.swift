@@ -11,7 +11,7 @@ import Combine
     }
 }
 
-@MainActor final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
+@MainActor final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenuItemValidation {
     #if ACCESSIBILITY_AUDIT
     private lazy var auditHarness = AccessibilityAuditHarness()
     private(set) lazy var model = auditHarness.model
@@ -24,6 +24,9 @@ import Combine
     private var started = false
     private var statusSubscription: AnyCancellable?
     private var accessibilitySubscription: AnyCancellable?
+    private var updateSubscription: AnyCancellable?
+    private var updateItems: [NSMenuItem] = []
+    private var terminationDelayedForUpdate = false
     private let readinessItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -41,6 +44,17 @@ import Combine
             return
         }
         NSApp.setActivationPolicy(.accessory)
+        #if !ACCESSIBILITY_AUDIT
+        let updates = UpdateController.live { [weak self] in
+            guard let model = self?.model else { return true }
+            return model.capturing || model.busy || model.choosingFile
+        }
+        model.updates = updates
+        updates.start()
+        updateSubscription = updates.objectWillChange.sink { [weak self] in
+            DispatchQueue.main.async { self?.updateUpdateItems() }
+        }
+        #endif
         started = true
         installStatusItem()
         model.refreshReadiness()
@@ -56,6 +70,7 @@ import Combine
         let appItem = NSMenuItem(); bar.addItem(appItem)
         let appMenu = NSMenu(); appItem.submenu = appMenu
         add("About Smart Clipboard…", action: #selector(openAbout), to: appMenu)
+        addUpdateItem(to: appMenu)
         appMenu.addItem(.separator())
         let settings = NSMenuItem(title: "Settings…", action: #selector(openSettings), keyEquivalent: ",")
         settings.target = self; appMenu.addItem(settings)
@@ -98,6 +113,7 @@ import Combine
         add("Cancel Capture / Conversion", action: #selector(cancelOperation), to: menu)
         add("Settings & Status…", action: #selector(openSettings), to: menu)
         add("About Smart Clipboard…", action: #selector(openAbout), to: menu)
+        addUpdateItem(to: menu)
         menu.addItem(.separator())
         add("Quit Smart Clipboard", action: #selector(quit), to: menu)
         item.menu = menu
@@ -117,6 +133,11 @@ import Combine
         updateStatus()
     }
     private func updateStatus() {
+        model.updates?.refreshState()
+        if terminationDelayedForUpdate, !model.capturing, !model.busy, !model.choosingFile {
+            terminationDelayedForUpdate = false
+            NSApp.reply(toApplicationShouldTerminate: true)
+        }
         let message: String
         let suffix: String
         if model.capturing { message = "Select a region or window"; suffix = " …" }
@@ -134,6 +155,24 @@ import Combine
     }
     private func add(_ title: String, action: Selector, to menu: NSMenu) {
         let item = NSMenuItem(title: title, action: action, keyEquivalent: ""); item.target = self; menu.addItem(item)
+    }
+    private func addUpdateItem(to menu: NSMenu) {
+        guard model.updates != nil else { return }
+        let item = NSMenuItem(title: "Check for Updates…", action: #selector(checkForUpdates), keyEquivalent: "")
+        item.target = self
+        menu.addItem(item)
+        updateItems.append(item)
+        updateUpdateItems()
+    }
+    private func updateUpdateItems() {
+        guard let updates = model.updates else { return }
+        for item in updateItems {
+            item.title = updates.menuTitle
+            item.isEnabled = updates.canCheckForUpdates
+        }
+    }
+    func validateMenuItem(_ item: NSMenuItem) -> Bool {
+        item.action == #selector(checkForUpdates) ? model.updates?.canCheckForUpdates == true : true
     }
     func menuWillOpen(_ menu: NSMenu) {
         model.refreshReadiness()
@@ -153,6 +192,11 @@ import Combine
         return false
     }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard model.updates?.shouldDelayTermination == true else { return .terminateNow }
+        terminationDelayedForUpdate = true
+        return .terminateLater
+    }
     @objc private func captureRegion() { model.capture() }
     @objc private func captureWindow() { model.capture(window: true) }
     @objc private func openClipboard() { model.showPanel() }
@@ -160,6 +204,7 @@ import Combine
     @objc private func importImage() { model.importImage() }
     @objc private func openSettings() { model.showSettings(tab: "general") }
     @objc private func openAbout() { model.showSettings(tab: "about") }
+    @objc private func checkForUpdates() { model.updates?.checkForUpdates() }
     @objc private func cancelOperation() { model.cancel() }
     @objc private func quit() { NSApp.terminate(nil) }
 }

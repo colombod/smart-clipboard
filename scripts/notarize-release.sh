@@ -57,8 +57,12 @@ app_hash() {
     file_hash "$APP/Contents/MacOS/SmartClipboard"
 }
 verify_app() {
-    local metadata
+    local metadata helper framework="$APP/Contents/Frameworks/Sparkle.framework"
     verify_identity "$APP"
+    for helper in XPCServices/Installer.xpc XPCServices/Downloader.xpc Autoupdate Updater.app; do
+        verify_identity "$framework/Versions/B/$helper"
+    done
+    verify_identity "$framework"
     metadata="$(codesign --display --verbose=4 "$APP" 2>&1)"
     [[ "$metadata" == *"Identifier=com.smartclipboard.app"* ]] || fail "Unexpected app bundle identifier."
     [[ "$metadata" == *"TeamIdentifier=$TEAM_ID"* ]] || fail "Unexpected app signing team."

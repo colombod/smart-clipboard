@@ -23,12 +23,21 @@ Escape cancels. macOS will ask for Screen Recording permission. Grant it
 for Smart Clipboard and reopen the app if necessary.
 
 AI SETUP
-Open Settings > Connection and choose either an OpenAI API key (stored in
-Keychain) or ChatGPT via the official Codex CLI. ChatGPT mode requires the
+Open Settings > Connection and choose OpenAI, ChatGPT via Codex, Anthropic,
+Google Gemini, Perplexity, or Local / oMLX. API keys are saved in Keychain. ChatGPT mode requires the
 CLI to be installed separately and a plan with Codex access. API billing
 is separate. Image copy/save and on-device OCR need neither connection.
 Automatic processing sends each capture/import to the configured AI connection.
 Choose Pass through (image) for local PNG copying without extraction.
+
+LOCAL / OMLX
+Start oMLX with an image-capable model. Select Local / oMLX in Connection,
+enter its server address ending in /v1, refresh models and choose the exact
+vision model ID. A server on this Mac may not need an API key. Click Test
+image processing before capturing; this uses a generated sample image.
+Qwen3-VL-8B-Instruct-4bit is our initial local vision test model. oMLX0.6.4
+has a structured-output bug with this model; see the release notes and setup
+guide for the tested fixed server version. Keep the server running.
 
 OUTPUT AND HISTORY
 Set Settings > General > Preferred format once. Auto detect lets AI choose
@@ -50,7 +59,12 @@ After installing in Applications, enable Settings > General > Launch at
 login. Closing the capture/settings windows leaves the menu bar app running.
 
 UPDATES AND REMOVAL
-Quit Smart Clipboard from its menu before replacing it with a new version.
+Use Clip > Check for Updates, or open About to enable daily background checks.
+Background checks show availability in the Clip menu; they do not open windows.
+You choose when to install. Updates wait for capture/conversion to finish.
+About > Releases selects stable releases or includes previews.
+Older versions without an updater need one manual replacement. Quit Smart
+Clipboard from its menu before dragging the new app into Applications.
 Moving from an older ad-hoc preview to Developer ID signing may require one
 new Screen Recording approval and authorization of your existing saved API
 key in Settings > Connection. Your captures and settings are retained.
@@ -67,5 +81,5 @@ ChatGPT credentials remain with Codex; removing this app does not sign out
 other Codex clients. Exported files and clipboard contents are unchanged.
 
 SOURCE AND DOWNLOADS
-https://github.com/colombod/smart-clipboard
+https://colombod.github.io/smart-clipboard/
 https://github.com/colombod/smart-clipboard/releases

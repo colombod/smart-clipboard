@@ -27,9 +27,17 @@ case "$tool" in
             mkdir -p "$CASE_ROOT/bin-output"
             printf '#!/bin/sh\nexit 0\n' > "$CASE_ROOT/bin-output/SmartClipboard"
             chmod +x "$CASE_ROOT/bin-output/SmartClipboard"
+            framework="$CASE_ROOT/bin-output/Sparkle.framework"
+            mkdir -p "$framework/Versions/B/Resources" "$framework/Versions/B/XPCServices/Installer.xpc" "$framework/Versions/B/XPCServices/Downloader.xpc" "$framework/Versions/B/Updater.app"
+            printf 'helper fixture\n' > "$framework/Versions/B/Autoupdate"
+            printf '<?xml version="1.0"?><plist version="1.0"><dict><key>CFBundleShortVersionString</key><string>2.10.0</string></dict></plist>\n' > "$framework/Versions/B/Resources/Info.plist"
+            ln -sf B "$framework/Versions/Current"
+            ln -sf Versions/Current/Resources "$framework/Resources"
         else mkdir -p "$2"; fi
         ;;
     iconutil) printf 'icon fixture' > "${@: -1}" ;;
+    otool) printf 'Load command 1\n          cmd LC_RPATH\n      cmdsize 48\n         path @executable_path/../Frameworks (offset 12)\n' ;;
+    install_name_tool) : ;;
     codesign)
         if [[ "$1" == --verify ]]; then [[ "${MOCK_VERIFY_FAIL:-false}" != true ]]; exit; fi
         if [[ "$1" == --display ]]; then
@@ -87,14 +95,14 @@ case "$tool" in
 esac
 FAKE
 chmod +x "$TEST_ROOT/bin/fake"
-for tool in security swift iconutil codesign hdiutil spctl xcrun; do ln -s fake "$TEST_ROOT/bin/$tool"; done
+for tool in security swift iconutil codesign hdiutil spctl xcrun otool install_name_tool; do ln -s fake "$TEST_ROOT/bin/$tool"; done
 export PATH="$TEST_ROOT/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 export SIGNING_IDENTITY="$FIXTURE_SHA" NOTARY_PROFILE=fixture-profile NOTARY_TIMEOUT=1s
 
 new_case() {
     CASE_ROOT="$TEST_ROOT/$1"; export CASE_ROOT
     mkdir -p "$CASE_ROOT/scripts" "$CASE_ROOT/Resources" "$CASE_ROOT/docs"
-    cp "$REPO/scripts/build-app.sh" "$REPO/scripts/package-release.sh" "$REPO/scripts/notarize-release.sh" "$CASE_ROOT/scripts/"
+    cp "$REPO/scripts/build-app.sh" "$REPO/scripts/embed-sparkle.sh" "$REPO/scripts/package-release.sh" "$REPO/scripts/notarize-release.sh" "$CASE_ROOT/scripts/"
     cp "$REPO/Resources/Info.plist" "$CASE_ROOT/Resources/"
     cp "$REPO/Resources/ThirdPartyNotices.txt" "$CASE_ROOT/Resources/"
     cp "$REPO/docs/INSTALL.txt" "$CASE_ROOT/docs/"
@@ -124,6 +132,16 @@ assert_count "$CASE_ROOT/commands.log" '^swift build -c release --disable-sandbo
 assert_count "$CASE_ROOT/submissions.log" '^app$' 1
 assert_count "$CASE_ROOT/submissions.log" '^dmg$' 1
 assert_count "$CASE_ROOT/commands.log" '^spctl ' 2
+assert_count "$CASE_ROOT/commands.log" '^codesign --force .*--preserve-metadata=entitlements .*Downloader.xpc$' 1
+assert_count "$CASE_ROOT/commands.log" '^codesign --force .*--deep' 0
+[[ -L "$CASE_ROOT/dist/Smart Clipboard.app/Contents/Frameworks/Sparkle.framework/Versions/Current" ]]
+python3 - "$CASE_ROOT/commands.log" <<'PY'
+import pathlib, sys
+lines = pathlib.Path(sys.argv[1]).read_text().splitlines()
+signed = [line for line in lines if line.startswith('codesign --force')]
+expected = ['Installer.xpc', 'Downloader.xpc', 'Autoupdate', 'Updater.app', 'Sparkle.framework', 'Clipboard.app']
+assert all(signed[i].endswith(suffix) for i, suffix in enumerate(expected)), signed
+PY
 (cd "$CASE_ROOT/dist" && shasum -a 256 -c SHA256SUMS.txt >/dev/null)
 [[ "$(cat "$CASE_ROOT/dist/notarization-release/dmg-input.sha256")" != "$(cat "$CASE_ROOT/dist/notarization-release/dmg-final.sha256")" ]]
 run_release --resume

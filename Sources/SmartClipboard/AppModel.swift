@@ -13,10 +13,13 @@ import ClipboardCore
     @Published var instruction = ""
     @Published var busy = false
     @Published var capturing = false
+    @Published private(set) var choosingFile = false
     @Published var error: String?
     @Published var notice = ""
     @Published var settingsTab = "connection"
     let connections: ConnectionStore
+    // Supplied only by the production app lifecycle, never by tests or audit builds.
+    var updates: UpdateController?
     @Published var defaultFormat: OutputFormat { didSet { defaults.set(defaultFormat.rawValue, forKey: "defaultFormat") } }
     @Published var defaultInstruction: String { didSet { defaults.set(defaultInstruction, forKey: "defaultInstruction") } }
     @Published var copyAutomatically: Bool { didSet { defaults.set(copyAutomatically, forKey: "copyAutomatically") } }
@@ -197,10 +200,12 @@ import ClipboardCore
         }
     }
     func importImage() {
-        guard !busy, !capturing else { return }
+        guard !busy, !capturing, !choosingFile else { return }
         let preferred = defaultFormat, direction = defaultInstruction
         guard let profile = selectedProfile(requiresAI: preferred != .image) else { return }
         let picker = NSOpenPanel(); picker.allowedContentTypes = [.png, .jpeg, .tiff, .heic]; picker.canChooseDirectories = false
+        choosingFile = true
+        defer { choosingFile = false }
         guard picker.runModal() == .OK, let url = picker.url else { return }
         do {
             let data = try Data(contentsOf: url)
@@ -378,11 +383,14 @@ import ClipboardCore
         notice = "\(resultFormat.title) copied."
     }
     func save(image: Bool = false) {
+        guard !choosingFile else { return }
         persistCurrentOutput()
         guard image ? png != nil : !output.isEmpty else { return }
         let ext = image ? "png" : resultFormat.fileExtension
         let dialog = NSSavePanel(); dialog.nameFieldStringValue = "Clip.\(ext)"
         dialog.allowedContentTypes = [UTType(filenameExtension: ext) ?? .data]
+        choosingFile = true
+        defer { choosingFile = false }
         guard dialog.runModal() == .OK, let url = dialog.url else { return }
         do {
             if image { try png?.write(to: url, options: .atomic) } else { try output.write(to: url, atomically: true, encoding: .utf8) }

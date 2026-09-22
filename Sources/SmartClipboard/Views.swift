@@ -294,7 +294,7 @@ struct SettingsView: View {
                 .accessibilityElement(children: .contain)
                 .accessibilityLabel("History settings")
                 .tabItem { Label("History", systemImage: "clock.arrow.circlepath") }.tag("history")
-            AboutView()
+            AboutView(updates: model.updates)
                 .accessibilityElement(children: .contain)
                 .accessibilityLabel("About Smart Clipboard")
                 .tabItem { Label("About", systemImage: "info.circle") }.tag("about")

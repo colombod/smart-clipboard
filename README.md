@@ -2,7 +2,7 @@
 
 <img src="docs/app-icon.png" alt="Smart Clipboard capture-frame icon" width="100">
 
-A native SwiftUI/AppKit menu bar app for macOS 14 or later. Capture a rectangle or window, then keep the image or convert it into editable content with OpenAI.
+A native SwiftUI/AppKit menu bar app for macOS 14 or later. Capture a rectangle or window, then keep the image or convert it into editable content using your preferred AI connection.
 
 ## Download and install
 
@@ -22,14 +22,14 @@ The app uses a green capture-frame icon, native system backgrounds/text and a fo
 
 ## Build from source
 
-The development branch adds Anthropic, Google Gemini, Perplexity and local oMLX connections alongside OpenAI and ChatGPT/Codex. See [connection setup and verification status](docs/PROVIDERS.md). These additions are not included in the public v0.3.1 download and still require live provider UAT.
+The development branch adds Anthropic, Google Gemini, Perplexity and local oMLX connections alongside OpenAI and ChatGPT/Codex, plus signed Sparkle updates. See the [user setup guide](docs/USER-GUIDE.md) and [connection verification status](docs/PROVIDERS.md). These additions are not included in the public v0.3.1 download and still require release acceptance.
 
 ```sh
 ./scripts/build-app.sh
 open 'dist/Smart Clipboard.app'
 ```
 
-Requires Apple Command Line Tools (`xcode-select --install`) and Swift 6 or later. SwiftPM fetches the pinned Yams dependency for YAML validation; its and libYAML's notices are included in the app. Open `Package.swift` in Xcode to work on the app. The build script creates an ad-hoc-signed app for local use. Set `SIGNING_IDENTITY` to sign with your own identity; a release that passes Gatekeeper without a manual exception also needs Developer ID signing and notarization.
+Requires Apple Command Line Tools (`xcode-select --install`) and Swift 6 or later. SwiftPM fetches pinned Yams and Sparkle dependencies; their third-party notices are included in the app. Open `Package.swift` in Xcode to work on the app. The build script creates an ad-hoc-signed app for local use. Set `SIGNING_IDENTITY` to sign with your own identity; a release that passes Gatekeeper without a manual exception also needs Developer ID signing and notarization.
 
 Move the built app into `/Applications` before enabling **Settings → General → Launch at login**. The app starts silently in the menu bar without a Dock icon or any app window. Use Clip → Settings & Status for setup. Opening the running app from Applications brings its panel back. Closing a window leaves the app running; Quit is in the menu bar menu.
 
