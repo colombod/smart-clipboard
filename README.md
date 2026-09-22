@@ -33,6 +33,8 @@ Requires Apple Command Line Tools (`xcode-select --install`) and Swift 6 or late
 
 Move the built app into `/Applications` before enabling **Settings → General → Launch at login**. The app starts silently in the menu bar without a Dock icon or any app window. Use Clip → Settings & Status for setup. Opening the running app from Applications brings its panel back. Closing a window leaves the app running; Quit is in the menu bar menu.
 
+The development build also includes **Clip → About Smart Clipboard** and **Settings → About**. About shows the running app's version/build, Help & README, project/release/issue links, and bundled third-party notices. It opens only when requested and follows the Mac's appearance. The public v0.3.1 download does not include this new page yet.
+
 ## Capture and convert
 
 - **⌥⇧⌘3**: capture a rectangle.

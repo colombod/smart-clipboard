@@ -43,6 +43,8 @@ import Combine
         let bar = NSMenu()
         let appItem = NSMenuItem(); bar.addItem(appItem)
         let appMenu = NSMenu(); appItem.submenu = appMenu
+        add("About Smart Clipboard…", action: #selector(openAbout), to: appMenu)
+        appMenu.addItem(.separator())
         let settings = NSMenuItem(title: "Settings…", action: #selector(openSettings), keyEquivalent: ",")
         settings.target = self; appMenu.addItem(settings)
         let quit = NSMenuItem(title: "Quit Smart Clipboard", action: #selector(quit), keyEquivalent: "q")
@@ -79,6 +81,8 @@ import Combine
         menu.addItem(.separator())
         add("Cancel Capture / Conversion", action: #selector(cancelOperation), to: menu)
         add("Settings & Status…", action: #selector(openSettings), to: menu)
+        add("About Smart Clipboard…", action: #selector(openAbout), to: menu)
+        menu.addItem(.separator())
         add("Quit Smart Clipboard", action: #selector(quit), to: menu)
         item.menu = menu
         statusItem = item
@@ -120,6 +124,7 @@ import Combine
     @objc private func openHistory() { model.showHistory() }
     @objc private func importImage() { model.importImage() }
     @objc private func openSettings() { model.showSettings(tab: "general") }
+    @objc private func openAbout() { model.showSettings(tab: "about") }
     @objc private func cancelOperation() { model.cancel() }
     @objc private func quit() { NSApp.terminate(nil) }
 }

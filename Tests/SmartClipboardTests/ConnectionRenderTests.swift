@@ -52,6 +52,50 @@ import ClipboardCore
                 #expect(content.window == nil)
             }
         }
+        try await renderAboutAndNotices(to: output)
+    }
+
+    private func renderAboutAndNotices(to output: URL) async throws {
+        let bundle: Bundle
+        let noticesURL: URL
+        if let path = ProcessInfo.processInfo.environment["SMART_CLIPBOARD_ABOUT_BUNDLE"] {
+            try #require(!path.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            bundle = try #require(Bundle(path: path))
+            // Fail instead of silently rendering development metadata or a fallback icon.
+            let version = try #require(bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String)
+            let build = try #require(bundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String)
+            try #require(!version.isEmpty && !build.isEmpty)
+            let iconURL = try #require(bundle.url(forResource: "AppIcon", withExtension: "icns"))
+            _ = try #require(NSImage(contentsOf: iconURL))
+            noticesURL = try #require(bundle.url(forResource: "ThirdPartyNotices", withExtension: "txt"))
+        } else {
+            bundle = .main
+            // The test executable has no app resources; use the real source notices for this render.
+            noticesURL = bundle.url(forResource: "ThirdPartyNotices", withExtension: "txt")
+                ?? URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+                    .deletingLastPathComponent().appendingPathComponent("Resources/ThirdPartyNotices.txt")
+        }
+        let notices = try String(contentsOf: noticesURL, encoding: .utf8)
+        try #require(!notices.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        for scheme in [ColorScheme.light, .dark] {
+            let panels = [
+                ("about", AnyView(AboutView(bundle: bundle).frame(width: 616, height: 480).clipped())),
+                ("third-party-notices", AnyView(ThirdPartyNoticesView(text: notices).frame(width: 580, height: 440).clipped()))
+            ]
+            for (name, panel) in panels {
+                // Keep the actual tab/sheet dimensions inside the settings-sized canvas so
+                // content that does not fit is visible in the snapshot as clipping.
+                let host = NSHostingView(rootView: panel.frame(width: 640, height: 550)
+                    .background(Color(nsColor: .windowBackgroundColor))
+                    .environment(\.colorScheme, scheme).environment(\.controlActiveState, .active))
+                host.frame = NSRect(x: 0, y: 0, width: 640, height: 550)
+                host.appearance = NSAppearance(named: scheme == .dark ? .darkAqua : .aqua)
+                await settle(host)
+                #expect(host.window == nil)
+                try snapshot(host, to: output.appendingPathComponent(name + (scheme == .dark ? "-dark.png" : "-light.png")))
+                #expect(host.window == nil)
+            }
+        }
     }
 
     private func settle(_ host: NSView) async {

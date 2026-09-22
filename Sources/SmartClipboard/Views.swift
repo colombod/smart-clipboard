@@ -7,7 +7,7 @@ import ClipboardCore
 // Explicit alias keeps the property wrapper unambiguous on SDKs that also expose a State macro.
 private typealias ViewState<Value> = SwiftUI.State<Value>
 
-private let accent = Color(red: 0.20, green: 0.46, blue: 0.35)
+let accent = Color(red: 0.20, green: 0.46, blue: 0.35)
 
 struct CaptureView: View {
     @ObservedObject var model: AppModel
@@ -254,11 +254,13 @@ struct SettingsView: View {
                 }
                 Section("Smart Clipboard") {
                     Text("Capture once. Use it anywhere.").font(.headline)
-                    Text("Native macOS · Version 0.4.0 (development)\nThe app stays in your menu bar when you close its windows.").foregroundStyle(.secondary)
+                    Text("The app stays in your menu bar when you close its windows.").foregroundStyle(.secondary)
+                    Button("About Smart Clipboard…") { model.settingsTab = "about" }
                 }
                 if !message.isEmpty { Text(message).font(.callout) }
             }.formStyle(.grouped).tabItem { Label("General", systemImage: "slider.horizontal.3") }.tag("general")
             HistorySettingsView(model: model).tabItem { Label("History", systemImage: "clock.arrow.circlepath") }.tag("history")
+            AboutView().tabItem { Label("About", systemImage: "info.circle") }.tag("about")
         }.padding(12).frame(width: 640, height: 550).tint(accent)
     }
 }

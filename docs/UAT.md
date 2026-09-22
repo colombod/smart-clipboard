@@ -66,6 +66,8 @@ The development candidate adds Anthropic, Gemini, Perplexity and oMLX. It is not
 
 Development checks on 22 September 2026: the initial candidate passed 114 tests, an optimized build and all 10 isolated release-orchestration scenarios. Subsequent local-model work passed 121 automated tests, including opt-in live synthetic-image and windowless render tests. Manual inspection found Description and SVG quality failures despite passing automated format/value assertions; see [oMLX evidence](testing/OMLX.md). Full connection forms were inspected in light/dark mode; detached native tabs and scrolling require live UI verification. No native capture was used for this candidate's evidence. The installed app was left unchanged.
 
+The About-page addition is in development version 0.4.0 build 8. Its app bundle built and passed signature verification, and the subsequent regression run passed 120 tests with the live oMLX test skipped. About and third-party notices were inspected in windowless light/dark renders using the actual bundle's version, icon and notices. Native tab selection, sheet dismissal and menu interaction still require live UI verification; no application window was opened for these checks. This build is not a new signed/notarized public release.
+
 | Connection | Live candidate status | Additional evidence required |
 | --- | --- | --- |
 | OpenAI API | Not yet rerun on this candidate | Existing-key migration, synthetic image test, G03/G04/G05/G07/G09/G11. |
