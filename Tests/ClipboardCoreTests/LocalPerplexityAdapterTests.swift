@@ -13,12 +13,15 @@ struct LocalPerplexityAdapterTests {
         let body = try payload(request)
         #expect(body["model"] as? String == "my-vision-model")
         #expect(body["tool_choice"] as? String == "none")
+        #expect(body["temperature"] as? Double == 0)
         #expect((body["tools"] as? [Any])?.isEmpty == true)
         #expect(body["response_format"] == nil)
         #expect((body["structured_outputs"] as? [String: Any])?["json"] as? [String: Any] != nil)
         let messages = try #require(body["messages"] as? [[String: Any]])
         #expect((messages[0]["content"] as? String)?.contains("untrusted data") == true)
         let parts = try #require(messages.last?["content"] as? [[String: Any]])
+        #expect((parts.first?["text"] as? String)?.contains("The format must be markdown") == true)
+        #expect((parts.first?["text"] as? String)?.contains("Keep headings") == true)
         #expect((parts.last?["image_url"] as? [String: Any])?["url"] as? String == "data:image/png;base64,AQID")
     }
 

@@ -68,9 +68,10 @@ public protocol ImageProviderAdapter: Sendable {
 }
 
 public enum ProviderWire {
-    public static var schema: [String: Any] {
-        ["type": "object", "additionalProperties": false,
-         "properties": ["format": ["type": "string", "enum": OutputFormat.allCases.filter { $0 != .auto && $0 != .image }.map(\.rawValue)],
+    public static func schema(for format: OutputFormat) -> [String: Any] {
+        let allowed = OutputFormat.allCases.filter { $0 != .auto && $0 != .image && (format == .auto || $0 == format) }
+        return ["type": "object", "additionalProperties": false,
+         "properties": ["format": ["type": "string", "enum": allowed.map(\.rawValue)],
                         "content": ["type": "string"]], "required": ["format", "content"]]
     }
     public static func json(_ data: Data) throws -> [String: Any] {

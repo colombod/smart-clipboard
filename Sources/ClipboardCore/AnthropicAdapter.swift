@@ -15,7 +15,7 @@ public struct AnthropicAdapter: ImageProviderAdapter {
                 ["type": "image", "source": ["type": "base64", "media_type": "image/png", "data": png.base64EncodedString()]],
                 ["type": "text", "text": "Convert this screenshot."]
             ]]],
-            "output_config": ["format": ["type": "json_schema", "schema": ProviderWire.schema]]
+            "output_config": ["format": ["type": "json_schema", "schema": ProviderWire.schema(for: format)]]
         ]
         var request = try ProviderWire.request(url: URL(string: "https://api.anthropic.com/v1/messages")!, key: key, body: body)
         request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")

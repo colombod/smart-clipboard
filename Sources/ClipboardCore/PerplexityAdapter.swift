@@ -20,7 +20,7 @@ public struct PerplexityAdapter: ImageProviderAdapter {
             "stream": false,
             "max_output_tokens": 12000,
             "response_format": ["type": "json_schema", "json_schema": [
-                "name": "ClipboardExtraction", "schema": ProviderWire.schema
+                "name": "ClipboardExtraction", "schema": ProviderWire.schema(for: format)
             ]]
         ])
     }

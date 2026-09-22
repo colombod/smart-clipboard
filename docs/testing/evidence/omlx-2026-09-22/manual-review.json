@@ -1,0 +1,25 @@
+{
+  "accepted": false,
+  "description": {
+    "status": "FAIL",
+    "reason": "Invented spelling commentary about Quartz, despite the visible spelling being correct and the request forbidding speculation."
+  },
+  "svg": {
+    "status": "FAIL",
+    "reason": "Well-formed SVG contains the expected editable text but adds numerous horizontal lines and fails to reconstruct the source table grid accurately."
+  },
+  "text_markdown_json_yaml_html_auto": {
+    "status": "PASS_FOR_THIS_FIXTURE",
+    "reason": "Inspected returned text/source. Required values and row associations preserved; Auto chose Markdown. HTML source inspected without rendering."
+  },
+  "clipboard_history": {
+    "status": "PASS_PRIVATE_TEST_ONLY",
+    "reason": "Imported synthetic image converted and copied to an isolated pasteboard; history original/result/provenance reloaded and opening history did not call provider or overwrite private clipboard."
+  },
+  "native_shortcut_selection_focus_actual_paste": {
+    "status": "NOT_RUN"
+  },
+  "packaged_fixed_omlx_release": {
+    "status": "NOT_RUN"
+  }
+}

@@ -64,7 +64,7 @@ Untested configuration gates must be stated as limitations of the preview. Do no
 
 The development candidate adds Anthropic, Gemini, Perplexity and oMLX. It is not part of public v0.3.1. Track evidence for each exact provider/model/API or server version under Beads epic `clip-cqc`; source and fixture tests do not establish live support.
 
-Development checks on 22 September 2026: 114 tests passed (including the opt-in windowless render test), the optimized build passed, and all 10 isolated release-orchestration scenarios passed. Full connection forms were inspected in light/dark mode; detached native tabs and scrolling require live UI verification. No live provider call or native capture was used for this candidate's evidence. The installed app was left unchanged.
+Development checks on 22 September 2026: the initial candidate passed 114 tests, an optimized build and all 10 isolated release-orchestration scenarios. Subsequent local-model work passed 121 automated tests, including opt-in live synthetic-image and windowless render tests. Manual inspection found Description and SVG quality failures despite passing automated format/value assertions; see [oMLX evidence](testing/OMLX.md). Full connection forms were inspected in light/dark mode; detached native tabs and scrolling require live UI verification. No native capture was used for this candidate's evidence. The installed app was left unchanged.
 
 | Connection | Live candidate status | Additional evidence required |
 | --- | --- | --- |
@@ -73,7 +73,7 @@ Development checks on 22 September 2026: 114 tests passed (including the opt-in 
 | Anthropic | Unverified | Available vision/schema model, account access, complete-response parsing and no tools. |
 | Google Gemini | Unverified | Available model/project, Interactions image/schema request, optional storage disabled and no tools. |
 | Perplexity | Unverified | Explicit direct vision model, no presets/web search/tools/fallback list, schema cold-start behavior. |
-| oMLX | Unverified; installed checkpoint is text-only | Complete vision model, running server, grammar support, model fallback disabled, offline processing and local/LAN authentication. |
+| oMLX | Synthetic conversion/private clipboard/history checks pass with a complete Qwen3-VL-8B model and temporary upstream grammar fix; Description/SVG quality fails manual review | Resolve output quality, verify a packaged fixed server, native G03/G04/G05/G07/G09/G11, model fallback disabled, offline processing and local/LAN authentication. |
 
 For every advertised connection, run G03 and G04 twice consecutively on the exact candidate with app windows closed. Record actual paste content and type, focus and cursor recovery, model/account/server version, output validity and cold/warm duration. Do not put private screenshots or credentials in the evidence record.
 

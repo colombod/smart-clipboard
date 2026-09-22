@@ -19,7 +19,7 @@ public struct GeminiAdapter: ImageProviderAdapter {
                 ["type": "text", "text": "Convert this screenshot."]
             ],
             "generation_config": ["max_output_tokens": 12000],
-            "response_format": ["type": "text", "mime_type": "application/json", "schema": ProviderWire.schema]
+            "response_format": ["type": "text", "mime_type": "application/json", "schema": ProviderWire.schema(for: format)]
         ]
         var request = try ProviderWire.request(url: URL(string: "https://generativelanguage.googleapis.com/v1beta/interactions")!, key: "", body: body)
         request.setValue(key, forHTTPHeaderField: "x-goog-api-key")

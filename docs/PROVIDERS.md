@@ -1,6 +1,6 @@
 # Image-processing connections
 
-This describes the development build on `codex/multiple-image-providers`. The public v0.3.1 download still has its original OpenAI API and ChatGPT/Codex connections. The new providers are implemented and covered by adapter tests, but are not yet verified with live accounts and native capture UAT.
+This describes the development build on `codex/multiple-image-providers`. The public v0.3.1 download still has its original OpenAI API and ChatGPT/Codex connections. The new providers are implemented and covered by adapter tests. Local synthetic-image testing has begun; cloud accounts and native capture UAT remain unverified.
 
 ## Configure once
 
@@ -36,6 +36,8 @@ oMLX requests disable tools, including server-configured MCP tools, and explicit
 Disable oMLX's server-side model fallback for a fixed-model workflow. Before each upload, Smart Clipboard checks that the selected model is still listed and refuses missing model IDs. oMLX may echo the requested model even after server-side substitution, so history records the requested model and leaves the effective model unverified.
 
 The desktop app continues to target macOS 14+. oMLX hosting has its own OS, Apple Silicon and memory requirements; it can run on another compatible machine.
+
+Current tested limitation: installed oMLX 0.6.4 failed required structured generation with `mlx-community/Qwen3-VL-8B-Instruct-4bit`. A temporary process with upstream PR #3551 completed the app's synthetic conversion checks, but manual review still found Description and SVG quality failures. This is not an accepted all-format configuration. See [the exact test evidence and reproduction instructions](testing/OMLX.md), including the distinction between the diagnostic patch and an untested packaged server release.
 
 ## Results, storage and verification
 

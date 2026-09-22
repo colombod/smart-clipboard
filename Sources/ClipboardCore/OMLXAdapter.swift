@@ -7,18 +7,22 @@ public struct OMLXAdapter: ImageProviderAdapter {
         try ProviderWire.requireImage(png, maximumBytes: 20 * 1024 * 1024)
         let model = try ProviderWire.requireModel(profile)
         let url = try endpoint(profile, route: "chat/completions", key: key)
+        let prompt = ConversionProtocol.prompt(format: format, instruction: instruction)
         // Unlike response_format, structured_outputs fails if grammar enforcement is unavailable.
         return try ProviderWire.request(url: url, key: key, body: [
             "model": model,
             "stream": false,
             "max_tokens": 12000,
+            // Extraction should not inherit a server's creative-chat sampling settings.
+            "temperature": 0,
             "tools": [],
             "tool_choice": "none",
-            "structured_outputs": ["json": ProviderWire.schema],
+            "structured_outputs": ["json": ProviderWire.schema(for: format)],
             "messages": [
-                ["role": "system", "content": ConversionProtocol.prompt(format: format, instruction: instruction)],
+                ["role": "system", "content": prompt],
                 ["role": "user", "content": [
-                    ["type": "text", "text": "Convert this screenshot using the requested format."],
+                    // Keep the concrete extraction request beside the image for local VLMs.
+                    ["type": "text", "text": prompt],
                     ["type": "image_url", "image_url": ["url": "data:image/png;base64," + png.base64EncodedString()]]
                 ]]
             ]

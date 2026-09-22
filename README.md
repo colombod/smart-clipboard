@@ -44,7 +44,7 @@ Move the built app into `/Applications` before enabling **Settings → General �
 - Open **Clipboard** or **History** explicitly to review a capture. In the editor, choose **Convert with AI**, or **Extract text on device** for offline Apple Vision OCR. Local OCR always returns plain text. **Copy after manual conversion** controls copying for these manual actions.
 - Errors appear in the menu bar and do not replace the clipboard with a failed conversion. No app window opens automatically, including at startup or on error. Open **History** to review, edit, copy, or export a result, or convert the original into another format.
 
-Capture requests Screen Recording permission if necessary and continues with the selected mode when permission is granted. If access is denied, the capture window explains how to resolve it. Grant it in System Settings → Privacy & Security → Screen & System Audio Recording, then restart the app if needed. Capture uses the built-in macOS interactive screenshot selector, including multi-display selection. `screencapture` receives only the selected region/window; there is no continuous screen monitoring.
+Capture requests Screen Recording permission if necessary and continues with the selected mode when permission is granted. If access is denied, the error stays in the menu bar; open Settings & Status explicitly for permission setup. Grant access in System Settings → Privacy & Security → Screen & System Audio Recording, then restart the app if needed. Capture uses the built-in macOS interactive screenshot selector, including multi-display selection. `screencapture` receives only the selected region/window; there is no continuous screen monitoring.
 
 ## Auto detect and capture history
 
@@ -78,6 +78,8 @@ AI extraction and vector reconstruction can be imperfect. Screenshot instruction
 
 The intended background workflow and observable release gates are defined in [User experience and UAT](docs/UAT.md). Automated tests and imported-image checks do not replace a real global-shortcut → selection → paste run. Current acceptance results and unresolved gates are tracked in Beads.
 
+For local-model development, see [the oMLX synthetic-image test instructions and observed limitations](docs/testing/OMLX.md). Passing automated checks alone does not establish Description/SVG quality or native capture acceptance.
+
 ```sh
 ./scripts/test.sh
 ```
@@ -109,7 +111,7 @@ Earlier builds were exercised with real region capture, live AI conversion and p
 
 ### Capture readiness and shortcut conflicts
 
-**Clip → Settings & Status → Shortcuts** shows the app's running status, Screen Recording permission, and a separate registration result for each capture shortcut. The capture action requests permission directly; denial leaves an explanation in the capture window. Use **Request screen access**, approve the macOS prompt yourself, then **Check again**; reopen the app if macOS requests it.
+**Clip → Settings & Status → Shortcuts** shows the app's running status, Screen Recording permission, and a separate registration result for each capture shortcut. The capture action requests permission directly; denial leaves an error in the menu bar without opening an app window. Open Settings explicitly, use **Request screen access**, approve the macOS prompt yourself, then **Check again**; reopen the app if macOS requests it.
 
 Shortcut recording rejects enabled macOS shortcuts, duplicate capture bindings and conflicting registered hotkeys. **Find available shortcuts** tries alternatives for unavailable bindings without changing working ones. A rejected replacement keeps the previous shortcut. Keyboard utilities that intercept events may not expose their bindings to macOS; the last-received shortcut timestamp helps diagnose those cases. Screen permission and shortcut registration are independent requirements.
 

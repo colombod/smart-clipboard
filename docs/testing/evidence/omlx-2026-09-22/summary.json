@@ -1,0 +1,83 @@
+{
+  "attempts": [
+    {
+      "actualFormat": "text",
+      "failures": [],
+      "phase": "provider",
+      "requestedFormat": "text",
+      "resultFile": "text.txt",
+      "seconds": 1.4465004166704603
+    },
+    {
+      "actualFormat": "markdown",
+      "failures": [],
+      "phase": "provider",
+      "requestedFormat": "markdown",
+      "resultFile": "markdown.md",
+      "seconds": 1.2903364583617076
+    },
+    {
+      "actualFormat": "json",
+      "failures": [],
+      "phase": "provider",
+      "requestedFormat": "json",
+      "resultFile": "json.json",
+      "seconds": 1.4279996249824762
+    },
+    {
+      "actualFormat": "yaml",
+      "failures": [],
+      "phase": "provider",
+      "requestedFormat": "yaml",
+      "resultFile": "yaml.yaml",
+      "seconds": 1.2716552083729766
+    },
+    {
+      "actualFormat": "html",
+      "failures": [],
+      "phase": "provider",
+      "requestedFormat": "html",
+      "resultFile": "html.html",
+      "seconds": 5.357896083325613
+    },
+    {
+      "actualFormat": "svg",
+      "failures": [],
+      "phase": "provider",
+      "requestedFormat": "svg",
+      "resultFile": "svg.svg",
+      "seconds": 10.584646416653413
+    },
+    {
+      "actualFormat": "description",
+      "failures": [],
+      "phase": "provider",
+      "requestedFormat": "description",
+      "resultFile": "description.txt",
+      "seconds": 2.4810223749955185
+    },
+    {
+      "actualFormat": "markdown",
+      "failures": [],
+      "phase": "provider",
+      "requestedFormat": "auto",
+      "resultFile": "auto.md",
+      "seconds": 1.3511337083182298
+    },
+    {
+      "actualFormat": "text",
+      "failures": [],
+      "phase": "import-history-clipboard",
+      "requestedFormat": "text",
+      "resultFile": "imported.txt",
+      "seconds": 1.1644691666588187
+    }
+  ],
+  "code": "761344",
+  "completed": true,
+  "model": "Qwen3-VL-8B-Instruct-4bit",
+  "scope": "Synthetic-image live API and windowless import/history/private-clipboard checks only. Native capture, shortcuts, focus, actual paste, and packaged-app LAN permission require separate UAT.",
+  "server": "http://127.0.0.1:9000/v1",
+  "serverBuild": "oMLX 0.6.4; tokenizer resolver from upstream PR3551 ae04a79233dedccd32c0781aa172d1faf8d2b438 applied in memory in an isolated loopback process",
+  "reviewScope": "Automated syntax/value checks only; read manual-review.json before interpreting PASS."
+}

@@ -10,7 +10,7 @@ let package = Package(
         .target(name: "ClipboardCore", dependencies: [.product(name: "Yams", package: "Yams")]),
         .executableTarget(name: "SmartClipboard", dependencies: ["ClipboardCore"]),
         .testTarget(name: "ClipboardCoreTests", dependencies: ["ClipboardCore"]),
-        .testTarget(name: "SmartClipboardTests", dependencies: ["SmartClipboard", "ClipboardCore"])
+        .testTarget(name: "SmartClipboardTests", dependencies: ["SmartClipboard", "ClipboardCore", .product(name: "Yams", package: "Yams")])
     ],
     swiftLanguageModes: [.v5]
 )

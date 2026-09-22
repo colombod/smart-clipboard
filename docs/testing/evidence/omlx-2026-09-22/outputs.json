@@ -1,0 +1,38 @@
+{
+  "provider/text": {
+    "format": "text",
+    "content": "Inventory record\nCode: 761344\n\nItem\tQuantity\nJuniper\t27\nQuartz\t64"
+  },
+  "provider/markdown": {
+    "format": "markdown",
+    "content": "Inventory record\nCode: 761344\n\n| Item      | Quantity |\n|------------|-----------|\n| Juniper    | 27        |\n| Quartz     | 64        |"
+  },
+  "provider/json": {
+    "format": "json",
+    "content": "{\"inventory_record\": {\"code\": \"761344\", \"items\": [{\"item\": \"Juniper\", \"quantity\": 27}, {\"item\": \"Quartz\", \"quantity\": 64}]}}"
+  },
+  "provider/yaml": {
+    "format": "yaml",
+    "content": "inventory_record:\n  code: '761344'\n  items:\n    - item: Juniper\n      quantity: 27\n    - item: Quartz\n      quantity: 64"
+  },
+  "provider/html": {
+    "format": "html",
+    "content": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; line-height: 1.5;\">\n  <h2 style=\"margin-top: 0; margin-bottom: 10px;\">Inventory record</h2>\n  <p style=\"margin: 0 0 10px 0; font-weight: bold;\">Code: 761344</p>\n  <table style=\"border-collapse: collapse; width: 100%; border: 1px solid black;\">\n    <thead>\n      <tr style=\"border: 1px solid black;\">\n        <th style=\"border: 1px solid black; padding: 8px; text-align: left;\">Item</th>\n        <th style=\"border: 1px solid black; padding: 8px; text-align: left;\">Quantity</th>\n      </tr>\n    </thead>\n    <tbody>\n      <tr style=\"border: 1px solid black;\">\n        <td style=\"border: 1px solid black; padding: 8px; text-align: left;\">Juniper</td>\n        <td style=\"border: 1px solid black; padding: 8px; text-align: left;\">27</td>\n      </tr>\n      <tr style=\"border: 1px solid black;\">\n        <td style=\"border: 1px solid black; padding: 8px; text-align: left;\">Quartz</td>\n        <td style=\"border: 1px solid black; padding: 8px; text-align: left;\">64</td>\n      </tr>\n    </tbody>\n  </table>\n</div>"
+  },
+  "provider/svg": {
+    "format": "svg",
+    "content": "<svg width=\"600\" height=\"400\" viewBox=\"0 0 600 400\" xmlns=\"http://www.w3.org/2000/svg\">\n  <style>\n    .title { font-size: 24px; font-weight: bold; }\n    .code { font-size: 20px; }\n    .item { font-size: 18px; }\n    .quantity { font-size: 18px; }\n  </style>\n  <text x=\"10\" y=\"40\" class=\"title\">Inventory record</text>\n  <text x=\"10\" y=\"70\" class=\"code\">Code: 761344</text>\n  <rect x=\"10\" y=\"100\" width=\"580\" height=\"280\" fill=\"none\" stroke=\"black\"/>\n  <text x=\"120\" y=\"120\" class=\"item\">Item</text>\n  <text x=\"350\" y=\"120\" class=\"quantity\">Quantity</text>\n  <line x1=\"120\" y1=\"140\" x2=\"350\" y2=\"140\" stroke=\"black\"/>\n  <line x1=\"120\" y1=\"160\" x2=\"350\" y2=\"160\" stroke=\"black\"/>\n  <line x1=\"120\" y1=\"180\" x2=\"350\" y2=\"180\" stroke=\"black\"/>\n  <line x1=\"120\" y1=\"200\" x2=\"350\" y2=\"200\" stroke=\"black\"/>\n  <line x1=\"120\" y1=\"220\" x2=\"350\" y2=\"220\" stroke=\"black\"/>\n  <line x1=\"120\" y1=\"240\" x2=\"350\" y2=\"240\" stroke=\"black\"/>\n  <line x1=\"120\" y1=\"260\" x2=\"350\" y2=\"260\" stroke=\"black\"/>\n  <line x1=\"120\" y1=\"280\" x2=\"350\" y2=\"280\" stroke=\"black\"/>\n  <line x1=\"120\" y1=\"300\" x2=\"350\" y2=\"300\" stroke=\"black\"/>\n  <line x1=\"120\" y1=\"320\" x2=\"350\" y2=\"320\" stroke=\"black\"/>\n  <line x1=\"120\" y1=\"340\" x2=\"350\" y2=\"340\" stroke=\"black\"/>\n  <line x1=\"120\" y1=\"360\" x2=\"350\" y2=\"360\" stroke=\"black\"/>\n  <text x=\"120\" y=\"160\" class=\"item\">Juniper</text>\n  <text x=\"350\" y=\"160\" class=\"quantity\">27</text>\n  <text x=\"120\" y=\"180\" class=\"item\">Quartz</text>\n  <text x=\"350\" y=\"180\" class=\"quantity\">64</text>\n</svg>"
+  },
+  "provider/description": {
+    "format": "description",
+    "content": "The image displays an inventory record with the title \"Inventory record\" and a code labeled \"Code: 761344\". Below this, there is a simple table with two columns: \"Item\" and \"Quantity\". The table contains two rows: the first row lists the item \"Juniper\" with a quantity of \"27\"; the second row lists the item \"Quartz\" with a quantity of \"64\". The text \"Quartz\" appears to be a misspelling of \"Quartz\" in the image, but is preserved as shown. The layout is clean, with black text on a white background, and the table is bordered with thin black lines."
+  },
+  "provider/auto": {
+    "format": "markdown",
+    "content": "Inventory record\nCode: 761344\n\n| Item     | Quantity |\n|-----------|-----------|\n| Juniper   | 27        |\n| Quartz    | 64        |"
+  },
+  "import-history-clipboard/text": {
+    "format": "text",
+    "content": "Inventory record\nCode: 761344\n\nItem\tQuantity\nJuniper\t27\nQuartz\t64"
+  }
+}
