@@ -1,0 +1,9 @@
+{
+  "sourceRef": "v0.4.0-preview.11",
+  "sources": {
+    "README.md": "523831eafcf1f2d33127d8230622d5d5365155c8a9fba6d48d6e84ad48d766a4",
+    "docs/USER-GUIDE.md": "eb42ce02596ca3063b67a0dfdedeec79d1a0ec16c82aaf6bf04d89c6dfeab3b2",
+    "docs/app-icon.png": "d9ead922fe0528e4c49b89ea5fb039f8d0a6082e71708a6c90172c3225b06e70"
+  },
+  "draftWithoutDemo": false
+}

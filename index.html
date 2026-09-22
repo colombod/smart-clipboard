@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src 'self'; media-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="description" content="Set up Smart Clipboard on your Mac, choose local or cloud image processing, and capture directly to your clipboard.">
+<title>Smart Clipboard — Capture, convert, paste</title><link rel="icon" type="image/png" href="assets/app-icon.png"><link rel="stylesheet" href="assets/style.css"></head>
+<body class="home"><a class="skip" href="#main">Skip to content</a>
+<header class="site-header"><a class="brand" href="index.html"><img src="assets/app-icon.png" alt="" width="42" height="42">Smart Clipboard</a>
+<nav aria-label="Main"><a href="index.html" aria-current="page">Get started</a><a href="guide.html">Setup guide</a><a href="https://github.com/colombod/smart-clipboard/releases">Downloads</a></nav></header>
+<div class="layout"><nav class="toc" aria-label="On this page"><details open><summary>On this page</summary><ul><li><a href="#get-started">Get started</a></li><li><a href="#keep-useful-captures">Keep useful captures</a></li><li><a href="#made-to-stay-out-of-the-way">Made to stay out of the way</a></li><li><a href="#need-a-hand">Need a hand?</a></li></ul></details></nav>
+<main id="main" tabindex="-1"><h1 id="smart-clipboard">Smart Clipboard</h1>
+<img src="assets/app-icon.png" alt="Smart Clipboard capture-frame icon" width="100">
+
+<p><strong>Capture something on your screen. Paste something useful.</strong></p>
+<p>Turn a screenshot into editable text, notes, a table or structured data—or simply keep the image. Smart Clipboard lives in your Mac’s menu bar, uses your preferred output automatically, and stays out of the way while you work.</p>
+<p><strong><a href="https://github.com/colombod/smart-clipboard/releases" class="download">Download for Mac</a></strong> · Apple Silicon (M1 or newer) · macOS 14+</p>
+<p>Choose the <strong>0.4 preview</strong> for local AI, multiple providers and completion notifications. It is an early release with <a href="https://github.com/colombod/smart-clipboard/blob/v0.4.0-preview.11/docs/releases/v0.4.0-preview.md">known limitations</a>, especially local Description/SVG quality and accessibility. Official downloads are signed and notarized by Apple.</p>
+<h2 id="get-started">Get started</h2>
+<h3 id="1-install">1. Install</h3>
+<p>Download the <strong>DMG</strong>, open it, and drag <strong>Smart Clipboard</strong> into <strong>Applications</strong>. Eject the disk image and open the app.</p>
+<p>Look for <strong>Clip</strong> in the menu bar at the top of your screen. There is no Dock icon and no window to keep open. Open <strong>Clip → Settings &amp; Status</strong> when you need to configure it.</p>
+<h3 id="2-choose-how-to-process-your-captures">2. Choose how to process your captures</h3>
+<p>In <strong>Settings → Connection</strong>, select a connection and run <strong>Test image processing</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Use this connection</th>
+<th>If you want…</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Local / oMLX</strong></td>
+<td>Image processing on your own Mac, with an installed vision model. <a href="guide.html#set-up-local-image-processing-with-omlx">Set up local AI →</a></td>
+</tr>
+<tr>
+<td><strong>OpenAI, Anthropic, Google Gemini or Perplexity</strong></td>
+<td>To use an image-capable model through your own provider account and API key. <a href="guide.html#choose-another-connection">Connection setup →</a></td>
+</tr>
+<tr>
+<td><strong>ChatGPT via Codex</strong></td>
+<td>To use an eligible ChatGPT/Codex account through the separately installed official Codex CLI. <a href="guide.html#choose-another-connection">Connection setup →</a></td>
+</tr>
+</tbody>
+</table>
+<p>You can also choose <strong>Pass through (image)</strong> and skip AI setup entirely. API usage is billed by your provider; a ChatGPT subscription does not include API credits. Availability depends on your account, and not every cloud route has been tested live in this preview.</p>
+<p><strong>Starting with oMLX?</strong> Our smaller tested option is <strong>Qwen3-VL-8B-Instruct-4bit</strong> for text, tables and structured extraction. The 32B model uses substantially more memory and did not fix the Description/SVG problems in our tests. Use the <a href="guide.html#choose-a-local-model">model guide</a> for exact downloads, memory guidance and the compatible server version.</p>
+<h3 id="3-set-your-preferred-result">3. Set your preferred result</h3>
+<p>In <strong>Settings → General → Preferred format</strong>, choose once:</p>
+<table>
+<thead>
+<tr>
+<th>What you need</th>
+<th>Choose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Let AI choose a useful format</td>
+<td><strong>Auto detect</strong></td>
+</tr>
+<tr>
+<td>Keep the screenshot as an image</td>
+<td><strong>Pass through (image)</strong></td>
+</tr>
+<tr>
+<td>Copy words into another app</td>
+<td><strong>Plain text</strong></td>
+</tr>
+<tr>
+<td>Keep headings, lists or tables</td>
+<td><strong>Markdown</strong></td>
+</tr>
+<tr>
+<td>Extract a record or configuration</td>
+<td><strong>JSON</strong> or <strong>YAML</strong></td>
+</tr>
+<tr>
+<td>Reconstruct markup or vector content</td>
+<td><strong>HTML</strong> or <strong>SVG</strong></td>
+</tr>
+<tr>
+<td>Describe what is visible</td>
+<td><strong>Description</strong></td>
+</tr>
+</tbody>
+</table>
+<p>For translation, add a <strong>Default direction</strong>, such as “Translate to English.” You can change these preferences whenever you like.</p>
+<h3 id="4-capture-and-paste">4. Capture and paste</h3>
+<ol type="1">
+<li>Press <strong>⌥⇧⌘3</strong> and drag a rectangle, or <strong>⌥⇧⌘4</strong> to select a window.</li>
+<li>The first time, allow Smart Clipboard to record your screen when macOS asks. Reopen it if requested.</li>
+<li>Wait for <strong>Clip ✓</strong> or the <strong>ready to paste</strong> notification.</li>
+<li>Press <strong>⌘V</strong> in your destination app.</li>
+</ol>
+<p>That’s it—there is no Convert or Copy step after a capture, and no app window opens. <strong>Space</strong> switches between rectangle and window selection; <strong>Escape</strong> cancels. Customize shortcuts in <strong>Settings → Shortcuts</strong>; your saved shortcuts take precedence over the defaults above.</p>
+<h3 id="5-know-when-its-ready">5. Know when it’s ready</h3>
+<p>In <strong>Settings → General → Capture notifications</strong>, enable macOS notifications and allow them when asked. Choose notifications for successful copies, failures, or both; sound is optional.</p>
+<p><strong>Clip …</strong> means the app is working. <strong>Clip ✓</strong> means the result has reached your clipboard. <strong>Clip !</strong> means something needs attention. Notifications contain a short status message, never your captured text. macOS notification settings and Focus determine how alerts appear.</p>
+<h2 id="keep-useful-captures">Keep useful captures</h2>
+<p>Open <strong>Clip → History</strong> to reuse an earlier capture. Pick another format and convert the original again—there is no need to take another screenshot. Saved results can be reopened without another AI request.</p>
+<p>Choose how many captures to retain in <strong>Settings → History</strong>, delete individual entries, or clear them all. The default is 50. Setting the limit to zero clears saved history and stops saving new captures.</p>
+<h2 id="made-to-stay-out-of-the-way">Made to stay out of the way</h2>
+<p>Enable <strong>Launch at login</strong> in General settings to have it ready when you start your Mac. Closing Settings or History leaves the menu-bar app running. Its green capture-frame icon and windows follow macOS light and dark appearance.</p>
+<p>The app captures only when you ask. It does not continuously record your screen or monitor other apps’ clipboard contents. AI captures go to your selected provider; <strong>Local / oMLX</strong> on this Mac keeps image processing local. <strong>Pass through</strong> makes no AI request. Capture history stays on your Mac. <a href="guide.html#privacy-and-storage">Privacy and storage details →</a></p>
+<h2 id="need-a-hand">Need a hand?</h2>
+<ul>
+<li><strong><a href="guide.html">Complete setup and usage guide</a></strong> — providers, models, notifications, history and updates.</li>
+<li><strong><a href="guide.html#if-capture-does-not-work">Capture troubleshooting</a></strong> — permissions, shortcuts and local connections.</li>
+<li><strong><a href="https://github.com/colombod/smart-clipboard/blob/v0.4.0-preview.11/docs/releases/v0.4.0-preview.md">Preview release notes</a></strong> — what changed and what still needs work.</li>
+<li><strong><a href="https://github.com/colombod/smart-clipboard/blob/v0.4.0-preview.11/docs/ACCESSIBILITY.md">Accessibility status</a></strong> — current support and known gaps. Pointer-free capture and full VoiceOver use are not yet verified.</li>
+<li><strong><a href="https://github.com/colombod/smart-clipboard/issues/new">Report a problem</a></strong> — include your app version, macOS version and selected provider/model; leave out keys and private screenshots.</li>
+</ul>
+<p>AI extraction can make mistakes. Review results before relying on them; HTML and SVG are copied as editable text, not rendered or executed by the app.</p>
+<hr>
+<p>Want to contribute? Start with the <a href="https://github.com/colombod/smart-clipboard/blob/v0.4.0-preview.11/docs/DEVELOPING.md">developer guide</a>, <a href="https://github.com/colombod/smart-clipboard/blob/v0.4.0-preview.11/docs/PROVIDERS.md">provider test status</a> or <a href="https://github.com/colombod/smart-clipboard/blob/v0.4.0-preview.11/docs/SIGNING.md">signing and release guide</a>.</p>
+</main></div>
+<footer class="site-footer">Smart Clipboard for Mac · <a href="https://github.com/colombod/smart-clipboard/issues/new">Report a problem</a> · <a href="https://github.com/colombod/smart-clipboard">Source and development</a></footer>
+</body></html>
