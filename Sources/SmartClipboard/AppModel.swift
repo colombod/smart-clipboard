@@ -68,8 +68,20 @@ import ClipboardCore
     }
     func pauseShortcuts() { shortcutsPaused = true; hotkeys.unregisterAll() }
     func resumeShortcuts() { shortcutsPaused = false; if registersHotkeys { registerShortcuts() } }
-    func requestScreenAccess() { _ = captureClient.requestAccess(); refreshReadiness() }
-    func openScreenAccessSettings() { NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!) }
+    func requestScreenAccess() {
+        #if ACCESSIBILITY_AUDIT
+        error = "Accessibility audit: requesting macOS Screen Recording permission was not performed."
+        #else
+        _ = captureClient.requestAccess(); refreshReadiness()
+        #endif
+    }
+    func openScreenAccessSettings() {
+        #if ACCESSIBILITY_AUDIT
+        error = "Accessibility audit: opening macOS Screen Recording settings was not performed."
+        #else
+        NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!)
+        #endif
+    }
 
     private let defaults: UserDefaults
     private var task: Task<Void, Never>?
@@ -372,6 +384,10 @@ import ClipboardCore
         } catch { self.error = error.localizedDescription }
     }
     func setLaunchAtLogin(_ enabled: Bool) throws {
+        #if ACCESSIBILITY_AUDIT
+        throw ClipError.message("Accessibility audit: changing launch at login was not performed.")
+        #else
         if enabled { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
+        #endif
     }
 }

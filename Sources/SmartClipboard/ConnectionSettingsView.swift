@@ -128,6 +128,9 @@ struct ConnectionSettingsView: View {
 
     private enum KeyAction: Sendable, Equatable { case save, authorize, remove }
     private func keyAction(_ action: KeyAction) {
+        #if ACCESSIBILITY_AUDIT
+        show("Keychain changes are unavailable in the isolated accessibility audit.")
+        #else
         let profile = store.activeProfile
         let account = profile.credentialAccount
         let key = newKey.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -158,9 +161,13 @@ struct ConnectionSettingsView: View {
                 if store.activeProfile == profile { show(error.localizedDescription) }
             }
         }
+        #endif
     }
 
     private func refreshModels() {
+        #if ACCESSIBILITY_AUDIT
+        show("Network requests are unavailable in the isolated accessibility audit.")
+        #else
         let profile: ConnectionProfile
         do { profile = try store.validatedProfile() }
         catch { show(error.localizedDescription); return }
@@ -183,9 +190,13 @@ struct ConnectionSettingsView: View {
                 }
             }
         }
+        #endif
     }
 
     private func testImageProcessing() {
+        #if ACCESSIBILITY_AUDIT
+        show("Provider tests are unavailable in the isolated accessibility audit.")
+        #else
         let profile: ConnectionProfile
         do { profile = try store.validatedProfile() }
         catch { show(error.localizedDescription); return }
@@ -205,9 +216,13 @@ struct ConnectionSettingsView: View {
                 }
             }
         }
+        #endif
     }
 
     private func signIn() {
+        #if ACCESSIBILITY_AUDIT
+        show("Account sign-in is unavailable in the isolated accessibility audit.")
+        #else
         let profile = store.activeProfile
         store.credentialsDidChange(for: profile)
         let revision = store.revision
@@ -228,5 +243,6 @@ struct ConnectionSettingsView: View {
                 }
             }
         }
+        #endif
     }
 }

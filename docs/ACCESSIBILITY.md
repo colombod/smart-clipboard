@@ -2,6 +2,8 @@
 
 **Status: partial support; end-to-end accessibility is not yet accepted.** This assessment covers development version **0.4.0 build 9**, not the public v0.3.1 download. Native controls provide a useful foundation, but they do not establish that a blind user or someone who cannot use a pointer can complete the capture workflow.
 
+The [22 September native execution record](testing/ACCESSIBILITY-NATIVE.md) is **BLOCKED**: the signed UI runner did not reach test execution, so there is no automated accessibility audit result. Limited live label and Settings keyboard observations are recorded separately and do not pass A01 or A04; A02, A03, A05 and A06 were not run.
+
 The essential experience remains **configure once → invoke capture → select the source → hear/read completion → paste into the original app**. Accessibility must not require an editor or Settings window after every capture. Ordinary startup, conversion, cancellation and failure must not open an app window or steal focus.
 
 ## Implemented foundation
@@ -22,7 +24,7 @@ The audit and foundational fixes are tracked in Beads `clip-cqc.13`. They do not
 
 **Text enlargement is incomplete.** Several headings and captions use fixed small sizes; there is no app-wide text-size setting. Resizing the window does not enlarge text. SwiftUI Dynamic Type sizes do not change text size on macOS, so applying an iOS-style Dynamic Type override is not sufficient evidence. Low-vision layout and genuine text enlargement are tracked separately in `clip-cqc.15`.
 
-**Assistive technologies need real acceptance testing.** VoiceOver, Full Keyboard Access, Voice Control, Switch Control, Zoom and system contrast settings have not been exercised on this candidate. Focus restoration after capture, failure, sheet dismissal, deleting history and cancelling recording remains unverified. Native testing and any required capture alternatives are tracked in `clip-cqc.14`. Both issues block candidate release acceptance (`clip-cqc.9`). There is no accessibility certification or conformance claim.
+**Assistive technologies need real acceptance testing.** The native session attempted VoiceOver and Full Keyboard Access, but established neither spoken/navigation acceptance nor complete keyboard traversal. Voice Control, Switch Control, Zoom and live contrast acceptance remain untested. Focus restoration after capture, failure, sheet dismissal, deleting history and cancelling recording remains unverified. Native testing and any required capture alternatives are tracked in `clip-cqc.14`. Both issues block candidate release acceptance (`clip-cqc.9`). There is no accessibility certification or conformance claim.
 
 ## Required native gates
 
@@ -41,7 +43,7 @@ Native gates supplement [the ordinary capture and release gates](UAT.md); neithe
 
 ## Reproducing supporting checks
 
-On 22 September 2026, on macOS 26.7 (25G229), the optimized build and app-signature verification succeeded. The regression run passed **134 tests**, with one opt-in live AI test skipped. This includes real AppModel publisher integration checks using mock providers, an injected announcement collector, private clipboard and isolated history; no actual speech or native screen selection was tested. Synthetic editor/history/About and expanded Settings snapshots were inspected for layout and button legibility. The installed app was not replaced, and no app window or macOS accessibility setting was changed.
+During the earlier windowless checks on 22 September 2026, on macOS 26.7 (25G229), the optimized build and app-signature verification succeeded. The regression run passed **134 tests**, with one opt-in live AI test skipped. This includes real AppModel publisher integration checks using mock providers, an injected announcement collector, private clipboard and isolated history; no actual speech or native screen selection was tested. Synthetic editor/history/About and expanded Settings snapshots were inspected for layout and button legibility. Those supporting checks did not replace the installed app, open an app window or change a macOS accessibility setting. The later authorized native session and its settings restoration are documented in the [separate execution record](testing/ACCESSIBILITY-NATIVE.md).
 
 The unit and integration tests run with `./scripts/test.sh`. Set `SMART_CLIPBOARD_RENDER_DIR` to an empty temporary directory for opt-in windowless snapshots, and `SMART_CLIPBOARD_ABOUT_BUNDLE` to a built app bundle to verify its actual About resources. Live AI tests stay opt-in and are not required for the accessibility policy checks. The render host is never attached to a window; these images cannot validate the live accessibility tree or native focus.
 

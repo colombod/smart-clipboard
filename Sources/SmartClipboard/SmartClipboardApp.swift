@@ -12,12 +12,18 @@ import Combine
 }
 
 @MainActor final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
+    #if ACCESSIBILITY_AUDIT
+    private lazy var auditHarness = AccessibilityAuditHarness()
+    private(set) lazy var model = auditHarness.model
+    private lazy var accessibilityAnnouncements = auditHarness.announcer
+    #else
     private(set) lazy var model = AppModel()
+    private let accessibilityAnnouncements = AccessibilityStatusAnnouncer.live()
+    #endif
     private var statusItem: NSStatusItem?
     private var started = false
     private var statusSubscription: AnyCancellable?
     private var accessibilitySubscription: AnyCancellable?
-    private let accessibilityAnnouncements = AccessibilityStatusAnnouncer.live()
     private let readinessItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -39,7 +45,11 @@ import Combine
         installStatusItem()
         model.refreshReadiness()
         installMainMenu()
+        #if ACCESSIBILITY_AUDIT
+        auditHarness.launch(arguments: CommandLine.arguments)
+        #else
         if CommandLine.arguments.contains("--show") { model.showPanel() }
+        #endif
     }
     private func installMainMenu() {
         let bar = NSMenu()
@@ -130,7 +140,14 @@ import Combine
         updateStatus()
     }
     func applicationDidBecomeActive(_ notification: Notification) { if started { model.refreshReadiness() } }
-    func applicationWillTerminate(_ notification: Notification) { if started { model.persistCurrentOutput(); model.cancel() } }
+    func applicationWillTerminate(_ notification: Notification) {
+        if started {
+            model.persistCurrentOutput(); model.cancel()
+            #if ACCESSIBILITY_AUDIT
+            auditHarness.cleanup()
+            #endif
+        }
+    }
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         if started { statusItem?.isVisible = true; model.showPanel() }
         return false
