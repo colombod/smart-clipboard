@@ -5,6 +5,7 @@ import ClipboardCore
 @testable import SmartClipboard
 
 /// Opt in with SMART_CLIPBOARD_RENDER_DIR. The host stays windowless throughout.
+/// Appearance/layout snapshots do not establish macOS Dynamic Type, live AX, or VoiceOver behavior.
 @MainActor struct ConnectionRenderTests {
     @Test(.enabled(if: ProcessInfo.processInfo.environment["SMART_CLIPBOARD_RENDER_DIR"] != nil))
     func settingsRenderWithoutWindows() async throws {
@@ -53,6 +54,7 @@ import ClipboardCore
             }
         }
         try await renderAboutAndNotices(to: output)
+        try await renderAccessibilityStates(to: output, history: history, board: board)
     }
 
     private func renderAboutAndNotices(to output: URL) async throws {
@@ -95,7 +97,90 @@ import ClipboardCore
                 try snapshot(host, to: output.appendingPathComponent(name + (scheme == .dark ? "-dark.png" : "-light.png")))
                 #expect(host.window == nil)
             }
+            try await render(AboutView(bundle: bundle).frame(width: 616, height: 480).clipped(),
+                             name: "about-high-contrast" + (scheme == .dark ? "-dark" : "-light"),
+                             scheme: scheme, increasedContrast: true, size: NSSize(width: 640, height: 550), to: output)
         }
+    }
+
+    private func renderAccessibilityStates(to output: URL, history: URL, board: NSPasteboard) async throws {
+        var conversions = 0
+        let capture = CaptureClient(hasAccess: { false }, requestAccess: { false }, takeImage: { _ in
+            throw ClipError.message("Synthetic render tests must never capture the screen.")
+        })
+        let model = AppModel(defaults: RenderDefaults(), historyDirectory: history.appendingPathComponent("synthetic-accessibility"),
+                             registerHotkeys: false, captureClient: capture, pasteboard: board, presentsWindows: false,
+                             conversionOverride: { _, _, _, _ in
+            conversions += 1
+            return ConversionResult(format: .markdown, content: "# Synthetic render fixture\n\n| Item | Quantity |\n| --- | --- |\n| Juniper | 27 |\n| Quartz | 64 |")
+        })
+        defer { model.cancel() }
+        model.settingsTab = "general"
+        for scheme in [ColorScheme.light, .dark] {
+            // The selected General tab remains shell-only offscreen. This does not
+            // establish native tab drawing, scrolling, keyboard navigation, or AX behavior.
+            try await render(SettingsView(model: model),
+                             name: "settings-general-shell-high-contrast" + (scheme == .dark ? "-dark" : "-light"),
+                             scheme: scheme, increasedContrast: true, size: NSSize(width: 640, height: 550), to: output)
+        }
+        try await render(SettingsView(model: model), name: "settings-general-shell-expanded-light", scheme: .light,
+                         size: NSSize(width: 900, height: 850), to: output)
+        try await render(CaptureView(model: model), name: "capture-empty-high-contrast-light", scheme: .light,
+                         increasedContrast: true, size: NSSize(width: 1000, height: 700), to: output)
+
+        let png = try syntheticCapturePNG()
+        model.defaultFormat = .markdown
+        model.processImportedImage(png, source: "Synthetic accessibility render fixture")
+        let deadline = Date().addingTimeInterval(5)
+        while (model.busy || model.capturing) && Date() < deadline { try await Task.sleep(for: .milliseconds(10)) }
+        try #require(!model.busy && !model.capturing)
+        try #require(model.error == nil)
+        try #require(model.history.count == 1 && conversions == 1)
+        try #require(board.string(forType: .string) == model.output)
+        try await render(CaptureView(model: model), name: "capture-result-high-contrast-dark", scheme: .dark,
+                         increasedContrast: true, size: NSSize(width: 1000, height: 700), to: output)
+        for scheme in [ColorScheme.light, .dark] {
+            try await render(HistoryView(model: model),
+                             name: "history-synthetic-high-contrast" + (scheme == .dark ? "-dark" : "-light"),
+                             scheme: scheme, increasedContrast: true, size: NSSize(width: 640, height: 550), to: output)
+        }
+        #expect(conversions == 1)
+    }
+
+    private func syntheticCapturePNG() throws -> Data {
+        let bitmap = try #require(NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: 780, pixelsHigh: 280,
+                                                  bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true,
+                                                  isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0))
+        let context = try #require(NSGraphicsContext(bitmapImageRep: bitmap))
+        NSGraphicsContext.saveGraphicsState()
+        defer { NSGraphicsContext.restoreGraphicsState() }
+        NSGraphicsContext.current = context
+        NSColor.white.setFill(); NSRect(x: 0, y: 0, width: 780, height: 280).fill()
+        ("Synthetic render fixture\nItem        Quantity\nJuniper     27\nQuartz      64" as NSString)
+            .draw(at: NSPoint(x: 32, y: 38), withAttributes: [
+                .font: NSFont.monospacedSystemFont(ofSize: 30, weight: .medium), .foregroundColor: NSColor.black
+            ])
+        context.flushGraphics()
+        return try #require(bitmap.representation(using: .png, properties: [:]))
+    }
+
+    private func render<Content: View>(_ content: Content, name: String, scheme: ColorScheme,
+                                       increasedContrast: Bool = false, size: NSSize, to output: URL) async throws {
+        let host = NSHostingView(rootView: content.frame(width: size.width, height: size.height)
+            .background(Color(nsColor: .windowBackgroundColor))
+            .environment(\.controlActiveState, .active))
+        host.frame = NSRect(origin: .zero, size: size)
+        let appearance: NSAppearance.Name = increasedContrast
+            ? (scheme == .dark ? .accessibilityHighContrastDarkAqua : .accessibilityHighContrastAqua)
+            : (scheme == .dark ? .darkAqua : .aqua)
+        // Let the host supply both scheme and contrast. Overriding colorScheme
+        // separately can resolve dynamic NSColors with the standard appearance.
+        host.appearance = NSAppearance(named: appearance)
+        await settle(host)
+        #expect(host.window == nil)
+        #expect(host.bounds.size == size)
+        try snapshot(host, to: output.appendingPathComponent(name + ".png"))
+        #expect(host.window == nil)
     }
 
     private func settle(_ host: NSView) async {

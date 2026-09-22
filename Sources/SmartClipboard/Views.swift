@@ -6,8 +6,19 @@ import ClipboardCore
 
 // Explicit alias keeps the property wrapper unambiguous on SDKs that also expose a State macro.
 private typealias ViewState<Value> = SwiftUI.State<Value>
+private typealias RecorderFocus<Value: Hashable> = SwiftUI.FocusState<Value>
 
-let accent = Color(red: 0.20, green: 0.46, blue: 0.35)
+let accent = Color(nsColor: NSColor(name: nil) { appearance in
+    switch appearance.bestMatch(from: [.accessibilityHighContrastDarkAqua, .accessibilityHighContrastAqua, .darkAqua, .aqua]) {
+    case .accessibilityHighContrastDarkAqua: return NSColor(srgbRed: 0.61, green: 0.88, blue: 0.72, alpha: 1)
+    case .accessibilityHighContrastAqua: return NSColor(srgbRed: 0.12, green: 0.34, blue: 0.23, alpha: 1)
+    case .darkAqua: return NSColor(srgbRed: 0.44, green: 0.75, blue: 0.59, alpha: 1)
+    default: return NSColor(srgbRed: 0.20, green: 0.46, blue: 0.35, alpha: 1)
+    }
+})
+// Native prominent buttons keep white labels, so their fill must stay dark
+// even when foreground accents become lighter in Dark Mode.
+private let prominentAccent = Color(red: 0.20, green: 0.46, blue: 0.35)
 
 struct CaptureView: View {
     @ObservedObject var model: AppModel
@@ -23,6 +34,8 @@ struct CaptureView: View {
                     Spacer()
                     if model.png != nil {
                         Button { model.clear() } label: { Image(systemName: "xmark") }.help("Close clip; keep saved history").disabled(model.busy)
+                            .accessibilityLabel("Close current clip")
+                            .accessibilityHint("Keeps the saved capture in history.")
                     }
                 }
                 if !model.captureReady {
@@ -45,6 +58,7 @@ struct CaptureView: View {
                         Text(error).font(.callout).textSelection(.enabled)
                         Spacer()
                         Button { model.error = nil } label: { Image(systemName: "xmark") }.buttonStyle(.plain)
+                            .accessibilityLabel("Dismiss error")
                     }.padding(12).background(Color.orange.opacity(0.09), in: RoundedRectangle(cornerRadius: 10))
                 }
                 HStack(spacing: 6) {
@@ -56,7 +70,8 @@ struct CaptureView: View {
         }.tint(accent).background(Color(nsColor: .windowBackgroundColor))
     }
     private var sidebar: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        ScrollView {
+          VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 10) {
                 Image(systemName: "viewfinder").font(.system(size: 23, weight: .medium)).foregroundStyle(accent)
                 VStack(alignment: .leading, spacing: 1) {
@@ -66,14 +81,15 @@ struct CaptureView: View {
             }.padding(.top, 10)
             Button { model.showSettings(tab: "general") } label: {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("CAPTURE → CLIPBOARD").font(.system(size: 9, weight: .semibold)).tracking(0.6)
+                    Text("CAPTURE → CLIPBOARD").font(.system(size: 11, weight: .semibold)).tracking(0.6)
                     Text(model.defaultFormat.title).font(.caption)
                 }.foregroundStyle(accent)
             }.buttonStyle(.plain).help("Configure your preferred format and capture workflow")
+                .accessibilityLabel("Capture preferences").accessibilityValue(model.defaultFormat.title)
             VStack(spacing: 8) {
                 Button { model.capture() } label: {
                     Label("Capture region", systemImage: "viewfinder").frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 5)
-                }.buttonStyle(.borderedProminent)
+                }.buttonStyle(.borderedProminent).tint(prominentAccent)
                 Button { model.capture(window: true) } label: {
                     Label("Capture window", systemImage: "macwindow").frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 5)
                 }
@@ -95,6 +111,8 @@ struct CaptureView: View {
                             .foregroundStyle(model.format == format ? accent : Color.primary)
                             .contentShape(Rectangle())
                     }.buttonStyle(.plain).disabled(model.busy)
+                        .accessibilityLabel(format.title)
+                        .accessibilityAddTraits(model.format == format ? .isSelected : [])
                 }
             }
             Spacer(minLength: 0)
@@ -103,7 +121,8 @@ struct CaptureView: View {
                 HStack { Label("History", systemImage: "clock.arrow.circlepath"); Spacer(); Text("\(model.history.count)").foregroundStyle(.secondary) }
             }.buttonStyle(.plain)
             Button { model.showSettings() } label: { Label("Settings", systemImage: "gearshape").foregroundStyle(.secondary) }.buttonStyle(.plain)
-        }.padding(20).frame(width: 200).frame(maxHeight: .infinity)
+          }.padding(20)
+        }.frame(width: 220).frame(maxHeight: .infinity)
             .background(Color(nsColor: .controlBackgroundColor).opacity(0.65))
             .overlay(alignment: .trailing) { Divider() }
     }
@@ -115,12 +134,12 @@ struct CaptureView: View {
                 RoundedRectangle(cornerRadius: 20).fill(Color(nsColor: .controlBackgroundColor)).frame(width: 128, height: 104).shadow(color: .black.opacity(0.07), radius: 15, y: 7)
                 Image(systemName: "viewfinder").font(.system(size: 52, weight: .ultraLight)).foregroundStyle(accent)
                 Image(systemName: "sparkles").font(.system(size: 24)).foregroundStyle(accent).offset(x: 60, y: -48)
-            }
+            }.accessibilityHidden(true)
             VStack(spacing: 7) {
                 Text("From your screen to your next idea.").font(.system(size: 19, weight: .medium, design: .rounded))
                 Text("Turn a table into JSON, a slide into notes,\nor a diagram into editable SVG.").multilineTextAlignment(.center).foregroundStyle(.secondary).lineSpacing(4)
             }
-            Button("Capture a region") { model.capture() }.buttonStyle(.borderedProminent).controlSize(.large)
+            Button("Capture a region") { model.capture() }.buttonStyle(.borderedProminent).tint(prominentAccent).controlSize(.large)
             Text(model.regionShortcut.label + "  anywhere on your Mac").font(.caption.monospaced()).foregroundStyle(.secondary)
             HStack(spacing: 24) {
                 Label("Select a region", systemImage: "rectangle.dashed")
@@ -137,6 +156,7 @@ struct CaptureView: View {
             HStack(alignment: .top, spacing: 16) {
                 Image(nsImage: image).resizable().scaledToFit().frame(maxWidth: .infinity).frame(height: 160)
                     .padding(12).background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 12))
+                    .accessibilityLabel("Original capture")
                 VStack(alignment: .leading, spacing: 12) {
                     Text("ORIGINAL CAPTURE").font(.system(size: 10, weight: .semibold)).tracking(1)
                     Text("Keep the image, too.").font(.callout).foregroundStyle(.secondary)
@@ -151,15 +171,16 @@ struct CaptureView: View {
                 HStack {
                     Image(systemName: "text.bubble").foregroundStyle(.secondary)
                     TextField("Optional direction — e.g. translate to English, preserve table columns…", text: $model.instruction).textFieldStyle(.plain).disabled(model.busy)
+                        .accessibilityLabel("Conversion direction")
                 }.padding(12).background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 9))
                 HStack {
                     if model.busy {
-                        ProgressView().controlSize(.small)
+                        ProgressView().controlSize(.small).accessibilityLabel("Converting capture")
                         Text("Working on your clip…").font(.callout).foregroundStyle(.secondary)
                         Spacer()
                         Button("Cancel") { model.cancel() }
                     } else {
-                        Button { model.convert() } label: { Label("Convert with AI", systemImage: "sparkles") }.buttonStyle(.borderedProminent).controlSize(.large)
+                        Button { model.convert() } label: { Label("Convert with AI", systemImage: "sparkles") }.buttonStyle(.borderedProminent).tint(prominentAccent).controlSize(.large)
                         Button("Extract text on device") { model.convert(local: true) }.help("Apple Vision OCR. No upload; ignores additional directions.")
                         Spacer()
                     }
@@ -193,7 +214,9 @@ struct CaptureView: View {
                         Text(model.format == .image ? "Your image is ready to copy or save." : "Your \(model.format == .auto ? "automatically chosen format" : model.format.title) will appear here.").foregroundStyle(.secondary)
                     }.frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
-                    TextEditor(text: $model.output).font(.system(size: 13, design: .monospaced)).padding(8).scrollContentBackground(.hidden)
+                    TextEditor(text: $model.output).font(.system(.body, design: .monospaced)).padding(8).scrollContentBackground(.hidden)
+                        .accessibilityLabel("Converted result")
+                        .accessibilityHint("Editable \(model.resultFormat.title) content.")
                 }
             }.frame(maxHeight: .infinity).frame(minHeight: 130).background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 12))
                 .overlay { RoundedRectangle(cornerRadius: 12).stroke(Color.primary.opacity(0.08)) }
@@ -261,7 +284,7 @@ struct SettingsView: View {
             }.formStyle(.grouped).tabItem { Label("General", systemImage: "slider.horizontal.3") }.tag("general")
             HistorySettingsView(model: model).tabItem { Label("History", systemImage: "clock.arrow.circlepath") }.tag("history")
             AboutView().tabItem { Label("About", systemImage: "info.circle") }.tag("about")
-        }.padding(12).frame(width: 640, height: 550).tint(accent)
+        }.padding(12).frame(minWidth: 640, maxWidth: .infinity, minHeight: 550, maxHeight: .infinity).tint(accent)
     }
 }
 
@@ -275,27 +298,43 @@ struct ShortcutRow: View {
     let save: (Shortcut) throws -> Void
     @ViewState<Bool> private var recording = false
     @ViewState<Any?> private var monitor = nil
+    @ViewState<NSWindow?> private var recordingWindow = nil
     @ViewState<String> private var error = ""
+    @RecorderFocus private var recorderFocused: Bool
     var body: some View {
         VStack(alignment: .leading) {
             HStack {
                 Text(title); Spacer()
                 Button(recording ? "Press shortcut…" : shortcut.label) { begin() }.font(.system(.body, design: .monospaced)).disabled(activeRecorder != nil && activeRecorder != title)
+                    .focused($recorderFocused)
+                    .accessibilityLabel("Record \(title.lowercased()) shortcut")
+                    .accessibilityValue(recording ? "Recording" : shortcut.spokenDescription)
+                    .accessibilityHint("Activate to record a key combination. Escape cancels; Tab moves to the next control. Control-Option commands pass through while VoiceOver is running.")
             }
             Text(status).font(.caption).foregroundStyle(.secondary)
             if !error.isEmpty { Text(error).font(.caption).foregroundStyle(.red) }
         }.onDisappear { end() }
+            .onChange(of: recorderFocused) { _, focused in if !focused { end() } }
+            .onReceive(NotificationCenter.default.publisher(for: NSWindow.didResignKeyNotification)) { _ in end() }
+            .onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in end() }
     }
     private func end() {
         guard recording else { return }
         if let monitor { NSEvent.removeMonitor(monitor) }
-        monitor = nil; recording = false; activeRecorder = nil; resume()
+        monitor = nil; recordingWindow = nil; recording = false; activeRecorder = nil; resume()
     }
     private func begin() {
-        end(); pause(); recording = true; activeRecorder = title; error = ""
+        end(); pause(); recording = true; activeRecorder = title; error = ""; recorderFocused = true
+        recordingWindow = NSApp.keyWindow
         monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            if event.keyCode == 53 { end(); return nil }
+            guard let recordingWindow, event.window === recordingWindow else { end(); return event }
             let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            switch ShortcutRecorderInput.action(keyCode: event.keyCode, modifiers: flags, characters: event.charactersIgnoringModifiers, voiceOverEnabled: NSWorkspace.shared.isVoiceOverEnabled) {
+            case .cancel: end(); return nil
+            case .navigate: end(); return event
+            case .assistiveNavigation: return event
+            case .record: break
+            }
             guard flags.contains(.command) || flags.contains(.control) else { error = "Include Command or Control."; return nil }
             var modifiers: UInt32 = 0; var label = ""
             if flags.contains(.control) { modifiers |= UInt32(controlKey); label += "⌃" }
@@ -336,15 +375,18 @@ struct HistoryView: View {
                     LazyVStack(spacing: 10) {
                         ForEach(model.history) { entry in
                             HStack(spacing: 14) {
-                                HistoryThumbnail(url: model.historyImageURL(entry))
+                                HistoryThumbnail(url: model.historyImageURL(entry)).accessibilityHidden(true)
                                 VStack(alignment: .leading, spacing: 5) {
                                     Text(entry.title).font(.headline).lineLimit(1)
                                     Text(entry.createdAt, format: .dateTime.month(.abbreviated).day().hour().minute()).font(.caption).foregroundStyle(.secondary)
                                     Text(entry.conversions.isEmpty ? "Original image" : entry.conversions.map { $0.format.title }.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary).lineLimit(2)
-                                }
+                                }.accessibilityElement(children: .combine)
                                 Spacer()
                                 Button("Open") { model.openHistory(entry) }
+                                    .accessibilityLabel("Open \(entry.title), captured \(entry.createdAt.formatted(date: .abbreviated, time: .shortened))")
                                 Button(role: .destructive) { model.deleteHistory(entry) } label: { Image(systemName: "trash") }.help("Delete this saved capture and all its formats")
+                                    .accessibilityLabel("Delete \(entry.title), captured \(entry.createdAt.formatted(date: .abbreviated, time: .shortened))")
+                                    .accessibilityHint("Deletes the original image and all its saved formats.")
                             }.padding(12).background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 10))
                                 .disabled(model.busy || model.capturing)
                         }

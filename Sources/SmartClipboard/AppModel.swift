@@ -121,9 +121,9 @@ import ClipboardCore
             let digit = id == 1 ? "3" : "4"
             let options: [(UInt32, String)] = [
                 (UInt32(cmdKey | shiftKey | optionKey), "⌥⇧⌘"),
-                (UInt32(cmdKey | controlKey | optionKey), "⌃⌥⌘"),
                 (UInt32(cmdKey | controlKey | shiftKey), "⌃⇧⌘"),
-                (UInt32(controlKey | optionKey), "⌃⌥")
+                (UInt32(cmdKey | optionKey), "⌥⌘"),
+                (UInt32(controlKey | shiftKey), "⌃⇧")
             ]
             for (modifiers, label) in options {
                 do { try setShortcut(Shortcut(key: key, modifiers: modifiers, label: label + digit), window: id == 2); break }
@@ -150,9 +150,10 @@ import ClipboardCore
         refreshReadiness()
         if let tab { settingsTab = tab }
         if settings == nil {
-            let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 640, height: 560), styleMask: [.titled, .closable], backing: .buffered, defer: false)
+            let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 640, height: 560), styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
             window.title = "Smart Clipboard Settings"
             window.isReleasedWhenClosed = false
+            window.contentMinSize = NSSize(width: 640, height: 550)
             window.contentView = NSHostingView(rootView: SettingsView(model: self))
             window.center(); settings = window
         }

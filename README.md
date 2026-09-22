@@ -80,6 +80,8 @@ AI extraction and vector reconstruction can be imperfect. Screenshot instruction
 
 The intended background workflow and observable release gates are defined in [User experience and UAT](docs/UAT.md). Automated tests and imported-image checks do not replace a real global-shortcut → selection → paste run. Current acceptance results and unresolved gates are tracked in Beads.
 
+Accessibility is currently **partial and not yet accepted end to end**. The development candidate improves VoiceOver labels/status announcements, shortcut recording and resizable layouts. Real VoiceOver use, pointer-free region/window selection and usable text enlargement remain release gates. See [the accessibility assessment and required tests](docs/ACCESSIBILITY.md); these changes are not in public v0.3.1.
+
 For local-model development, see [the oMLX synthetic-image test instructions and observed limitations](docs/testing/OMLX.md). Passing automated checks alone does not establish Description/SVG quality or native capture acceptance.
 
 ```sh

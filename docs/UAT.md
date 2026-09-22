@@ -60,6 +60,10 @@ G01–G12 must pass on the exact candidate before claiming the core experience i
 
 Untested configuration gates must be stated as limitations of the preview. Do not imply both connection types, login startup, multiple displays, or clean-machine installation are proven by testing one local configuration.
 
+## Accessibility gates
+
+The user has identified accessibility as a required part of the product. [Accessibility status and acceptance](ACCESSIBILITY.md) defines A01–A06: VoiceOver setup, pointer-free region/window capture, spoken outcomes, keyboard/focus recovery, low-vision layouts and alternative input. These supplement G01–G12; native controls, labels, imports, unit tests and offscreen renders cannot establish assistive-technology acceptance. `clip-cqc.14` and `clip-cqc.15` block candidate release acceptance until native accessibility and usable text enlargement are verified. Keep the normal quiet background workflow throughout.
+
 ## Multiple-provider candidate
 
 The development candidate adds Anthropic, Gemini, Perplexity and oMLX. It is not part of public v0.3.1. Track evidence for each exact provider/model/API or server version under Beads epic `clip-cqc`; source and fixture tests do not establish live support.
@@ -67,6 +71,8 @@ The development candidate adds Anthropic, Gemini, Perplexity and oMLX. It is not
 Development checks on 22 September 2026: the initial candidate passed 114 tests, an optimized build and all 10 isolated release-orchestration scenarios. Subsequent local-model work passed 121 automated tests, including opt-in live synthetic-image and windowless render tests. Manual inspection found Description and SVG quality failures despite passing automated format/value assertions; see [oMLX evidence](testing/OMLX.md). Full connection forms were inspected in light/dark mode; detached native tabs and scrolling require live UI verification. No native capture was used for this candidate's evidence. The installed app was left unchanged.
 
 The About-page addition is in development version 0.4.0 build 8. Its app bundle built and passed signature verification, and the subsequent regression run passed 120 tests with the live oMLX test skipped. About and third-party notices were inspected in windowless light/dark renders using the actual bundle's version, icon and notices. Native tab selection, sheet dismissal and menu interaction still require live UI verification; no application window was opened for these checks. This build is not a new signed/notarized public release.
+
+The accessibility foundation update is in development version 0.4.0 build 9. It adds explicit labels/selected states, safe VoiceOver announcement requests, recorder navigation/lifecycle cleanup, Command-W, resizable Settings and scrolling sidebar/About content. The optimized build/signature verification and 134 tests passed; one opt-in live AI test was skipped. App-state announcement integration used mock providers and a private clipboard. Offscreen inspection found and corrected white-on-light-green prominent buttons in dark mode. High-contrast named-appearance snapshots still used the normal palette and are not proof of system Increase Contrast support. The installed app and macOS accessibility settings were not changed; A01–A06 remain NOT RUN.
 
 | Connection | Live candidate status | Additional evidence required |
 | --- | --- | --- |

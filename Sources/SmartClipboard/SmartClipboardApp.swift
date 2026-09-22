@@ -16,6 +16,8 @@ import Combine
     private var statusItem: NSStatusItem?
     private var started = false
     private var statusSubscription: AnyCancellable?
+    private var accessibilitySubscription: AnyCancellable?
+    private let accessibilityAnnouncements = AccessibilityStatusAnnouncer.live()
     private let readinessItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -49,6 +51,10 @@ import Combine
         settings.target = self; appMenu.addItem(settings)
         let quit = NSMenuItem(title: "Quit Smart Clipboard", action: #selector(quit), keyEquivalent: "q")
         quit.target = self; appMenu.addItem(quit)
+        let fileItem = NSMenuItem(title: "File", action: nil, keyEquivalent: ""); bar.addItem(fileItem)
+        let file = NSMenu(title: "File"); fileItem.submenu = file
+        // A nil target uses the responder chain to close only the current window.
+        file.addItem(NSMenuItem(title: "Close Window", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w"))
         let editItem = NSMenuItem(title: "Edit", action: nil, keyEquivalent: ""); bar.addItem(editItem)
         let edit = NSMenu(title: "Edit"); editItem.submenu = edit
         for (title, action, key) in [("Undo", "undo:", "z"), ("Cut", "cut:", "x"), ("Copy", "copy:", "c"), ("Paste", "paste:", "v"), ("Select All", "selectAll:", "a")] {
@@ -90,6 +96,14 @@ import Combine
         statusSubscription = model.objectWillChange.sink { [weak self] in
             DispatchQueue.main.async { self?.updateStatus() }
         }
+        // Read the publishers' new values synchronously: a quick image capture
+        // can start and copy before the deferred visual status update runs.
+        accessibilitySubscription = Publishers.CombineLatest4(model.$capturing, model.$busy,
+                                                               model.$error.map { $0 != nil }, model.$notice)
+            .sink { [weak self] state in
+                self?.accessibilityAnnouncements.observe(AccessibilityStatusSnapshot(capturing: state.0, processing: state.1,
+                                                                                     failed: state.2, notice: state.3))
+            }
         updateStatus()
     }
     private func updateStatus() {
@@ -102,6 +116,10 @@ import Combine
         else { message = model.captureReady ? "Ready · " + model.defaultFormat.title : "Setup needs attention"; suffix = "" }
         statusItem?.button?.title = " Clip" + suffix
         statusItem?.button?.toolTip = message
+        let accessibleStatus = AccessibilityStatusSnapshot(capturing: model.capturing, processing: model.busy,
+                                                            failed: model.error != nil, notice: model.notice)
+        statusItem?.button?.setAccessibilityValue(accessibleStatus.accessibilityValue(ready: model.captureReady,
+                                                                                     preferredFormat: model.defaultFormat))
         readinessItem.title = message
     }
     private func add(_ title: String, action: Selector, to menu: NSMenu) {

@@ -25,6 +25,7 @@ struct AboutView: View {
     }
 
     var body: some View {
+      ScrollView {
         VStack(spacing: 18) {
             VStack(spacing: 8) {
                 Group {
@@ -69,7 +70,8 @@ struct AboutView: View {
             Text("Smart Clipboard stays in your menu bar when you close its windows.")
                 .font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.center)
         }
-        .padding(28).frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(28).frame(maxWidth: .infinity)
+      }.frame(maxWidth: .infinity, maxHeight: .infinity)
         .tint(accent)
         .background(Color(nsColor: .windowBackgroundColor))
     }

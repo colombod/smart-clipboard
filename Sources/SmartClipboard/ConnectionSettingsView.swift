@@ -5,7 +5,6 @@ private typealias ConnectionViewState<Value> = SwiftUI.State<Value>
 
 struct ConnectionSettingsView: View {
     @ObservedObject var store: ConnectionStore
-    @Environment(\.colorScheme) private var colorScheme
     @ConnectionViewState<String> private var newKey = ""
     @ConnectionViewState<String> private var message = ""
     @ConnectionViewState<UInt64?> private var messageRevision = nil
@@ -62,7 +61,7 @@ struct ConnectionSettingsView: View {
                 HStack {
                     Button("Test image processing") { testImageProcessing() }.disabled(working || hasUnsavedKey)
                     if working {
-                        ProgressView().controlSize(.small)
+                        ProgressView().controlSize(.small).accessibilityLabel("Updating connection")
                         Button("Cancel") { operation?.cancel() }
                     }
                 }
@@ -85,7 +84,7 @@ struct ConnectionSettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .tint(colorScheme == .dark ? Color(red: 0.44, green: 0.75, blue: 0.59) : Color(red: 0.20, green: 0.46, blue: 0.35))
+        .tint(accent)
         .onChange(of: store.activeProvider) { _, _ in newKey = "" }
     }
 

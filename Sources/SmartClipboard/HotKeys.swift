@@ -2,6 +2,29 @@ import AppKit
 import Carbon
 import ClipboardCore
 
+enum ShortcutRecorderInput {
+    enum Action { case cancel, navigate, assistiveNavigation, record }
+
+    static func action(keyCode: UInt16, modifiers: NSEvent.ModifierFlags, characters: String? = nil, voiceOverEnabled: Bool) -> Action {
+        if keyCode == 53 { return .cancel }
+        if voiceOverEnabled && modifiers.contains([.control, .option]) { return .assistiveNavigation }
+        let commands = modifiers.intersection([.command, .control, .option])
+        // Let keyboard navigation leave the recorder, restoring global handlers.
+        if commands.isEmpty && [48, 115, 116, 119, 121, 123, 124, 125, 126].contains(keyCode) { return .navigate }
+        if commands == .command, let character = characters?.lowercased(), ["w", "q"].contains(character) { return .navigate }
+        return .record
+    }
+}
+
+extension Shortcut {
+    var spokenDescription: String {
+        label.replacingOccurrences(of: "⌃", with: "Control ")
+            .replacingOccurrences(of: "⌥", with: "Option ")
+            .replacingOccurrences(of: "⇧", with: "Shift ")
+            .replacingOccurrences(of: "⌘", with: "Command ")
+    }
+}
+
 @MainActor protocol HotKeyBackend: AnyObject {
     var handler: ((UInt32) -> Void)? { get set }
     func register(_ shortcut: Shortcut, id: UInt32) throws
