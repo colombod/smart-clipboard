@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    # Keep this name stable: main protection requires this exact check.
+    name: macOS tests
+    runs-on: macos-15
+    timeout-minutes: 25
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+      # Live provider tests are a separate, explicitly enabled release gate.
+      SMART_CLIPBOARD_OMLX_TEST_URL: ""
+      SMART_CLIPBOARD_OMLX_TEST_MODEL: ""
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Report toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+          python3 --version
+
+      - name: Check shell syntax
+        run: |
+          for script in scripts/*.sh Tests/ReleaseScripts/*.sh; do
+            bash -n "$script"
+          done
+
+      - name: Test release orchestration
+        run: bash Tests/ReleaseScripts/test-release.sh
+
+      - name: Test publication guards
+        run: python3 Tests/ReleaseScripts/test-release-update.py
+
+      - name: Test packaged bundle comparison
+        run: python3 Tests/ReleaseScripts/test-compare-bundles.py
+
+      - name: Test app and core
+        run: bash scripts/test.sh

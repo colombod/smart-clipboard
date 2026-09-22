@@ -1,0 +1,111 @@
+{
+  "attempts": [
+    {
+      "actualFormat": "text",
+      "failures": [],
+      "phase": "provider",
+      "requestedFormat": "text",
+      "resultFile": "text.txt",
+      "seconds": 4.513617750024423
+    },
+    {
+      "actualFormat": "markdown",
+      "failures": [],
+      "phase": "provider",
+      "requestedFormat": "markdown",
+      "resultFile": "markdown.md",
+      "seconds": 4.717255625000689
+    },
+    {
+      "actualFormat": "json",
+      "failures": [],
+      "phase": "provider",
+      "requestedFormat": "json",
+      "resultFile": "json.json",
+      "seconds": 5.311436999996658
+    },
+    {
+      "actualFormat": "yaml",
+      "failures": [],
+      "phase": "provider",
+      "requestedFormat": "yaml",
+      "resultFile": "yaml.yaml",
+      "seconds": 5.454728083277587
+    },
+    {
+      "actualFormat": "html",
+      "failures": [],
+      "phase": "provider",
+      "requestedFormat": "html",
+      "resultFile": "html.html",
+      "seconds": 19.36045170831494
+    },
+    {
+      "actualFormat": "svg",
+      "failures": [
+        "SVG changed the source canvas aspect ratio instead of preserving the 1200 \u00d7 680 fixture."
+      ],
+      "phase": "provider",
+      "requestedFormat": "svg",
+      "resultFile": "svg.svg",
+      "seconds": 27.79378945834469
+    },
+    {
+      "actualFormat": "description",
+      "failures": [],
+      "phase": "provider",
+      "requestedFormat": "description",
+      "resultFile": "description.txt",
+      "seconds": 9.519871083379257
+    },
+    {
+      "actualFormat": "markdown",
+      "failures": [],
+      "phase": "provider",
+      "requestedFormat": "auto",
+      "resultFile": "auto.md",
+      "seconds": 6.4111057500122115
+    },
+    {
+      "actualFormat": "text",
+      "failures": [],
+      "phase": "import-history-clipboard",
+      "requestedFormat": "text",
+      "resultFile": "imported.txt",
+      "seconds": 2.721044708334375
+    }
+  ],
+  "code": "923235",
+  "completed": true,
+  "model": "Qwen3-VL-32B-Instruct-4bit",
+  "scope": "Synthetic-image live API and windowless import/history/private-clipboard checks only. Automated syntax/value checks do not establish semantic or visual quality; inspect every output. Native capture, shortcuts, focus, actual paste, and packaged-app LAN permission require separate UAT.",
+  "serverBuild": "oMLX 0.7.0.dev2 installed official macOS26/27 build, mlx-vlm 0.6.3, unmodified packaged runtime; Qwen snapshot 6e5644d3ea4b953b5221ffd02339bf897041038a",
+  "modelRepository": "mlx-community/Qwen3-VL-32B-Instruct-4bit",
+  "modelRevision": "6e5644d3ea4b953b5221ffd02339bf897041038a",
+  "modelDownloadBytes": 19636446591,
+  "filesVerified": 19,
+  "suiteResult": {
+    "exitCode": 1,
+    "appTargetTestsReported": 81,
+    "coreTargetTestsReported": 68,
+    "passed": 147,
+    "failed": 1,
+    "skipped": 1,
+    "failure": "Live SVG aspect ratio assertion",
+    "skip": "Optional windowless Settings rendering not requested"
+  },
+  "outputs": {
+    "text.txt": "Inventory record\nCode: 923235\n\nItem\tQuantity\nJuniper\t27\nQuartz\t64",
+    "markdown.md": "Inventory record\nCode: 923235\n\n| Item    | Quantity |\n|---------|----------|\n| Juniper | 27       |\n| Quartz  | 64       |",
+    "json.json": "{\"inventoryRecord\": {\"code\": \"923235\", \"items\": [{\"item\": \"Juniper\", \"quantity\": 27}, {\"item\": \"Quartz\", \"quantity\": 64}]}}",
+    "yaml.yaml": "record:\n  title: Inventory record\n  code: 923235\n  items:\n    - item: Juniper\n      quantity: 27\n    - item: Quartz\n      quantity: 64\n",
+    "html.html": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <title>Inventory Record</title>\n    <style>\n        body {\n            font-family: Arial, sans-serif;\n            margin: 20px;\n            line-height: 1.6;\n        }\n        h1, h2 {\n            margin: 0 0 10px;\n        }\n        table {\n            width: 100%;\n            border-collapse: collapse;\n            margin-top: 20px;\n        }\n        th, td {\n            border: 1px solid black;\n            padding: 10px;\n            text-align: left;\n        }\n        th {\n            background-color: #f2f2f2;\n        }\n    </style>\n</head>\n<body>\n    <h1>Inventory record</h1>\n    <h2>Code: 923235</h2>\n    <table>\n        <thead>\n            <tr>\n                <th>Item</th>\n                <th>Quantity</th>\n            </tr>\n        </thead>\n        <tbody>\n            <tr>\n                <td>Juniper</td>\n                <td>27</td>\n            </tr>\n            <tr>\n                <td>Quartz</td>\n                <td>64</td>\n            </tr>\n        </tbody>\n    </table>\n</body>\n</html>",
+    "svg.svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 400 300\" width=\"400\" height=\"300\" font-family=\"Arial, sans-serif\" font-size=\"16\" stroke=\"black\" stroke-width=\"1\" fill=\"none\">\n  <!-- Title -->\n  <text x=\"100\" y=\"40\" font-size=\"24\" font-weight=\"bold\">Inventory record</text>\n  <text x=\"100\" y=\"80\" font-size=\"20\">Code: 923235</text>\n\n  <!-- Table -->\n  <!-- Table borders -->\n  <rect x=\"50\" y=\"100\" width=\"300\" height=\"160\" fill=\"none\" stroke=\"black\" />\n  <!-- Horizontal lines -->\n  <line x1=\"50\" y1=\"140\" x2=\"350\" y2=\"140\" />\n  <line x1=\"50\" y1=\"180\" x2=\"350\" y2=\"180\" />\n  <line x1=\"50\" y1=\"220\" x2=\"350\" y2=\"220\" />\n  <!-- Vertical line -->\n  <line x1=\"200\" y1=\"100\" x2=\"200\" y2=\"260\" />\n\n  <!-- Table headers -->\n  <text x=\"125\" y=\"120\" font-weight=\"bold\">Item</text>\n  <text x=\"275\" y=\"120\" font-weight=\"bold\">Quantity</text>\n\n  <!-- Table data -->\n  <text x=\"100\" y=\"160\">Juniper</text>\n  <text x=\"275\" y=\"160\">27</text>\n  <text x=\"100\" y=\"200\">Quartz</text>\n  <text x=\"275\" y=\"200\">64</text>\n</svg>",
+    "description.txt": "The image displays an inventory record with a title \"Inventory record\" and a code \"923235\". Below this, there is a two-column table with headers \"Item\" and \"Quantity\". The table contains two rows of data: the first row lists \"Juniper\" with a quantity of 27, and the second row lists \"Quartz\" with a quantity of 64. The layout is simple and structured, with clear borders around the table and centered text for the title and code.",
+    "auto.md": "Inventory record\nCode: 923235\n\n| Item    | Quantity |\n|---------|----------|\n| Juniper | 27       |\n| Quartz  | 64       |",
+    "imported.txt": "Inventory record\nCode: 923235\n\nItem\tQuantity\nJuniper\t27\nQuartz\t64"
+  },
+  "outputStorage": "resultFile names identify keys in outputs; generated HTML/SVG are retained as inert JSON strings, not executable standalone files.",
+  "acceptance": "FAIL: SVG automated geometry assertion and manual SVG/Description fidelity. No native capture or all-format quality acceptance.",
+  "fixtureSHA256": "8663be5afb0b3eb31ae9f73ada89c420ac7e90a1f801a00d6577ef8c1ec25773"
+}

@@ -60,6 +60,47 @@ G01–G12 must pass on the exact candidate before claiming the core experience i
 
 Untested configuration gates must be stated as limitations of the preview. Do not imply both connection types, login startup, multiple displays, or clean-machine installation are proven by testing one local configuration.
 
+## Accessibility gates
+
+The user has identified accessibility as a required part of the product. [Accessibility status and acceptance](ACCESSIBILITY.md) defines A01–A06: VoiceOver setup, pointer-free region/window capture, spoken outcomes, keyboard/focus recovery, low-vision layouts and alternative input. These supplement G01–G12; native controls, labels, imports, unit tests and offscreen renders cannot establish assistive-technology acceptance. `clip-cqc.14` and `clip-cqc.15` block candidate release acceptance until native accessibility and usable text enlargement are verified. Keep the normal quiet background workflow throughout.
+
+## Multiple-provider candidate
+
+The development candidate adds Anthropic, Gemini, Perplexity and oMLX. It is not part of public v0.3.1. Track evidence for each exact provider/model/API or server version under Beads epic `clip-cqc`; source and fixture tests do not establish live support.
+
+Development checks on 22 September 2026: the initial candidate passed 114 tests, an optimized build and all 10 isolated release-orchestration scenarios. Subsequent local-model work passed 121 automated tests, including opt-in live synthetic-image and windowless render tests. Manual inspection found Description and SVG quality failures despite passing automated format/value assertions; see [oMLX evidence](testing/OMLX.md). Full connection forms were inspected in light/dark mode; detached native tabs and scrolling require live UI verification. No native capture was used for this candidate's evidence. The installed app was left unchanged.
+
+The About-page addition is in development version 0.4.0 build 8. Its app bundle built and passed signature verification, and the subsequent regression run passed 120 tests with the live oMLX test skipped. About and third-party notices were inspected in windowless light/dark renders using the actual bundle's version, icon and notices. Native tab selection, sheet dismissal and menu interaction still require live UI verification; no application window was opened for these checks. This build is not a new signed/notarized public release.
+
+The accessibility foundation update is in development version 0.4.0 build 9. It adds explicit labels/selected states, safe VoiceOver announcement requests, recorder navigation/lifecycle cleanup, Command-W, resizable Settings and scrolling sidebar/About content. The optimized build/signature verification and 134 tests passed; one opt-in live AI test was skipped. App-state announcement integration used mock providers and a private clipboard. Offscreen inspection found and corrected white-on-light-green prominent buttons in dark mode. High-contrast named-appearance snapshots still used the normal palette and are not proof of system Increase Contrast support. The installed app and macOS accessibility settings were not changed; A01–A06 remain NOT RUN.
+
+Later on 22 September, signed/notarized **0.4.0 build 10** was installed locally as a private bootstrap, preserving preferences/history and selecting the existing 8B local model on the official packaged oMLX 0.7.0.dev2 server. The native Connection test passed. Renewed Screen Recording approval required clearing only the obsolete ad-hoc app entry and adding the installed signed app after user authorization; the warning then cleared. Native capture-to-paste acceptance is still pending. Both 8B and the newly downloaded 32B model pass useful synthetic extraction checks but fail Description/SVG fidelity; [the current evidence](testing/OMLX.md) records those failures. The updater's private installation test and native accessibility acceptance remain open. No 0.4 release was public at that stage. Later preview publication must keep these limitations explicit and does not retroactively pass unverified gates.
+
+### Installed build 11: notification and updater checks
+
+The final signed/notarized **0.4.0 build 11** was built from commit `8d195552c5363672d26c929837f66ac60c46679a`. Its final offline regression reported **177 passed and two opt-in tests skipped**, across 111 application tests and 68 core tests (179 total). Live oMLX and windowless rendering were the opt-in skips; they are not counted as passes. Later documentation-only corrections do not change that binary, source revision or prepared signed assets.
+
+The user confirmed both native **ready** and **failure** banners and their sounds on the installed final app. Earlier missing alerts were traced to macOS suppression: first the policy for shared/recorded displays, then an active Sleep Focus. With the user's explicit approval, those settings were temporarily adjusted for the check. The sharing policy was then restored to **Notifications Off** and verified in System Settings; the user confirmed Sleep Focus was restored. This verifies visible/audible delivery when macOS permits it, not an ability to bypass Focus or screen-sharing privacy policy. Notification-click behavior and every wider capture gate are not implied by this result.
+
+In the private Sparkle updater rehearsal, the installed app rejected a modified feed and a modified archive, then successfully installed signed/notarized build 11 over build 10. The installed bundle matched the prepared candidate, and existing preferences/history were preserved. This is evidence for that upgrade path; it does not substitute for verifying a published download on a clean installation under D06.
+
+These are bounded preview results, not full accessibility, cloud-provider, native capture-matrix or Description/SVG quality acceptance. The local-model failures and unverified gates remain explicit. An optional demo recording did not show the intended capture-to-paste sequence, so no demo is published or promised; a future synthetic recording remains deferred under `clip-bkc.16`.
+
+| Connection | Live candidate status | Additional evidence required |
+| --- | --- | --- |
+| OpenAI API | Not yet rerun on this candidate | Existing-key migration, synthetic image test, G03/G04/G05/G07/G09/G11. |
+| ChatGPT via Codex | Unverified on this candidate | Actual ChatGPT login and image execution through supported CLI; preserve noninteractive background failure behavior. |
+| Anthropic | Unverified | Available vision/schema model, account access, complete-response parsing and no tools. |
+| Google Gemini | Unverified | Available model/project, Interactions image/schema request, optional storage disabled and no tools. |
+| Perplexity | Unverified | Explicit direct vision model, no presets/web search/tools/fallback list, schema cold-start behavior. |
+| oMLX | Synthetic conversion/private clipboard/history checks exercised complete Qwen3-VL 8B/32B models on the unmodified official oMLX 0.7.0.dev2 package; useful extraction works, while Description/SVG fidelity fails | Resolve output quality; complete native G03/G04/G05/G07/G09/G11 evidence, model fallback disabled, offline processing and local/LAN authentication. |
+
+For every advertised connection, run G03 and G04 twice consecutively on the exact candidate with app windows closed. Record actual paste content and type, focus and cursor recovery, model/account/server version, output validity and cold/warm duration. Do not put private screenshots or credentials in the evidence record.
+
+Additional regression cases: switch provider/model/address while selecting or converting and confirm the initial configuration is used; change a key or endpoint and confirm readiness is invalidated and keys are not sent to another destination; restore an unreadable configuration and confirm captures do not fall back to OpenAI; cancel a delayed request and confirm its late response does not copy; retry a history image with another provider and verify provenance even when output text is identical. Pass through must perform no model-list request, key lookup or AI call.
+
+Check invalid/revoked keys, unavailable models/server, local text-only model, oversized input, refusal, incomplete output, invalid JSON/YAML, rate/quota error, redirect and timeout. Each must preserve the clipboard, avoid app/credential windows, terminate busy state and allow a subsequent successful capture. Use the existing G01–G12/D01–D06 gates for install/startup/appearance/history and signed release acceptance.
+
 ## Fixtures and evidence
 
 Use synthetic/public content: a short sentence with a unique number, a two-column three-row table, a small record with string/number/boolean values, and a simple labelled diagram. Keep the complete fixture within the selected crop. Verify known values and paste type, not only the app's success label.

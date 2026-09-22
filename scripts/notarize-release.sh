@@ -57,8 +57,12 @@ app_hash() {
     file_hash "$APP/Contents/MacOS/SmartClipboard"
 }
 verify_app() {
-    local metadata
+    local metadata helper framework="$APP/Contents/Frameworks/Sparkle.framework"
     verify_identity "$APP"
+    for helper in XPCServices/Installer.xpc XPCServices/Downloader.xpc Autoupdate Updater.app; do
+        verify_identity "$framework/Versions/B/$helper"
+    done
+    verify_identity "$framework"
     metadata="$(codesign --display --verbose=4 "$APP" 2>&1)"
     [[ "$metadata" == *"Identifier=com.smartclipboard.app"* ]] || fail "Unexpected app bundle identifier."
     [[ "$metadata" == *"TeamIdentifier=$TEAM_ID"* ]] || fail "Unexpected app signing team."
@@ -159,7 +163,7 @@ fi
 
 # Verify the final downloadable payload, including the ticket inside the ZIP.
 ditto -x -k "$ZIP" "$SCRATCH/unzipped"
-diff -qr "$APP" "$SCRATCH/unzipped/Smart Clipboard.app"
+python3 scripts/compare-bundles.py "$APP" "$SCRATCH/unzipped/Smart Clipboard.app"
 verify_identity "$SCRATCH/unzipped/Smart Clipboard.app"
 xcrun stapler validate "$SCRATCH/unzipped/Smart Clipboard.app"
 verify_unchanged_app

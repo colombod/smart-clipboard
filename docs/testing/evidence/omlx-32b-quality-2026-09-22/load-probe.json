@@ -1,0 +1,24 @@
+{
+  "elapsed_seconds": 6.66,
+  "requested_model": "Qwen3-VL-32B-Instruct-4bit",
+  "response_model": "Qwen3-VL-32B-Instruct-4bit",
+  "text": "VISION CHECK 4827",
+  "usage": {
+    "prompt_tokens": 136,
+    "completion_tokens": 7,
+    "total_tokens": 143,
+    "input_tokens": 136,
+    "output_tokens": 7,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "model_load_duration": 4.75,
+    "total_time": 1.68
+  },
+  "finish_reason": "stop",
+  "loaded_models": [
+    "Qwen3-VL-32B-Instruct-4bit"
+  ],
+  "image_text_matches": true,
+  "model_loaded": true
+}

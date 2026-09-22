@@ -1,0 +1,93 @@
+{
+  "attempts": [
+    {
+      "actualFormat": "text",
+      "failures": [],
+      "phase": "provider",
+      "requestedFormat": "text",
+      "resultFile": "text.txt",
+      "seconds": 1.4581526249530725
+    },
+    {
+      "actualFormat": "markdown",
+      "failures": [],
+      "phase": "provider",
+      "requestedFormat": "markdown",
+      "resultFile": "markdown.md",
+      "seconds": 1.290265541698318
+    },
+    {
+      "actualFormat": "json",
+      "failures": [],
+      "phase": "provider",
+      "requestedFormat": "json",
+      "resultFile": "json.json",
+      "seconds": 1.412225958367344
+    },
+    {
+      "actualFormat": "yaml",
+      "failures": [],
+      "phase": "provider",
+      "requestedFormat": "yaml",
+      "resultFile": "yaml.yaml",
+      "seconds": 1.3451382083585486
+    },
+    {
+      "actualFormat": "html",
+      "failures": [],
+      "phase": "provider",
+      "requestedFormat": "html",
+      "resultFile": "html.html",
+      "seconds": 5.322365333326161
+    },
+    {
+      "actualFormat": "svg",
+      "failures": [],
+      "phase": "provider",
+      "requestedFormat": "svg",
+      "resultFile": "svg.svg",
+      "seconds": 6.580048791656736
+    },
+    {
+      "actualFormat": "description",
+      "failures": [],
+      "phase": "provider",
+      "requestedFormat": "description",
+      "resultFile": "description.txt",
+      "seconds": 2.452370624989271
+    },
+    {
+      "actualFormat": "markdown",
+      "failures": [],
+      "phase": "provider",
+      "requestedFormat": "auto",
+      "resultFile": "auto.md",
+      "seconds": 1.442115708370693
+    },
+    {
+      "actualFormat": "text",
+      "failures": [],
+      "phase": "import-history-clipboard",
+      "requestedFormat": "text",
+      "resultFile": "imported.txt",
+      "seconds": 1.2374924999894574
+    }
+  ],
+  "code": "837792",
+  "completed": true,
+  "model": "Qwen3-VL-8B-Instruct-4bit",
+  "scope": "Synthetic-image live API and windowless import/history/private-clipboard checks only. Automated syntax/value checks do not establish semantic or visual quality; inspect every output. Native capture, shortcuts, focus, actual paste, and packaged-app LAN permission require separate UAT.",
+  "serverBuild": "Official oMLX 0.7.0.dev2 macOS26-27 DMG; unmodified; isolated state; HF offline",
+  "suiteCountReported": 147,
+  "acceptance": "Automated structural/value assertions passed before added correction/aspect checks. Description and SVG failed manual review; all-format acceptance is false.",
+  "outputs": {
+    "text": "Inventory record\nCode: 837792\n\nItem\tQuantity\nJuniper\t27\nQuartz\t64",
+    "markdown": "Inventory record\nCode: 837792\n\n| Item     | Quantity |\n|-----------|-----------|\n| Juniper   | 27        |\n| Quartz    | 64        |",
+    "json": "{\"inventory_record\": {\"code\": \"837792\", \"items\": [{\"item\": \"Juniper\", \"quantity\": 27}, {\"item\": \"Quartz\", \"quantity\": 64}]}}",
+    "yaml": "inventory_record:\n  code: 837792\n  items:\n    - item: Juniper\n      quantity: 27\n    - item: Quartz\n      quantity: 64",
+    "html": "<div style=\"font-family: Arial, sans-serif; font-size: 16px; line-height: 1.5;\">\n  <h2 style=\"color: #222;\">Inventory record</h2>\n  <p style=\"font-weight: bold;\">Code: 837792</p>\n  <table style=\"border-collapse: collapse; width: 100%; border: 1px solid #000;\">\n    <thead>\n      <tr style=\"border: 1px solid #000;\">\n        <th style=\"border: 1px solid #000; padding: 8px;\">Item</th>\n        <th style=\"border: 1px solid #000; padding: 8px;\">Quantity</th>\n      </tr>\n    </thead>\n    <tbody>\n      <tr style=\"border: 1px solid #000;\">\n        <td style=\"border: 1px solid #000; padding: 8px;\">Juniper</td>\n        <td style=\"border: 1px solid #000; padding: 8px;\">27</td>\n      </tr>\n      <tr style=\"border: 1px solid #000;\">\n        <td style=\"border: 1px solid #000; padding: 8px;\">Quartz</td>\n        <td style=\"border: 1px solid #000; padding: 8px;\">64</td>\n      </tr>\n    </tbody>\n  </table>\n</div>",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 600 600\" width=\"600\" height=\"600\">\n  <style>\n    .label { font-family: sans-serif; font-size: 24px; fill: black; }\n    .value { font-family: sans-serif; font-size: 24px; fill: black; }\n    .header { font-family: sans-serif; font-size: 32px; fill: black; }\n  </style>\n  <text x=\"10\" y=\"40\" class=\"header\">Inventory record</text>\n  <text x=\"10\" y=\"80\" class=\"label\">Code: </text>\n  <text x=\"100\" y=\"80\" class=\"value\">837792</text>\n  <rect x=\"10\" y=\"100\" width=\"580\" height=\"40\" fill=\"none\" stroke=\"black\"/>\n  <text x=\"10\" y=\"120\" class=\"label\">Item</text>\n  <text x=\"280\" y=\"120\" class=\"label\">Quantity</text>\n  <rect x=\"10\" y=\"140\" width=\"260\" height=\"40\" fill=\"none\" stroke=\"black\"/>\n  <text x=\"10\" y=\"160\" class=\"value\">Juniper</text>\n  <text x=\"280\" y=\"160\" class=\"value\">27</text>\n  <rect x=\"10\" y=\"180\" width=\"260\" height=\"40\" fill=\"none\" stroke=\"black\"/>\n  <text x=\"10\" y=\"200\" class=\"value\">Quartz</text>\n  <text x=\"280\" y=\"200\" class=\"value\">64</text>\n</svg>",
+    "description": "The image displays an inventory record with the title \"Inventory record\" and a code labeled \"Code: 837792\". Below this, there is a table with two columns: \"Item\" and \"Quantity\". The table contains two rows: the first row lists the item \"Juniper\" with a quantity of \"27\"; the second row lists the item \"Quartz\" with a quantity of \"64\". The text \"Quartz\" appears to be a misspelling of \"Quartz\" in the image, and the item \"Juniper\" is spelled as \"Juniper\".",
+    "auto": "Inventory record\nCode: 837792\n\n| Item     | Quantity |\n|-----------|-----------|\n| Juniper   | 27        |\n| Quartz    | 64        |"
+  }
+}

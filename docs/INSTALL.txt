@@ -23,18 +23,34 @@ Escape cancels. macOS will ask for Screen Recording permission. Grant it
 for Smart Clipboard and reopen the app if necessary.
 
 AI SETUP
-Open Settings > Connection and choose either an OpenAI API key (stored in
-Keychain) or ChatGPT via the official Codex CLI. ChatGPT mode requires the
+Open Settings > Connection and choose OpenAI, ChatGPT via Codex, Anthropic,
+Google Gemini, Perplexity, or Local / oMLX. API keys are saved in Keychain. ChatGPT mode requires the
 CLI to be installed separately and a plan with Codex access. API billing
 is separate. Image copy/save and on-device OCR need neither connection.
 Automatic processing sends each capture/import to the configured AI connection.
 Choose Pass through (image) for local PNG copying without extraction.
+
+LOCAL / OMLX
+Start oMLX with an image-capable model. Select Local / oMLX in Connection,
+enter its server address ending in /v1, refresh models and choose the exact
+vision model ID. A server on this Mac may not need an API key. Click Test
+image processing before capturing; this uses a generated sample image.
+Start with mlx-community/Qwen3-VL-8B-Instruct-4bit for tested text/table
+extraction. It is about 5.78 GB; plan for 16 GB+ unified memory (an estimate).
+The tested server is the official oMLX 0.7.0.dev2 prerelease; 0.6.4 has a
+structured-output bug. The larger 32B model did not fix Description/SVG
+quality problems. Review those experimental outputs; see the setup guide
+for exact model IDs and known limits. Keep the server running.
 
 OUTPUT AND HISTORY
 Set Settings > General > Preferred format once. Auto detect lets AI choose
 the best editable format for each source. Add an optional Default direction.
 Capture, wait for Clip ✓, then paste with Command-V. Pass through (image)
 copies the PNG without extraction or AI. Import Image uses the same settings.
+Enable Settings > General > Capture notifications to get a macOS notification
+when the result is ready or processing fails. Allow the notification request;
+success/failure alerts and optional sound are configurable. Notifications do
+not contain captured text. Focus and macOS settings control their delivery.
 No app window opens automatically, including on startup or errors.
 Open Settings, Clipboard or History explicitly from the Clip menu.
 History in the sidebar or menu bar lets you reopen a capture, select another
@@ -50,7 +66,12 @@ After installing in Applications, enable Settings > General > Launch at
 login. Closing the capture/settings windows leaves the menu bar app running.
 
 UPDATES AND REMOVAL
-Quit Smart Clipboard from its menu before replacing it with a new version.
+Use Clip > Check for Updates, or open About to enable daily background checks.
+Background checks show availability in the Clip menu; they do not open windows.
+You choose when to install. Updates wait for capture/conversion to finish.
+About > Releases selects stable releases or includes previews.
+Older versions without an updater need one manual replacement. Quit Smart
+Clipboard from its menu before dragging the new app into Applications.
 Moving from an older ad-hoc preview to Developer ID signing may require one
 new Screen Recording approval and authorization of your existing saved API
 key in Settings > Connection. Your captures and settings are retained.
@@ -67,5 +88,5 @@ ChatGPT credentials remain with Codex; removing this app does not sign out
 other Codex clients. Exported files and clipboard contents are unchanged.
 
 SOURCE AND DOWNLOADS
-https://github.com/colombod/smart-clipboard
+https://colombod.github.io/smart-clipboard/
 https://github.com/colombod/smart-clipboard/releases

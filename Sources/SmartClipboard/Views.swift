@@ -6,8 +6,19 @@ import ClipboardCore
 
 // Explicit alias keeps the property wrapper unambiguous on SDKs that also expose a State macro.
 private typealias ViewState<Value> = SwiftUI.State<Value>
+private typealias RecorderFocus<Value: Hashable> = SwiftUI.FocusState<Value>
 
-private let accent = Color(red: 0.20, green: 0.46, blue: 0.35)
+let accent = Color(nsColor: NSColor(name: nil) { appearance in
+    switch appearance.bestMatch(from: [.accessibilityHighContrastDarkAqua, .accessibilityHighContrastAqua, .darkAqua, .aqua]) {
+    case .accessibilityHighContrastDarkAqua: return NSColor(srgbRed: 0.61, green: 0.88, blue: 0.72, alpha: 1)
+    case .accessibilityHighContrastAqua: return NSColor(srgbRed: 0.12, green: 0.34, blue: 0.23, alpha: 1)
+    case .darkAqua: return NSColor(srgbRed: 0.44, green: 0.75, blue: 0.59, alpha: 1)
+    default: return NSColor(srgbRed: 0.20, green: 0.46, blue: 0.35, alpha: 1)
+    }
+})
+// Native prominent buttons keep white labels, so their fill must stay dark
+// even when foreground accents become lighter in Dark Mode.
+private let prominentAccent = Color(red: 0.20, green: 0.46, blue: 0.35)
 
 struct CaptureView: View {
     @ObservedObject var model: AppModel
@@ -23,6 +34,8 @@ struct CaptureView: View {
                     Spacer()
                     if model.png != nil {
                         Button { model.clear() } label: { Image(systemName: "xmark") }.help("Close clip; keep saved history").disabled(model.busy)
+                            .accessibilityLabel("Close current clip")
+                            .accessibilityHint("Keeps the saved capture in history.")
                     }
                 }
                 if !model.captureReady {
@@ -45,6 +58,7 @@ struct CaptureView: View {
                         Text(error).font(.callout).textSelection(.enabled)
                         Spacer()
                         Button { model.error = nil } label: { Image(systemName: "xmark") }.buttonStyle(.plain)
+                            .accessibilityLabel("Dismiss error")
                     }.padding(12).background(Color.orange.opacity(0.09), in: RoundedRectangle(cornerRadius: 10))
                 }
                 HStack(spacing: 6) {
@@ -56,7 +70,8 @@ struct CaptureView: View {
         }.tint(accent).background(Color(nsColor: .windowBackgroundColor))
     }
     private var sidebar: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        ScrollView {
+          VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 10) {
                 Image(systemName: "viewfinder").font(.system(size: 23, weight: .medium)).foregroundStyle(accent)
                 VStack(alignment: .leading, spacing: 1) {
@@ -66,14 +81,15 @@ struct CaptureView: View {
             }.padding(.top, 10)
             Button { model.showSettings(tab: "general") } label: {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("CAPTURE → CLIPBOARD").font(.system(size: 9, weight: .semibold)).tracking(0.6)
+                    Text("CAPTURE → CLIPBOARD").font(.system(size: 11, weight: .semibold)).tracking(0.6)
                     Text(model.defaultFormat.title).font(.caption)
                 }.foregroundStyle(accent)
             }.buttonStyle(.plain).help("Configure your preferred format and capture workflow")
+                .accessibilityLabel("Capture preferences").accessibilityValue(model.defaultFormat.title)
             VStack(spacing: 8) {
                 Button { model.capture() } label: {
                     Label("Capture region", systemImage: "viewfinder").frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 5)
-                }.buttonStyle(.borderedProminent)
+                }.buttonStyle(.borderedProminent).tint(prominentAccent)
                 Button { model.capture(window: true) } label: {
                     Label("Capture window", systemImage: "macwindow").frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 5)
                 }
@@ -95,6 +111,8 @@ struct CaptureView: View {
                             .foregroundStyle(model.format == format ? accent : Color.primary)
                             .contentShape(Rectangle())
                     }.buttonStyle(.plain).disabled(model.busy)
+                        .accessibilityLabel(format.title)
+                        .accessibilityAddTraits(model.format == format ? .isSelected : [])
                 }
             }
             Spacer(minLength: 0)
@@ -103,7 +121,8 @@ struct CaptureView: View {
                 HStack { Label("History", systemImage: "clock.arrow.circlepath"); Spacer(); Text("\(model.history.count)").foregroundStyle(.secondary) }
             }.buttonStyle(.plain)
             Button { model.showSettings() } label: { Label("Settings", systemImage: "gearshape").foregroundStyle(.secondary) }.buttonStyle(.plain)
-        }.padding(20).frame(width: 200).frame(maxHeight: .infinity)
+          }.padding(20)
+        }.frame(width: 220).frame(maxHeight: .infinity)
             .background(Color(nsColor: .controlBackgroundColor).opacity(0.65))
             .overlay(alignment: .trailing) { Divider() }
     }
@@ -115,12 +134,12 @@ struct CaptureView: View {
                 RoundedRectangle(cornerRadius: 20).fill(Color(nsColor: .controlBackgroundColor)).frame(width: 128, height: 104).shadow(color: .black.opacity(0.07), radius: 15, y: 7)
                 Image(systemName: "viewfinder").font(.system(size: 52, weight: .ultraLight)).foregroundStyle(accent)
                 Image(systemName: "sparkles").font(.system(size: 24)).foregroundStyle(accent).offset(x: 60, y: -48)
-            }
+            }.accessibilityHidden(true)
             VStack(spacing: 7) {
                 Text("From your screen to your next idea.").font(.system(size: 19, weight: .medium, design: .rounded))
                 Text("Turn a table into JSON, a slide into notes,\nor a diagram into editable SVG.").multilineTextAlignment(.center).foregroundStyle(.secondary).lineSpacing(4)
             }
-            Button("Capture a region") { model.capture() }.buttonStyle(.borderedProminent).controlSize(.large)
+            Button("Capture a region") { model.capture() }.buttonStyle(.borderedProminent).tint(prominentAccent).controlSize(.large)
             Text(model.regionShortcut.label + "  anywhere on your Mac").font(.caption.monospaced()).foregroundStyle(.secondary)
             HStack(spacing: 24) {
                 Label("Select a region", systemImage: "rectangle.dashed")
@@ -137,6 +156,7 @@ struct CaptureView: View {
             HStack(alignment: .top, spacing: 16) {
                 Image(nsImage: image).resizable().scaledToFit().frame(maxWidth: .infinity).frame(height: 160)
                     .padding(12).background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 12))
+                    .accessibilityLabel("Original capture")
                 VStack(alignment: .leading, spacing: 12) {
                     Text("ORIGINAL CAPTURE").font(.system(size: 10, weight: .semibold)).tracking(1)
                     Text("Keep the image, too.").font(.callout).foregroundStyle(.secondary)
@@ -151,15 +171,16 @@ struct CaptureView: View {
                 HStack {
                     Image(systemName: "text.bubble").foregroundStyle(.secondary)
                     TextField("Optional direction — e.g. translate to English, preserve table columns…", text: $model.instruction).textFieldStyle(.plain).disabled(model.busy)
+                        .accessibilityLabel("Conversion direction")
                 }.padding(12).background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 9))
                 HStack {
                     if model.busy {
-                        ProgressView().controlSize(.small)
+                        ProgressView().controlSize(.small).accessibilityLabel("Converting capture")
                         Text("Working on your clip…").font(.callout).foregroundStyle(.secondary)
                         Spacer()
                         Button("Cancel") { model.cancel() }
                     } else {
-                        Button { model.convert() } label: { Label("Convert with AI", systemImage: "sparkles") }.buttonStyle(.borderedProminent).controlSize(.large)
+                        Button { model.convert() } label: { Label("Convert with AI", systemImage: "sparkles") }.buttonStyle(.borderedProminent).tint(prominentAccent).controlSize(.large)
                         Button("Extract text on device") { model.convert(local: true) }.help("Apple Vision OCR. No upload; ignores additional directions.")
                         Spacer()
                     }
@@ -167,7 +188,12 @@ struct CaptureView: View {
             }
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
-                    Text(model.output.isEmpty ? "RESULT" : model.resultFormat.title.uppercased()).font(.system(size: 10, weight: .semibold)).tracking(1)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(model.output.isEmpty ? "RESULT" : model.resultFormat.title.uppercased()).font(.system(size: 10, weight: .semibold)).tracking(1)
+                        if let origin = model.resultOrigin {
+                            Text(origin).font(.caption2).foregroundStyle(.secondary).lineLimit(1).help(origin)
+                        }
+                    }
                     Spacer()
                     if !model.savedConversions.isEmpty {
                         Menu("Saved formats") {
@@ -188,7 +214,9 @@ struct CaptureView: View {
                         Text(model.format == .image ? "Your image is ready to copy or save." : "Your \(model.format == .auto ? "automatically chosen format" : model.format.title) will appear here.").foregroundStyle(.secondary)
                     }.frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
-                    TextEditor(text: $model.output).font(.system(size: 13, design: .monospaced)).padding(8).scrollContentBackground(.hidden)
+                    TextEditor(text: $model.output).font(.system(.body, design: .monospaced)).padding(8).scrollContentBackground(.hidden)
+                        .accessibilityLabel("Converted result")
+                        .accessibilityHint("Editable \(model.resultFormat.title) content.")
                 }
             }.frame(maxHeight: .infinity).frame(minHeight: 130).background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 12))
                 .overlay { RoundedRectangle(cornerRadius: 12).stroke(Color.primary.opacity(0.08)) }
@@ -198,74 +226,15 @@ struct CaptureView: View {
 
 struct SettingsView: View {
     @ObservedObject var model: AppModel
-    @ViewState<String> private var apiKey = ""
     @ViewState<String> private var message = ""
-    @ViewState<Bool> private var working = false
-    @ViewState<Task<Void, Never>?> private var loginTask = nil
     @ViewState<String?> private var activeRecorder = nil
     @ViewState<Bool> private var loginEnabled = SMAppService.mainApp.status == .enabled
     var body: some View {
         TabView(selection: $model.settingsTab) {
-            Form {
-                Section("AI connection") {
-                    Picker("Connect with", selection: $model.provider) {
-                        Text("OpenAI API key").tag("api")
-                        Text("ChatGPT via Codex").tag("codex")
-                    }
-                    if model.provider == "api" {
-                        SecureField("New API key", text: $apiKey)
-                        Text("Your saved key remains in Keychain. Opening Settings does not read it.").font(.caption).foregroundStyle(.secondary)
-                        HStack {
-                            Button("Save key to Keychain") {
-                                let key = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
-                                working = true
-                                Task {
-                                    defer { working = false }
-                                    do { try await Task.detached { try KeyStore.save(key) }.value; apiKey = ""; message = "Key saved securely." }
-                                    catch { message = error.localizedDescription }
-                                }
-                            }.disabled(working || apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                            Link("Get an API key ↗", destination: URL(string: "https://platform.openai.com/api-keys")!)
-                        }
-                        HStack {
-                            Button("Authorize saved key") {
-                                working = true
-                                Task {
-                                    defer { working = false }
-                                    do { let exists = try await Task.detached { try !KeyStore.read(allowInteraction: true).isEmpty }.value; message = exists ? "Saved key is accessible." : "No API key saved yet." }
-                                    catch { message = error.localizedDescription }
-                                }
-                            }.disabled(working)
-                            Button("Remove saved key") {
-                                working = true
-                                Task {
-                                    defer { working = false }
-                                    do { try await Task.detached { try KeyStore.save("") }.value; message = "Key removed." }
-                                    catch { message = error.localizedDescription }
-                                }
-                            }.disabled(working)
-                            if working { ProgressView().controlSize(.small) }
-                        }
-                        TextField("Vision model", text: $model.apiModel)
-                        Text("API usage is billed to your OpenAI Platform account. Choose a model that supports images and structured outputs.").font(.caption).foregroundStyle(.secondary)
-                    } else {
-                        Text("Use your ChatGPT plan’s Codex access through the official Codex CLI. Subscription limits and workspace policies apply.").font(.callout).foregroundStyle(.secondary)
-                        TextField("Codex executable", text: $model.codexExecutable, prompt: Text("Auto-detect"))
-                        TextField("Model (optional)", text: $model.codexModel, prompt: Text("Codex default"))
-                        HStack {
-                            Button("Sign in with ChatGPT") { signIn() }.disabled(working)
-                            Button("Check connection") { checkConnection() }.disabled(working)
-                            if working { ProgressView().controlSize(.small); Button("Cancel") { loginTask?.cancel() } }
-                        }
-                        Link("Install / update Codex CLI ↗", destination: URL(string: "https://developers.openai.com/codex/cli")!)
-                        Text("Sign-in opens your browser. Credentials stay with Codex; this app does not read or copy your ChatGPT tokens. A recent CLI with --ignore-user-config is required.").font(.caption).foregroundStyle(.secondary)
-                    }
-                }
-                if !message.isEmpty { Text(message).font(.callout).textSelection(.enabled) }
-                Section("Your captures") {
-                    Text("Each selected screenshot or imported image uses your preferred format, then copies the result. AI formats send it to your configured connection. Pass through copies the image locally without extraction. On-device text extraction also works offline. Captured and imported images and their results are saved locally according to your History settings. Set the limit to zero to disable history. Codex uses temporary files removed after conversion.").font(.caption).foregroundStyle(.secondary)
-                }
-            }.formStyle(.grouped).tabItem { Label("Connection", systemImage: "network") }.tag("connection")
+            ConnectionSettingsView(store: model.connections)
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel("Connection settings")
+                .tabItem { Label("Connection", systemImage: "network") }.tag("connection")
             Form {
                 Section("App status") {
                     Label("Running in the background", systemImage: "checkmark.circle.fill").foregroundStyle(accent)
@@ -290,7 +259,10 @@ struct SettingsView: View {
                     Text("Click a shortcut and press a combination with ⌘ or ⌃. Escape cancels. Shortcuts pause while you record. During capture, Space switches between region and window.").font(.caption).foregroundStyle(.secondary)
                     Text(model.lastShortcutEvent).font(.caption.monospaced()).textSelection(.enabled)
                 }
-            }.formStyle(.grouped).tabItem { Label("Shortcuts", systemImage: "keyboard") }.tag("shortcuts")
+            }.formStyle(.grouped)
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel("Shortcut settings")
+                .tabItem { Label("Shortcuts", systemImage: "keyboard") }.tag("shortcuts")
             Form {
                 Section("General") {
                     Toggle("Launch at login", isOn: Binding(get: { loginEnabled }, set: { enabled in
@@ -302,42 +274,34 @@ struct SettingsView: View {
                 Section("Capture workflow") {
                     Picker("Preferred format", selection: $model.defaultFormat) { ForEach(OutputFormat.allCases) { Text($0.title).tag($0) } }
                     TextField("Default direction", text: $model.defaultInstruction, prompt: Text("Optional — e.g. translate to English"))
-                    Text("Every capture uses this format and direction, then copies the result. No app windows open; progress and errors appear in the menu bar.").font(.caption).foregroundStyle(.secondary)
+                    Text("Every capture uses this format and direction, then copies the result. No app windows open; progress appears in the menu bar. Enable notifications below to hear or see when it is ready to paste or needs attention.").font(.caption).foregroundStyle(.secondary)
                     Text("Auto detect lets AI choose the best format. Pass through copies the original PNG without extraction or AI. Other formats use your configured connection.").font(.caption).foregroundStyle(.secondary)
                 }
                 Section("Manual conversions") {
                     Toggle("Copy after manual conversion", isOn: $model.copyAutomatically)
                 }
+                if let notifications = model.notifications {
+                    NotificationSettingsView(notifications: notifications)
+                }
                 Section("Smart Clipboard") {
                     Text("Capture once. Use it anywhere.").font(.headline)
-                    Text("Native macOS · Version 0.3.1\nThe app stays in your menu bar when you close its windows.").foregroundStyle(.secondary)
+                    Text("The app stays in your menu bar when you close its windows.").foregroundStyle(.secondary)
+                    Button("About Smart Clipboard…") { model.settingsTab = "about" }
                 }
                 if !message.isEmpty { Text(message).font(.callout) }
-            }.formStyle(.grouped).tabItem { Label("General", systemImage: "slider.horizontal.3") }.tag("general")
-            HistorySettingsView(model: model).tabItem { Label("History", systemImage: "clock.arrow.circlepath") }.tag("history")
-        }.padding(12).frame(width: 640, height: 550).tint(accent)
-    }
-    private func signIn() {
-        working = true; message = "Complete sign-in in your browser."
-        loginTask = Task {
-            defer { working = false; loginTask = nil }
-            do {
-                let path = try AIService.codexPath(model.codexExecutable)
-                let (status, _) = try await ProcessRunner().run(path, ["login"], timeout: 300)
-                message = status == 0 ? "Signed in. Use Check connection to confirm ChatGPT access." : "Sign-in did not complete. Try again."
-            } catch { message = error is CancellationError ? "Sign-in cancelled." : error.localizedDescription }
-        }
-    }
-    private func checkConnection() {
-        working = true; message = "Checking Codex…"
-        loginTask = Task {
-            defer { working = false; loginTask = nil }
-            do {
-                let path = try AIService.codexPath(model.codexExecutable)
-                let (status, text) = try await ProcessRunner().run(path, ["login", "status"], timeout: 15)
-                message = status == 0 && text.localizedCaseInsensitiveContains("ChatGPT") ? "Connected with ChatGPT." : "No ChatGPT sign-in found. Choose Sign in with ChatGPT."
-            } catch { message = error.localizedDescription }
-        }
+            }.formStyle(.grouped)
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel("General settings")
+                .tabItem { Label("General", systemImage: "slider.horizontal.3") }.tag("general")
+            HistorySettingsView(model: model)
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel("History settings")
+                .tabItem { Label("History", systemImage: "clock.arrow.circlepath") }.tag("history")
+            AboutView(updates: model.updates)
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel("About Smart Clipboard")
+                .tabItem { Label("About", systemImage: "info.circle") }.tag("about")
+        }.padding(12).frame(minWidth: 640, maxWidth: .infinity, minHeight: 550, maxHeight: .infinity).tint(accent)
     }
 }
 
@@ -351,27 +315,43 @@ struct ShortcutRow: View {
     let save: (Shortcut) throws -> Void
     @ViewState<Bool> private var recording = false
     @ViewState<Any?> private var monitor = nil
+    @ViewState<NSWindow?> private var recordingWindow = nil
     @ViewState<String> private var error = ""
+    @RecorderFocus private var recorderFocused: Bool
     var body: some View {
         VStack(alignment: .leading) {
             HStack {
                 Text(title); Spacer()
                 Button(recording ? "Press shortcut…" : shortcut.label) { begin() }.font(.system(.body, design: .monospaced)).disabled(activeRecorder != nil && activeRecorder != title)
+                    .focused($recorderFocused)
+                    .accessibilityLabel("Record \(title.lowercased()) shortcut")
+                    .accessibilityValue(recording ? "Recording" : shortcut.spokenDescription)
+                    .accessibilityHint("Activate to record a key combination. Escape cancels; Tab moves to the next control. Control-Option commands pass through while VoiceOver is running.")
             }
             Text(status).font(.caption).foregroundStyle(.secondary)
             if !error.isEmpty { Text(error).font(.caption).foregroundStyle(.red) }
         }.onDisappear { end() }
+            .onChange(of: recorderFocused) { _, focused in if !focused { end() } }
+            .onReceive(NotificationCenter.default.publisher(for: NSWindow.didResignKeyNotification)) { _ in end() }
+            .onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in end() }
     }
     private func end() {
         guard recording else { return }
         if let monitor { NSEvent.removeMonitor(monitor) }
-        monitor = nil; recording = false; activeRecorder = nil; resume()
+        monitor = nil; recordingWindow = nil; recording = false; activeRecorder = nil; resume()
     }
     private func begin() {
-        end(); pause(); recording = true; activeRecorder = title; error = ""
+        end(); pause(); recording = true; activeRecorder = title; error = ""; recorderFocused = true
+        recordingWindow = NSApp.keyWindow
         monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            if event.keyCode == 53 { end(); return nil }
+            guard let recordingWindow, event.window === recordingWindow else { end(); return event }
             let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            switch ShortcutRecorderInput.action(keyCode: event.keyCode, modifiers: flags, characters: event.charactersIgnoringModifiers, voiceOverEnabled: NSWorkspace.shared.isVoiceOverEnabled) {
+            case .cancel: end(); return nil
+            case .navigate: end(); return event
+            case .assistiveNavigation: return event
+            case .record: break
+            }
             guard flags.contains(.command) || flags.contains(.control) else { error = "Include Command or Control."; return nil }
             var modifiers: UInt32 = 0; var label = ""
             if flags.contains(.control) { modifiers |= UInt32(controlKey); label += "⌃" }
@@ -412,15 +392,18 @@ struct HistoryView: View {
                     LazyVStack(spacing: 10) {
                         ForEach(model.history) { entry in
                             HStack(spacing: 14) {
-                                HistoryThumbnail(url: model.historyImageURL(entry))
+                                HistoryThumbnail(url: model.historyImageURL(entry)).accessibilityHidden(true)
                                 VStack(alignment: .leading, spacing: 5) {
                                     Text(entry.title).font(.headline).lineLimit(1)
                                     Text(entry.createdAt, format: .dateTime.month(.abbreviated).day().hour().minute()).font(.caption).foregroundStyle(.secondary)
                                     Text(entry.conversions.isEmpty ? "Original image" : entry.conversions.map { $0.format.title }.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary).lineLimit(2)
-                                }
+                                }.accessibilityElement(children: .combine)
                                 Spacer()
                                 Button("Open") { model.openHistory(entry) }
+                                    .accessibilityLabel("Open \(entry.title), captured \(entry.createdAt.formatted(date: .abbreviated, time: .shortened))")
                                 Button(role: .destructive) { model.deleteHistory(entry) } label: { Image(systemName: "trash") }.help("Delete this saved capture and all its formats")
+                                    .accessibilityLabel("Delete \(entry.title), captured \(entry.createdAt.formatted(date: .abbreviated, time: .shortened))")
+                                    .accessibilityHint("Deletes the original image and all its saved formats.")
                             }.padding(12).background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 10))
                                 .disabled(model.busy || model.capturing)
                         }
@@ -460,7 +443,10 @@ struct HistorySettingsView: View {
                 Stepper(value: $draftLimit, in: 0...HistoryStore.maximumLimit) {
                     HStack {
                         Text("Keep up to")
-                        TextField("Clips", value: $draftLimit, format: .number).frame(width: 65)
+                        TextField("Clips", value: $draftLimit, format: .number)
+                            .accessibilityLabel("Maximum saved clips")
+                            .accessibilityHint("Choose zero to disable history.")
+                            .frame(width: 65)
                         Text("clips")
                     }
                 }.disabled(model.busy || model.capturing)
