@@ -5,7 +5,10 @@ export CLANG_MODULE_CACHE_PATH="$PWD/.build/clang-cache"
 export SWIFTPM_MODULECACHE_OVERRIDE="$PWD/.build/module-cache"
 swift build -c release --disable-sandbox
 BIN_DIR="$(swift build -c release --show-bin-path --disable-sandbox)"
-APP="$PWD/dist/Smart Clipboard.app"
+mkdir -p "$PWD/dist"
+STAGING="$(mktemp -d "$PWD/dist/build.XXXXXX")"
+trap 'rm -rf "$STAGING"' EXIT
+APP="$STAGING/Smart Clipboard.app"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN_DIR/SmartClipboard" "$APP/Contents/MacOS/SmartClipboard"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
@@ -17,4 +20,7 @@ else
     codesign --force --sign - "$APP"
 fi
 codesign --verify --deep --strict "$APP"
+rm -rf "$PWD/dist/Smart Clipboard.app"
+mv "$APP" "$PWD/dist/Smart Clipboard.app"
+APP="$PWD/dist/Smart Clipboard.app"
 echo "Built $APP"

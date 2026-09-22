@@ -6,7 +6,7 @@ A native SwiftUI/AppKit menu bar app for macOS 14 or later. Capture a rectangle 
 
 ## Download and install
 
-**[Download v0.3.0 preview](https://github.com/colombod/smart-clipboard/releases/tag/v0.3.0)** · Apple Silicon (M1 or newer) · macOS 14+
+**[Download v0.3.1 signed preview](https://github.com/colombod/smart-clipboard/releases/tag/v0.3.1)** · Apple Silicon (M1 or newer) · macOS 14+
 
 1. Download the `.dmg`, open it, and drag **Smart Clipboard** to **Applications**.
 2. Eject the disk image and open the installed app. Look for the viewfinder button labelled **Clip** in the menu bar.
@@ -14,7 +14,7 @@ A native SwiftUI/AppKit menu bar app for macOS 14 or later. Capture a rectangle 
 4. In **Settings → General**, choose your **Preferred format** and optional **Default direction**. Captures always use this preference and copy automatically.
 5. Enable **Launch at login** if you want it to start automatically.
 
-This initial preview is **ad-hoc signed and not Apple-notarized**. If macOS blocks opening it, review [Apple’s instructions](https://support.apple.com/en-us/102445) and use **System Settings → Privacy & Security → Open Anyway** only if you trust this download. Managed Macs may disallow that exception. A Developer ID certificate and notarization are needed for a future release without this extra step.
+The official v0.3.1 download is **Developer ID signed and Apple-notarized**. The app and DMG include validated notarization tickets, and both pass Gatekeeper assessment. Screen Recording and saved-key access still require your macOS approval. Updating from an older ad-hoc preview may require those approvals again once; history and preferences remain in their existing locations.
 
 A ZIP is also available; extract it and move the app into Applications. `SHA256SUMS.txt` on the release page provides checksums. Intel Macs are not supported by this first binary release. See [the complete installation guide](docs/INSTALL.txt) for setup, updates and removal.
 
@@ -84,11 +84,24 @@ The 49 tests cover preferred-format capture/import automation, clipboard success
 
 ## Package a release
 
+For a public release, configure a Developer ID Application identity and a local notarization profile using the [signing guide](docs/SIGNING.md), then run:
+
+```sh
+SIGNING_IDENTITY="YOUR_CERTIFICATE_SHA1" \
+NOTARY_PROFILE="smart-clipboard-notary" \
+NOTARY_TIMEOUT=60s \
+./scripts/notarize-release.sh
+```
+
+If Apple is still processing the submission, leave `dist/` unchanged and append `--resume` to the same command. The pipeline signs and notarizes the app and DMG, staples both tickets, verifies Gatekeeper acceptance, and computes final checksums. It preserves the exact approved app throughout packaging. Orchestration checks run with `bash Tests/ReleaseScripts/test-release.sh`.
+
+For a local development package without notarization:
+
 ```sh
 ./scripts/package-release.sh
 ```
 
-This builds for the current Mac’s architecture and writes a DMG, ZIP, and SHA-256 checksums into `dist/`. The DMG includes the app, an Applications shortcut, and installation instructions. The capture-frame application icon is generated from vector drawing code in `scripts/generate-icon.swift`.
+Both paths build for the current Mac’s architecture and write a DMG, ZIP, and SHA-256 checksums into `dist/`. The DMG includes the app, an Applications shortcut, and installation instructions. The capture-frame application icon is generated from vector drawing code in `scripts/generate-icon.swift`.
 
 A real region capture, live AI conversion and pasting the result into TextEdit have been verified on the development Mac. Interactive window capture across multiple displays, login-item approval and both connection types still need broader hands-on acceptance testing. No credentials, captures, local issue database, or compiled build cache are published in source.
 

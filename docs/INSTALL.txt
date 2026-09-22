@@ -9,11 +9,12 @@ INSTALL
 3. Eject the disk image and open Smart Clipboard from Applications.
 4. The capture-frame icon appears in the menu bar. The app has no Dock icon.
 
-This preview is ad-hoc signed, not Developer ID signed or notarized by Apple.
-If macOS blocks it, follow Apple's guidance for opening an app you trust:
-https://support.apple.com/en-us/102445
-After attempting to open the installed app, System Settings > Privacy &
-Security may show Open Anyway. A managed Mac may prohibit this exception.
+Official releases from 0.3.1 use Developer ID Application signing and Apple
+notarization. Check the release page for its validation record and checksums.
+The app and DMG carry notarization tickets for offline verification.
+Local development builds may still be ad-hoc signed. If macOS rejects an
+official download, check that it came from the repository's release page;
+do not disable Gatekeeper or bypass a signature failure.
 
 FIRST CAPTURE
 Use the menu bar icon > Capture Region, or Option-Shift-Command-3.
@@ -50,8 +51,12 @@ login. Closing the capture/settings windows leaves the menu bar app running.
 
 UPDATES AND REMOVAL
 Quit Smart Clipboard from its menu before replacing it with a new version.
-Ad-hoc updates can invalidate Screen Recording approval even if its switch
-is still on. If restarting/toggling does not fix it, quit the app and run:
+Moving from an older ad-hoc preview to Developer ID signing may require one
+new Screen Recording approval and authorization of your existing saved API
+key in Settings > Connection. Your captures and settings are retained.
+Stable signing provides a consistent app identity for future releases;
+macOS privacy prompts can still require approval.
+If Screen Recording fails despite its switch being on, quit the app and run:
   tccutil reset ScreenCapture com.smartclipboard.app
 Then add /Applications/Smart Clipboard.app again in macOS Screen & System
 Audio Recording settings, approve it and reopen the app.

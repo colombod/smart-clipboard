@@ -310,7 +310,7 @@ struct SettingsView: View {
                 }
                 Section("Smart Clipboard") {
                     Text("Capture once. Use it anywhere.").font(.headline)
-                    Text("Native macOS · Version 0.3.0\nThe app stays in your menu bar when you close its windows.").foregroundStyle(.secondary)
+                    Text("Native macOS · Version 0.3.1\nThe app stays in your menu bar when you close its windows.").foregroundStyle(.secondary)
                 }
                 if !message.isEmpty { Text(message).font(.callout) }
             }.formStyle(.grouped).tabItem { Label("General", systemImage: "slider.horizontal.3") }.tag("general")
