@@ -2,136 +2,93 @@
 
 <img src="docs/app-icon.png" alt="Smart Clipboard capture-frame icon" width="100">
 
-A native SwiftUI/AppKit menu bar app for macOS 14 or later. Capture a rectangle or window, then keep the image or convert it into editable content using your preferred AI connection.
+**Capture something on your screen. Paste something useful.**
 
-## Download and install
+Turn a screenshot into editable text, notes, a table or structured data—or simply keep the image. Smart Clipboard lives in your Mac’s menu bar, uses your preferred output automatically, and stays out of the way while you work.
 
-**[Download v0.3.1 signed preview](https://github.com/colombod/smart-clipboard/releases/tag/v0.3.1)** · Apple Silicon (M1 or newer) · macOS 14+
+**[Download for Mac](https://github.com/colombod/smart-clipboard/releases)** · Apple Silicon (M1 or newer) · macOS 14+
 
-1. Download the `.dmg`, open it, and drag **Smart Clipboard** to **Applications**.
-2. Eject the disk image and open the installed app. Look for the viewfinder button labelled **Clip** in the menu bar.
-3. Open **Clip → Settings & Status → Shortcuts → Request screen access**, then approve Screen Recording in macOS. Choose your OpenAI connection in Settings.
-4. In **Settings → General**, choose your **Preferred format** and optional **Default direction**. Captures always use this preference and copy automatically.
-5. Enable **Launch at login** if you want it to start automatically.
+Choose the **0.4 preview** for local AI, multiple providers and completion notifications. It is an early release with [known limitations](docs/releases/v0.4.0-preview.md), especially local Description/SVG quality and accessibility. Official downloads are signed and notarized by Apple.
 
-The official v0.3.1 download is **Developer ID signed and Apple-notarized**. The app and DMG include validated notarization tickets, and both pass Gatekeeper assessment. Screen Recording and saved-key access still require your macOS approval. Updating from an older ad-hoc preview may require those approvals again once; history and preferences remain in their existing locations.
+[![A short Smart Clipboard capture-to-paste demo](https://colombod.github.io/smart-clipboard/demo.gif)](https://colombod.github.io/smart-clipboard/demo.mp4)
 
-A ZIP is also available; extract it and move the app into Applications. `SHA256SUMS.txt` on the release page provides checksums. Intel Macs are not supported by this first binary release. See [the complete installation guide](docs/INSTALL.txt) for setup, updates and removal.
+[Watch the short demo](https://colombod.github.io/smart-clipboard/demo.mp4) · [Read the setup guide](docs/USER-GUIDE.md)
 
-The app uses a green capture-frame icon, native system backgrounds/text and a forest-green accent. Windows follow the Mac’s light/dark appearance automatically.
+## Get started
 
-## Build from source
+### 1. Install
 
-The development branch adds Anthropic, Google Gemini, Perplexity and local oMLX connections alongside OpenAI and ChatGPT/Codex, plus signed Sparkle updates. See the [user setup guide](docs/USER-GUIDE.md) and [connection verification status](docs/PROVIDERS.md). These additions are not included in the public v0.3.1 download and still require release acceptance.
+Download the **DMG**, open it, and drag **Smart Clipboard** into **Applications**. Eject the disk image and open the app.
 
-```sh
-./scripts/build-app.sh
-open 'dist/Smart Clipboard.app'
-```
+Look for **Clip** in the menu bar at the top of your screen. There is no Dock icon and no window to keep open. Open **Clip → Settings & Status** when you need to configure it.
 
-Requires Apple Command Line Tools (`xcode-select --install`) and Swift 6 or later. SwiftPM fetches pinned Yams and Sparkle dependencies; their third-party notices are included in the app. Open `Package.swift` in Xcode to work on the app. The build script creates an ad-hoc-signed app for local use. Set `SIGNING_IDENTITY` to sign with your own identity; a release that passes Gatekeeper without a manual exception also needs Developer ID signing and notarization.
+### 2. Choose how to process your captures
 
-Move the built app into `/Applications` before enabling **Settings → General → Launch at login**. The app starts silently in the menu bar without a Dock icon or any app window. Use Clip → Settings & Status for setup. Opening the running app from Applications brings its panel back. Closing a window leaves the app running; Quit is in the menu bar menu.
+In **Settings → Connection**, select a connection and run **Test image processing**.
 
-The development build also includes **Clip → About Smart Clipboard** and **Settings → About**. About shows the running app's version/build, Help & README, project/release/issue links, and bundled third-party notices. It opens only when requested and follows the Mac's appearance. The public v0.3.1 download does not include this new page yet.
+| Use this connection | If you want… |
+| --- | --- |
+| **Local / oMLX** | Image processing on your own Mac, with an installed vision model. [Set up local AI →](docs/USER-GUIDE.md#set-up-local-image-processing-with-omlx) |
+| **OpenAI, Anthropic, Google Gemini or Perplexity** | To use an image-capable model through your own provider account and API key. [Connection setup →](docs/USER-GUIDE.md#choose-another-connection) |
+| **ChatGPT via Codex** | To use an eligible ChatGPT/Codex account through the separately installed official Codex CLI. [Connection setup →](docs/USER-GUIDE.md#choose-another-connection) |
 
-## Local AI with oMLX — 0.4 preview
+You can also choose **Pass through (image)** and skip AI setup entirely. API usage is billed by your provider; a ChatGPT subscription does not include API credits. Availability depends on your account, and not every cloud route has been tested live in this preview.
 
-The development preview can send images to oMLX on your Mac. Follow the [local setup guide](docs/USER-GUIDE.md#set-up-local-image-processing-with-omlx) for the server address, model selection and image-processing test. These are MLX Community conversions of Qwen vision models:
+**Starting with oMLX?** Our smaller tested option is **Qwen3-VL-8B-Instruct-4bit** for text, tables and structured extraction. The 32B model uses substantially more memory and did not fix the Description/SVG problems in our tests. Use the [model guide](docs/USER-GUIDE.md#choose-a-local-model) for exact downloads, memory guidance and the compatible server version.
 
-| Download model ID | Download size | Current Smart Clipboard evidence |
-| --- | --- | --- |
-| [mlx-community/Qwen3-VL-8B-Instruct-4bit](https://huggingface.co/mlx-community/Qwen3-VL-8B-Instruct-4bit) | About 5.78 GB, [publisher-listed](https://huggingface.co/mlx-community/Qwen3-VL-8B-Instruct-4bit/tree/main). | Tested with oMLX 0.7.0.dev2. Text and structured extraction worked on synthetic fixtures, but Description invented observations and SVG distorted geometry. |
-| [mlx-community/Qwen3-VL-32B-Instruct-4bit](https://huggingface.co/mlx-community/Qwen3-VL-32B-Instruct-4bit) | 19.64 GB / 18.29 GiB, measured complete download. | Tested with oMLX 0.7.0.dev2. Description still invented alignment claims and SVG failed canvas/grid checks. A larger model did not resolve quality acceptance. |
+### 3. Set your preferred result
 
-For planning, allow **16 GB or more unified memory for 8B**, or **48 GB or more for 32B**. These are conservative estimates, not tested minimums; image size, context, caches and other apps affect memory use. Tests so far used a 128 GiB Mac. Leave extra disk space beyond the model download for caches.
+In **Settings → General → Preferred format**, choose once:
 
-oMLX **0.7.0.dev2 is a prerelease**; it contains the structured-output fix missing from tested 0.6.4. See [test evidence and limitations](docs/testing/OMLX.md), the [model guidance](docs/USER-GUIDE.md#choose-a-local-model) and [unpublished 0.4 preview notes](docs/releases/v0.4.0-preview.md). Description/SVG quality and release acceptance remain unresolved.
+| What you need | Choose |
+| --- | --- |
+| Let AI choose a useful format | **Auto detect** |
+| Keep the screenshot as an image | **Pass through (image)** |
+| Copy words into another app | **Plain text** |
+| Keep headings, lists or tables | **Markdown** |
+| Extract a record or configuration | **JSON** or **YAML** |
+| Reconstruct markup or vector content | **HTML** or **SVG** |
+| Describe what is visible | **Description** |
 
-## Capture and convert
+For translation, add a **Default direction**, such as “Translate to English.” You can change these preferences whenever you like.
 
-- **⌥⇧⌘3**: capture a rectangle.
-- **⌥⇧⌘4**: start in window selection mode.
-- Press **Space** during capture to switch modes; **Escape** cancels.
-- Configure both global shortcuts in Settings → Shortcuts. Conflicts are reported and the previous shortcut is restored.
-- Set **Settings → General → Preferred format** once: Pass through (image), Description, Plain text, Markdown, HTML, SVG, JSON, YAML, or Auto detect. Add an optional **Default direction**, such as “Translate to English”.
-- Capture a region/window. The app automatically converts it using your configured connection and copies the result. **Clip …** indicates work in progress; **Clip ✓** means it is ready to paste with **⌘V**. Pass through (image) copies the PNG directly without AI. Imported images use the same workflow.
-- Open **Clipboard** or **History** explicitly to review a capture. In the editor, choose **Convert with AI**, or **Extract text on device** for offline Apple Vision OCR. Local OCR always returns plain text. **Copy after manual conversion** controls copying for these manual actions.
-- Errors appear in the menu bar and do not replace the clipboard with a failed conversion. No app window opens automatically, including at startup or on error. Open **History** to review, edit, copy, or export a result, or convert the original into another format.
+### 4. Capture and paste
 
-Capture requests Screen Recording permission if necessary and continues with the selected mode when permission is granted. If access is denied, the error stays in the menu bar; open Settings & Status explicitly for permission setup. Grant access in System Settings → Privacy & Security → Screen & System Audio Recording, then restart the app if needed. Capture uses the built-in macOS interactive screenshot selector, including multi-display selection. `screencapture` receives only the selected region/window; there is no continuous screen monitoring.
+1. Press **⌥⇧⌘3** and drag a rectangle, or **⌥⇧⌘4** to select a window.
+2. The first time, allow Smart Clipboard to record your screen when macOS asks. Reopen it if requested.
+3. Wait for **Clip ✓** or the **ready to paste** notification.
+4. Press **⌘V** in your destination app.
 
-## Auto detect and capture history
+That’s it—there is no Convert or Copy step after a capture, and no app window opens. **Space** switches between rectangle and window selection; **Escape** cancels. Customize shortcuts in **Settings → Shortcuts**; your saved shortcuts take precedence over the defaults above.
 
-Choose **Auto detect** in the output sidebar, or set it as **Settings → General → Preferred format**. On conversion, AI chooses an editable format from the original source: plain text for prose, Markdown for documents/tables, JSON or YAML for records/configuration, HTML for web layouts, SVG for simple diagrams, or a description for photos. The result shows the actual chosen format. You can override it any time.
+### 5. Know when it’s ready
 
-Open **History** from the sidebar or menu bar. Entries show a thumbnail, capture date, and saved formats. Select **Open**, pick a different output format, and convert the original image again. **Saved formats** retrieves a previous result without a new AI request. Each capture keeps the latest result per format; regenerating one format leaves the others intact. Editor changes are saved when switching clips/results, copying/exporting, starting another conversion, closing the working clip, or quitting normally.
+In **Settings → General → Capture notifications**, enable macOS notifications and allow them when asked. Choose notifications for successful copies, failures, or both; sound is optional.
 
-In **Settings → History**, set the maximum clip count (0–500, default 50), then click **Apply limit**. Oldest captures and their original image files are removed first. Zero clears saved clips and disables history for future captures. Use the trash button on an entry to delete it, or **Clear history** to remove all captures/results and close the active clip. Deletions do not erase exported files or the system clipboard.
+**Clip …** means the app is working. **Clip ✓** means the result has reached your clipboard. **Clip !** means something needs attention. Notifications contain a short status message, never your captured text. macOS notification settings and Focus determine how alerts appear.
 
-Storage: `~/Library/Application Support/Smart Clipboard/History/`. Original PNGs are stored alongside a metadata/result index. Files are restricted to your macOS user (folder 0700, files 0600), but are not separately encrypted by the app. History is only for captures and images imported into Smart Clipboard; it does not monitor the system clipboard. The limit counts captures, so disk usage depends on image sizes; Settings also shows the current disk usage.
+## Keep useful captures
 
-## Connect to OpenAI
+Open **Clip → History** to reuse an earlier capture. Pick another format and convert the original again—there is no need to take another screenshot. Saved results can be reopened without another AI request.
 
-**API key:** In Settings → Connection, choose OpenAI API key, paste a key, and save it. Keys are stored in macOS Keychain. Settings never reads a saved key automatically. After an ad-hoc update, use **Authorize saved key** if Keychain access needs approval; background capture reports access errors in the menu bar without opening a dialog. The editable default model is `gpt-5.6-luna`; choose an image-capable model supporting structured outputs available to your API account. Requests use the Responses API with a JSON schema and `store: false`. API usage is billed separately through OpenAI Platform.
+Choose how many captures to retain in **Settings → History**, delete individual entries, or clear them all. The default is 50. Setting the limit to zero clears saved history and stops saving new captures.
 
-**ChatGPT subscription:** Install a recent official Codex CLI, select ChatGPT via Codex, then click Sign in with ChatGPT and complete the browser flow. Alternatively, an existing `codex login` session works. Check connection verifies that Codex reports a ChatGPT login. The CLI must support `--ignore-user-config` (update it if necessary). An optional executable path handles nonstandard installations; an empty model uses the CLI's built-in default.
+## Made to stay out of the way
 
-The subscription integration invokes the official CLI's non-interactive image support; it is not a standalone ChatGPT OAuth client or an API billing workaround. Availability and limits depend on the account’s Codex entitlement and workspace policies. Credentials remain managed by Codex. The app checks login type, forces ChatGPT auth for conversions, strips inherited API keys from the child environment, and does not read authentication files.
+Enable **Launch at login** in General settings to have it ready when you start your Mac. Closing Settings or History leaves the menu-bar app running. Its green capture-frame icon and windows follow macOS light and dark appearance.
 
-Codex conversions use a private temporary working directory, ephemeral sessions, read-only sandbox, no user config, disabled shell/patch/collaboration features and disabled web search. No plugins or MCP servers from the user's config are loaded. A conversion is image analysis only; temporary captures/results are removed when the operation ends. Cancellation terminates the child process. Do not use an untrusted replacement for the configured executable.
+The app captures only when you ask. It does not continuously record your screen or monitor other apps’ clipboard contents. AI captures go to your selected provider; **Local / oMLX** on this Mac keeps image processing local. **Pass through** makes no AI request. Capture history stays on your Mac. [Privacy and storage details →](docs/USER-GUIDE.md#privacy-and-storage)
 
-Official references: [Authentication](https://learn.chatgpt.com/docs/auth), [Non-interactive Codex](https://learn.chatgpt.com/docs/non-interactive-mode), [Image input](https://developers.openai.com/api/docs/guides/images-vision).
+## Need a hand?
 
-## Privacy and output behavior
+- **[Complete setup and usage guide](docs/USER-GUIDE.md)** — providers, models, notifications, history and updates.
+- **[Capture troubleshooting](docs/USER-GUIDE.md#if-capture-does-not-work)** — permissions, shortcuts and local connections.
+- **[Preview release notes](docs/releases/v0.4.0-preview.md)** — what changed and what still needs work.
+- **[Accessibility status](docs/ACCESSIBILITY.md)** — current support and known gaps. Pointer-free capture and full VoiceOver use are not yet verified.
+- **[Report a problem](https://github.com/colombod/smart-clipboard/issues/new)** — include your app version, macOS version and selected provider/model; leave out keys and private screenshots.
 
-After capture, each selected screenshot or imported image is sent to your configured AI connection and the result replaces the system clipboard. Selecting **Pass through (image)** copies the PNG locally without AI. Image copy/save and local OCR work without a connection. By default, the app saves the 50 most recent captures/imports and their generated results locally. Change this in Settings → History; setting the limit to zero removes saved history and disables future saving. Exporting writes a file; successful automatic processing and the Copy actions update the system clipboard. Saved history survives quitting the app. Close a working clip with the × button without deleting its history; delete an entry in History or use Clear history to remove saved originals and results. The system clipboard and exported files survive app exit. OpenAI data handling follows the selected API account or ChatGPT workspace policy; `store: false` does not imply zero retention.
+AI extraction can make mistakes. Review results before relying on them; HTML and SVG are copied as editable text, not rendered or executed by the app.
 
-AI extraction and vector reconstruction can be imperfect. Screenshot instructions are treated as untrusted data. JSON is validated before acceptance; YAML/HTML/SVG are returned as editable source, not rendered or executed, and require review for correctness. Copying output uses plain-text clipboard content, including markup formats. Large or complex captures may exceed model limits; try a smaller region.
+---
 
-## Validate
-
-The intended background workflow and observable release gates are defined in [User experience and UAT](docs/UAT.md). Automated tests and imported-image checks do not replace a real global-shortcut → selection → paste run. Current acceptance results and unresolved gates are tracked in Beads.
-
-Accessibility is currently **partial and not yet accepted end to end**. The development candidate improves VoiceOver labels/status announcements, shortcut recording and resizable layouts. Real VoiceOver use, pointer-free region/window selection and usable text enlargement remain release gates. See [the accessibility assessment and required tests](docs/ACCESSIBILITY.md); these changes are not in public v0.3.1.
-
-For local-model development, see [the oMLX synthetic-image test instructions and observed limitations](docs/testing/OMLX.md). Passing automated checks alone does not establish Description/SVG quality or native capture acceptance.
-
-```sh
-./scripts/test.sh
-```
-
-Tests cover preferred-format capture/import automation, clipboard success/failure/cancellation, permission routing, shortcuts, all provider request/response contracts, JSON/YAML validation, settings migration and profile isolation, history provenance and retention, child-process cancellation/timeouts, and on-device OCR against a generated fixture. Run the OCR test outside restrictive automation sandboxes so Vision can access macOS image buffers. Set `SMART_CLIPBOARD_RENDER_DIR` to a temporary directory to opt into windowless light/dark Settings renders. Live AI calls require a configured account. macOS screen permissions, interactive selection and login-item approval require testing in a logged-in GUI session. Project task tracking lives in Beads (`bd`).
-
-## Package a release
-
-For a public release, configure a Developer ID Application identity and a local notarization profile using the [signing guide](docs/SIGNING.md), then run:
-
-```sh
-SIGNING_IDENTITY="YOUR_CERTIFICATE_SHA1" \
-NOTARY_PROFILE="smart-clipboard-notary" \
-NOTARY_TIMEOUT=60s \
-./scripts/notarize-release.sh
-```
-
-If Apple is still processing the submission, leave `dist/` unchanged and append `--resume` to the same command. The pipeline signs and notarizes the app and DMG, staples both tickets, verifies Gatekeeper acceptance, and computes final checksums. It preserves the exact approved app throughout packaging. Orchestration checks run with `bash Tests/ReleaseScripts/test-release.sh`.
-
-For a local development package without notarization:
-
-```sh
-./scripts/package-release.sh
-```
-
-Both paths build for the current Mac’s architecture and write a DMG, ZIP, and SHA-256 checksums into `dist/`. The DMG includes the app, an Applications shortcut, and installation instructions. The capture-frame application icon is generated from vector drawing code in `scripts/generate-icon.swift`.
-
-Earlier builds were exercised with real region capture, live AI conversion and pasting into TextEdit on the development Mac. That evidence does not verify the multiple-provider candidate: its live provider, native-capture and signed-update gates remain pending in [UAT.md](docs/UAT.md). No credentials, captures, local issue database, or compiled build cache are published in source.
-
-### Capture readiness and shortcut conflicts
-
-**Clip → Settings & Status → Shortcuts** shows the app's running status, Screen Recording permission, and a separate registration result for each capture shortcut. The capture action requests permission directly; denial leaves an error in the menu bar without opening an app window. Open Settings explicitly, use **Request screen access**, approve the macOS prompt yourself, then **Check again**; reopen the app if macOS requests it.
-
-Shortcut recording rejects enabled macOS shortcuts, duplicate capture bindings and conflicting registered hotkeys. **Find available shortcuts** tries alternatives for unavailable bindings without changing working ones. A rejected replacement keeps the previous shortcut. Keyboard utilities that intercept events may not expose their bindings to macOS; the last-received shortcut timestamp helps diagnose those cases. Screen permission and shortcut registration are independent requirements.
-
-The app keeps one instance running even when a development or downloaded copy is opened. The menu bar button has both a native template icon and a text label, and reappears when the running app is reopened. macOS can still hide menu items when the bar is crowded.
-
-Ad-hoc preview updates can invalidate a previous Screen Recording grant even if System Settings still shows the switch enabled. If restarting and toggling the switch does not help, quit Smart Clipboard and run `tccutil reset ScreenCapture com.smartclipboard.app` in Terminal. Then add `/Applications/Smart Clipboard.app` again in System Settings → Privacy & Security → Screen & System Audio Recording, approve it, and reopen the app. This resets only Smart Clipboard’s Screen Recording grant. Stable certificate signing is required before promising permission continuity across releases.
+Want to contribute? Start with the [developer guide](docs/DEVELOPING.md), [provider test status](docs/PROVIDERS.md) or [signing and release guide](docs/SIGNING.md).

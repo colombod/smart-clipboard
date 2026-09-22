@@ -5,6 +5,11 @@ import ServiceManagement
 import UniformTypeIdentifiers
 import ClipboardCore
 
+enum CaptureFeedback: Equatable {
+    case copied(OutputFormat)
+    case failed
+}
+
 @MainActor final class AppModel: ObservableObject {
     @Published var png: Data?
     @Published var output = ""
@@ -20,6 +25,9 @@ import ClipboardCore
     let connections: ConnectionStore
     // Supplied only by the production app lifecycle, never by tests or audit builds.
     var updates: UpdateController?
+    var notifications: CaptureNotifications?
+    // Explicit operation events avoid treating history warnings or UI refreshes as captures.
+    var operationFeedback: ((CaptureFeedback) -> Void)?
     @Published var defaultFormat: OutputFormat { didSet { defaults.set(defaultFormat.rawValue, forKey: "defaultFormat") } }
     @Published var defaultInstruction: String { didSet { defaults.set(defaultInstruction, forKey: "defaultInstruction") } }
     @Published var copyAutomatically: Bool { didSet { defaults.set(copyAutomatically, forKey: "copyAutomatically") } }
@@ -188,6 +196,7 @@ import ClipboardCore
         task = Task {
             defer { capturing = false; busy = false; task = nil }
             do {
+                try Task.checkCancellation()
                 guard let data = try await captureClient.capture(window: window, willBegin: { [self] in
                     screenAccess = true
                     if presentsWindows { for window in NSApp.windows { window.orderOut(nil) } }
@@ -196,7 +205,10 @@ import ClipboardCore
                 capturing = false
                 try await finishCapture(data, source: window ? "Window capture" : "Region capture", preferred: preferred, direction: direction, profile: profile)
             } catch is CancellationError { notice = "Capture cancelled." }
-            catch { self.error = error.localizedDescription; refreshReadiness() }
+            catch {
+                if Task.isCancelled { notice = "Capture cancelled." }
+                else { reportOperationFailure(error.localizedDescription); refreshReadiness() }
+            }
         }
     }
     func importImage() {
@@ -211,7 +223,7 @@ import ClipboardCore
             let data = try Data(contentsOf: url)
             guard let bitmap = NSBitmapImageRep(data: data), let normalized = bitmap.representation(using: .png, properties: [:]) else { throw ClipError.message("Could not read this image.") }
             processImportedImage(normalized, source: url.lastPathComponent, profile: profile, preferred: preferred, direction: direction)
-        } catch { self.error = error.localizedDescription }
+        } catch { reportOperationFailure(error.localizedDescription) }
     }
     func processImportedImage(_ data: Data, source: String, profile: ConnectionProfile? = nil, preferred: OutputFormat? = nil, direction: String? = nil) {
         guard !busy, !capturing else { return }
@@ -222,10 +234,14 @@ import ClipboardCore
             defer { busy = false; task = nil }
             do { try await finishCapture(data, source: source, preferred: preferred, direction: direction, profile: profile) }
             catch is CancellationError { notice = "Conversion cancelled." }
-            catch { self.error = error.localizedDescription }
+            catch {
+                if Task.isCancelled { notice = "Conversion cancelled." }
+                else { reportOperationFailure(error.localizedDescription) }
+            }
         }
     }
     private func finishCapture(_ data: Data, source: String, preferred: OutputFormat, direction: String, profile: ConnectionProfile) async throws {
+        try Task.checkCancellation()
         acceptCapture(data, source: source)
         format = preferred; instruction = direction
         if preferred == .image { copyImage(); return }
@@ -244,7 +260,7 @@ import ClipboardCore
             defer { busy = false; task = nil }
             do { try await convertCurrent(local: local, shouldCopy: shouldCopy, profile: profile, requested: requested, extra: extra) }
             catch is CancellationError { notice = "Conversion cancelled." }
-            catch { if Task.isCancelled { notice = "Conversion cancelled." } else { self.error = error.localizedDescription } }
+            catch { if Task.isCancelled { notice = "Conversion cancelled." } else { reportOperationFailure(error.localizedDescription) } }
         }
     }
     private func convertCurrent(local: Bool, shouldCopy: Bool, profile: ConnectionProfile, requested: OutputFormat, extra: String) async throws {
@@ -273,7 +289,11 @@ import ClipboardCore
     private func selectedProfile(requiresAI: Bool) -> ConnectionProfile? {
         guard requiresAI else { return connections.activeProfile }
         do { return try connections.validatedProfile() }
-        catch { self.error = error.localizedDescription; return nil }
+        catch { reportOperationFailure(error.localizedDescription); return nil }
+    }
+    private func reportOperationFailure(_ message: String) {
+        error = message
+        operationFeedback?(.failed)
     }
     func clear() { guard !busy, !capturing else { return }; persistCurrentOutput(); resetCurrent() }
     private func resetCurrent() { activeHistoryID = nil; png = nil; output = ""; instruction = ""; notice = ""; resultProvenance = nil; uneditedOutput = "" }
@@ -370,17 +390,21 @@ import ClipboardCore
     }
     func copyImage() {
         guard let png else { return }
-        pasteboard.clearContents()
-        guard pasteboard.setData(png, forType: .png) else { error = "Could not copy the image. Try Copy image again."; return }
+        guard ClipboardWriter.writePNG(png, to: pasteboard) else {
+            reportOperationFailure("Could not copy the image. Try Copy image again."); return
+        }
         notice = "Image copied."
+        operationFeedback?(.copied(.image))
     }
     func copyOutput() {
         persistCurrentOutput()
         guard !output.isEmpty else { return }
-        pasteboard.clearContents()
         // Keep generated markup inert; don't put unreviewed HTML on the rich-text pasteboard.
-        guard pasteboard.setString(output, forType: .string) else { error = "Could not copy the result. Try Copy again."; return }
+        guard ClipboardWriter.writeText(output, to: pasteboard) else {
+            reportOperationFailure("Could not copy the result. Try Copy again."); return
+        }
         notice = "\(resultFormat.title) copied."
+        operationFeedback?(.copied(resultFormat))
     }
     func save(image: Bool = false) {
         guard !choosingFile else { return }

@@ -44,6 +44,19 @@ import Combine
             return
         }
         NSApp.setActivationPolicy(.accessory)
+        #if ACCESSIBILITY_AUDIT
+        model.notifications = .disabled()
+        #else
+        let notifications = CaptureNotifications.live { [weak self] in self?.model.showPanel() }
+        model.notifications = notifications
+        model.operationFeedback = { [weak notifications] event in
+            switch event {
+            case .copied(let format): notifications?.notifyCopied(format: format)
+            case .failed: notifications?.notifyFailed()
+            }
+        }
+        Task { await notifications.refreshAuthorization() }
+        #endif
         #if !ACCESSIBILITY_AUDIT
         let updates = UpdateController.live { [weak self] in
             guard let model = self?.model else { return true }
@@ -178,9 +191,15 @@ import Combine
         model.refreshReadiness()
         updateStatus()
     }
-    func applicationDidBecomeActive(_ notification: Notification) { if started { model.refreshReadiness() } }
+    func applicationDidBecomeActive(_ notification: Notification) {
+        if started {
+            model.refreshReadiness()
+            Task { await model.notifications?.refreshAuthorization() }
+        }
+    }
     func applicationWillTerminate(_ notification: Notification) {
         if started {
+            model.operationFeedback = nil
             model.persistCurrentOutput(); model.cancel()
             #if ACCESSIBILITY_AUDIT
             auditHarness.cleanup()

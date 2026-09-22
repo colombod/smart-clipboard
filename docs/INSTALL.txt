@@ -35,15 +35,22 @@ Start oMLX with an image-capable model. Select Local / oMLX in Connection,
 enter its server address ending in /v1, refresh models and choose the exact
 vision model ID. A server on this Mac may not need an API key. Click Test
 image processing before capturing; this uses a generated sample image.
-Qwen3-VL-8B-Instruct-4bit is our initial local vision test model. oMLX0.6.4
-has a structured-output bug with this model; see the release notes and setup
-guide for the tested fixed server version. Keep the server running.
+Start with mlx-community/Qwen3-VL-8B-Instruct-4bit for tested text/table
+extraction. It is about 5.78 GB; plan for 16 GB+ unified memory (an estimate).
+The tested server is the official oMLX 0.7.0.dev2 prerelease; 0.6.4 has a
+structured-output bug. The larger 32B model did not fix Description/SVG
+quality problems. Review those experimental outputs; see the setup guide
+for exact model IDs and known limits. Keep the server running.
 
 OUTPUT AND HISTORY
 Set Settings > General > Preferred format once. Auto detect lets AI choose
 the best editable format for each source. Add an optional Default direction.
 Capture, wait for Clip ✓, then paste with Command-V. Pass through (image)
 copies the PNG without extraction or AI. Import Image uses the same settings.
+Enable Settings > General > Capture notifications to get a macOS notification
+when the result is ready or processing fails. Allow the notification request;
+success/failure alerts and optional sound are configurable. Notifications do
+not contain captured text. Focus and macOS settings control their delivery.
 No app window opens automatically, including on startup or errors.
 Open Settings, Clipboard or History explicitly from the Clip menu.
 History in the sidebar or menu bar lets you reopen a capture, select another

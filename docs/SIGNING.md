@@ -79,7 +79,7 @@ Only the public key belongs in `SUPublicEDKey`. Keep the private key in Keychain
 
 ## Prepare and publish a preview update
 
-The current all-provider and native accessibility release gates remain unaccepted. **Do not publish the candidate until the agreed release gates pass.** The intended first distribution is a prerelease on the preview channel, with accurately scoped support and limitations. Preview status does not waive acceptance, and these commands do not establish that the app is ready.
+The all-provider and native accessibility gates remain unaccepted. The owner has authorized an opt-in preview after local capture, notifications, packaging and update checks, with the remaining limitations disclosed. **Do not present that preview as stable or fully accepted.** The complete criteria in UAT.md still apply before making those broader claims; these commands alone do not establish product readiness.
 
 Commit the reviewed source/version/public-key configuration before the final build, then complete notarization. Builds use positive integer `CFBundleVersion` values. Every new update build must exceed all builds already in the feed, including preview builds. Preview tags are `v<marketing-version>-preview.<build>`; stable tags are `v<marketing-version>`. Stable entries have no channel element; preview entries use `sparkle:channel=preview`. Only users who explicitly opt into previews receive preview entries; a later higher-build stable entry can supersede them. See [Sparkle channels and versioning](https://sparkle-project.org/documentation/publishing/#channels).
 
@@ -88,7 +88,7 @@ For the proposed final 0.4.0 build 11 preview, prepare a signed feed locally aft
 ```sh
 python3 scripts/release-update.py prepare \
   --tag v0.4.0-preview.11 --channel preview \
-  --notes docs/releases/v0.4.0-preview.11.md \
+  --notes docs/releases/v0.4.0-preview.md \
   --sparkle-tools "$SPARKLE_TOOLS" --first-feed
 ```
 

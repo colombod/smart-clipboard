@@ -274,11 +274,14 @@ struct SettingsView: View {
                 Section("Capture workflow") {
                     Picker("Preferred format", selection: $model.defaultFormat) { ForEach(OutputFormat.allCases) { Text($0.title).tag($0) } }
                     TextField("Default direction", text: $model.defaultInstruction, prompt: Text("Optional — e.g. translate to English"))
-                    Text("Every capture uses this format and direction, then copies the result. No app windows open; progress and errors appear in the menu bar.").font(.caption).foregroundStyle(.secondary)
+                    Text("Every capture uses this format and direction, then copies the result. No app windows open; progress appears in the menu bar. Enable notifications below to hear or see when it is ready to paste or needs attention.").font(.caption).foregroundStyle(.secondary)
                     Text("Auto detect lets AI choose the best format. Pass through copies the original PNG without extraction or AI. Other formats use your configured connection.").font(.caption).foregroundStyle(.secondary)
                 }
                 Section("Manual conversions") {
                     Toggle("Copy after manual conversion", isOn: $model.copyAutomatically)
+                }
+                if let notifications = model.notifications {
+                    NotificationSettingsView(notifications: notifications)
                 }
                 Section("Smart Clipboard") {
                     Text("Capture once. Use it anywhere.").font(.headline)

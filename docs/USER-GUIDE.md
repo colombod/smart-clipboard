@@ -2,7 +2,7 @@
 
 Smart Clipboard stays in the menu bar. Set your connection and preferred output once, then capture and paste into the app you are already using.
 
-This guide covers the **0.4 development preview**. Local oMLX, the additional providers, About and the updater are not included in the public 0.3.1 download. See the [unpublished preview notes](releases/v0.4.0-preview.md) for current limits and acceptance status.
+This guide covers the **0.4 preview**. If you are using 0.3.1, install the new preview to get local oMLX, additional providers, About, notifications and update checks. See the [preview notes](releases/v0.4.0-preview.md) for current limitations.
 
 ## Install and start
 
@@ -39,7 +39,22 @@ The measured 32B download matches [publisher revision `6e5644d`](https://hugging
 
 **Memory planning estimates:** allow at least 16 GB unified memory for the 8B candidate or 48 GB for 32B, with additional headroom for larger images, context and other apps. These are conservative estimates, not verified minimum requirements or speed guarantees. The recorded tests used a 128 GiB Mac; lower-memory Macs have not been validated. Keep extra disk space available for server caches. Start with a small non-private sample and check the output before relying on either model.
 
-For observed outputs and the distinction between automated checks and visual quality, see [the local test evidence](testing/OMLX.md). Description and SVG quality remain release blockers.
+For observed outputs and the distinction between automated checks and visual quality, see [the local test evidence](testing/OMLX.md). Description and SVG remain experimental in this preview and have not passed all-format quality acceptance.
+
+## Choose another connection
+
+For **OpenAI**, **Anthropic**, **Google Gemini** or **Perplexity**:
+
+1. Choose the provider in **Settings → Connection**.
+2. Enter that provider's API key in **New API key**, then click **Save key**. Approve macOS Keychain access if requested.
+3. Click **Refresh models**, use **Choose a listed model**, or enter an image-capable model available to your account. A listed model may still lack the required image or structured-output capability.
+4. Click **Test image processing** and wait for the success message before capturing.
+
+API access and billing are separate from consumer chat subscriptions. Each provider keeps its own saved key and settings. Changing a provider or model does not change your preferred output. Cloud routes have request/response tests, but have not all been verified against live accounts in this preview; see [connection test status](PROVIDERS.md).
+
+For **ChatGPT via Codex**, use the **Install / update Codex CLI** link in Connection, then **Sign in with ChatGPT** and complete the official sign-in flow. Leave **Codex executable** blank for automatic discovery unless you installed it in a custom location. The model is optional. Run **Test image processing** after signing in. This requires an account with Codex access and a compatible official CLI; subscription usage limits apply. Credentials stay with Codex.
+
+If an existing saved key needs approval after an update, click **Authorize saved key** explicitly. Background capture never opens a Keychain dialog for you. Never put API keys into issue reports or screenshots shared for support.
 
 ## Capture, wait, paste
 
@@ -71,6 +86,14 @@ In **Settings → General → Preferred format**, choose:
 
 All AI outputs, including HTML and SVG, are copied as text. The app does not render or execute generated markup. **Default direction** adds an instruction to subsequent captures, for example “Translate to English.” AI output can contain mistakes; our small local model has known Description and SVG quality limitations documented in the [preview notes](releases/v0.4.0-preview.md).
 
+## Completion and failure notifications
+
+Open **Settings → General → Capture notifications** and click **Enable notifications**. Allow Smart Clipboard's macOS notification request. This is an explicit setup step; launching the app or taking a capture never triggers that permission prompt automatically.
+
+Choose **When a capture is ready to paste**, **When capture or conversion fails**, or both. **Play a notification sound** is optional and starts off. A successful notification is sent only after the result has been copied. Pass-through images also receive a ready notification. Cancelling selection or processing stays quiet; a manual conversion without automatic copying does not claim the result is ready to paste.
+
+The banner shows only a status and output format, never your screenshot, extracted text or detailed provider error. Click it to open Smart Clipboard explicitly. Posting it does not open the app or take focus. **Turn off notifications** disables them in the app; **Open notification settings** lets you choose macOS banner/alert style and sound permissions. Focus modes may hide or silence alerts. The Clip menu always keeps its status indicator.
+
 ## Reuse a previous capture
 
 Choose **Clip → History**, open a capture, select another format and click **Convert with AI**. The original image is reused. **Saved formats** retrieves an already generated result without another AI request. **Extract text on device** uses Apple's local text recognition and returns plain text without an AI connection.
@@ -78,6 +101,14 @@ Choose **Clip → History**, open a capture, select another format and click **C
 In **Settings → History**, choose the maximum number of saved clips and apply the limit. The default is 50; the maximum is 500. Oldest clips are removed first. Zero clears and disables history. You can delete one clip or clear all history. Deletion does not remove exported files or change what is already on the system clipboard.
 
 History stores your selected/imported images and results locally. It does not watch other apps' clipboard activity.
+
+## Privacy and storage
+
+The app captures a selected region or window only when you ask; it does not continuously watch your screen or other apps' clipboard contents. AI processing sends the image and your instructions to the connection you selected. A local oMLX server on `127.0.0.1` processes it on this Mac; a server on another computer receives it there. Cloud data handling follows that provider's account policies. Turning off optional response storage is not a promise of zero provider retention.
+
+**Pass through (image)** makes no AI request. The editor's **Extract text on device** uses Apple's local text recognition. API keys are stored in macOS Keychain; ChatGPT credentials remain with Codex.
+
+History stores originals and results in `~/Library/Application Support/Smart Clipboard/History/`. Files are restricted to your Mac user, but the app does not separately encrypt them. Set the history limit to zero to clear existing entries and stop saving new ones. Exported files and clipboard contents are independent of history. Notification messages never contain capture contents.
 
 ## Updates
 
