@@ -163,7 +163,7 @@ fi
 
 # Verify the final downloadable payload, including the ticket inside the ZIP.
 ditto -x -k "$ZIP" "$SCRATCH/unzipped"
-diff -qr "$APP" "$SCRATCH/unzipped/Smart Clipboard.app"
+python3 scripts/compare-bundles.py "$APP" "$SCRATCH/unzipped/Smart Clipboard.app"
 verify_identity "$SCRATCH/unzipped/Smart Clipboard.app"
 xcrun stapler validate "$SCRATCH/unzipped/Smart Clipboard.app"
 verify_unchanged_app

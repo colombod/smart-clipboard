@@ -22,7 +22,7 @@ STAGING="$(mktemp -d "$PWD/dist/package.XXXXXX")"
 trap 'rm -rf "$STAGING"' EXIT
 ditto "$APP" "$STAGING/Smart Clipboard.app"
 codesign --verify --deep --strict "$STAGING/Smart Clipboard.app"
-diff -qr "$APP" "$STAGING/Smart Clipboard.app"
+python3 scripts/compare-bundles.py "$APP" "$STAGING/Smart Clipboard.app"
 ln -s /Applications "$STAGING/Applications"
 cp docs/INSTALL.txt "$STAGING/INSTALL.txt"
 rm -f "$PWD/dist/SHA256SUMS.txt"

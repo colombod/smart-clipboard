@@ -102,7 +102,7 @@ export SIGNING_IDENTITY="$FIXTURE_SHA" NOTARY_PROFILE=fixture-profile NOTARY_TIM
 new_case() {
     CASE_ROOT="$TEST_ROOT/$1"; export CASE_ROOT
     mkdir -p "$CASE_ROOT/scripts" "$CASE_ROOT/Resources" "$CASE_ROOT/docs"
-    cp "$REPO/scripts/build-app.sh" "$REPO/scripts/embed-sparkle.sh" "$REPO/scripts/package-release.sh" "$REPO/scripts/notarize-release.sh" "$CASE_ROOT/scripts/"
+    cp "$REPO/scripts/build-app.sh" "$REPO/scripts/embed-sparkle.sh" "$REPO/scripts/package-release.sh" "$REPO/scripts/notarize-release.sh" "$REPO/scripts/compare-bundles.py" "$CASE_ROOT/scripts/"
     cp "$REPO/Resources/Info.plist" "$CASE_ROOT/Resources/"
     cp "$REPO/Resources/ThirdPartyNotices.txt" "$CASE_ROOT/Resources/"
     cp "$REPO/docs/INSTALL.txt" "$CASE_ROOT/docs/"
