@@ -22,12 +22,14 @@ The app uses a green capture-frame icon, native system backgrounds/text and a fo
 
 ## Build from source
 
+The development branch adds Anthropic, Google Gemini, Perplexity and local oMLX connections alongside OpenAI and ChatGPT/Codex. See [connection setup and verification status](docs/PROVIDERS.md). These additions are not included in the public v0.3.1 download and still require live provider UAT.
+
 ```sh
 ./scripts/build-app.sh
 open 'dist/Smart Clipboard.app'
 ```
 
-Requires Apple Command Line Tools (`xcode-select --install`), Swift 6 or later, and no third-party Swift dependencies. Open `Package.swift` in Xcode to work on the app. The build script creates an ad-hoc-signed app for local use. Set `SIGNING_IDENTITY` to sign with your own identity; a release that passes Gatekeeper without a manual exception also needs Developer ID signing and notarization.
+Requires Apple Command Line Tools (`xcode-select --install`) and Swift 6 or later. SwiftPM fetches the pinned Yams dependency for YAML validation; its and libYAML's notices are included in the app. Open `Package.swift` in Xcode to work on the app. The build script creates an ad-hoc-signed app for local use. Set `SIGNING_IDENTITY` to sign with your own identity; a release that passes Gatekeeper without a manual exception also needs Developer ID signing and notarization.
 
 Move the built app into `/Applications` before enabling **Settings → General → Launch at login**. The app starts silently in the menu bar without a Dock icon or any app window. Use Clip → Settings & Status for setup. Opening the running app from Applications brings its panel back. Closing a window leaves the app running; Quit is in the menu bar menu.
 
@@ -80,7 +82,7 @@ The intended background workflow and observable release gates are defined in [Us
 ./scripts/test.sh
 ```
 
-The 49 tests cover preferred-format capture/import automation, clipboard success/failure/cancellation, permission-request routing, shortcut registration/conflicts, conversion envelopes, output selection, JSON validity, refusals/truncation, Responses API payloads, child-process cancellation/timeouts, on-device OCR against a generated fixture, history persistence/eviction/deletion, and converting a reopened capture from its original image. Run the OCR test outside restrictive automation sandboxes so Vision can access macOS image buffers. Live AI calls require a configured account. macOS screen permissions, interactive selection and login-item approval require testing in a logged-in GUI session. Project task tracking lives in Beads (`bd`).
+Tests cover preferred-format capture/import automation, clipboard success/failure/cancellation, permission routing, shortcuts, all provider request/response contracts, JSON/YAML validation, settings migration and profile isolation, history provenance and retention, child-process cancellation/timeouts, and on-device OCR against a generated fixture. Run the OCR test outside restrictive automation sandboxes so Vision can access macOS image buffers. Set `SMART_CLIPBOARD_RENDER_DIR` to a temporary directory to opt into windowless light/dark Settings renders. Live AI calls require a configured account. macOS screen permissions, interactive selection and login-item approval require testing in a logged-in GUI session. Project task tracking lives in Beads (`bd`).
 
 ## Package a release
 
@@ -103,7 +105,7 @@ For a local development package without notarization:
 
 Both paths build for the current Mac’s architecture and write a DMG, ZIP, and SHA-256 checksums into `dist/`. The DMG includes the app, an Applications shortcut, and installation instructions. The capture-frame application icon is generated from vector drawing code in `scripts/generate-icon.swift`.
 
-A real region capture, live AI conversion and pasting the result into TextEdit have been verified on the development Mac. Interactive window capture across multiple displays, login-item approval and both connection types still need broader hands-on acceptance testing. No credentials, captures, local issue database, or compiled build cache are published in source.
+Earlier builds were exercised with real region capture, live AI conversion and pasting into TextEdit on the development Mac. That evidence does not verify the multiple-provider candidate: its live provider, native-capture and signed-update gates remain pending in [UAT.md](docs/UAT.md). No credentials, captures, local issue database, or compiled build cache are published in source.
 
 ### Capture readiness and shortcut conflicts
 

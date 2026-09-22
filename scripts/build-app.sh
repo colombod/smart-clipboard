@@ -12,6 +12,7 @@ APP="$STAGING/Smart Clipboard.app"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN_DIR/SmartClipboard" "$APP/Contents/MacOS/SmartClipboard"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
+cp Resources/ThirdPartyNotices.txt "$APP/Contents/Resources/ThirdPartyNotices.txt"
 swift scripts/generate-icon.swift "$PWD/.build/AppIcon.iconset"
 iconutil -c icns "$PWD/.build/AppIcon.iconset" -o "$APP/Contents/Resources/AppIcon.icns"
 if [[ -n "${SIGNING_IDENTITY:-}" ]]; then

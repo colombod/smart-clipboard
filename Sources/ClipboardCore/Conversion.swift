@@ -1,4 +1,5 @@
 import Foundation
+import Yams
 
 public enum OutputFormat: String, CaseIterable, Codable, Identifiable, Sendable {
     case auto, image, description, text, markdown, html, svg, json, yaml
@@ -81,7 +82,10 @@ public enum ConversionProtocol {
             let lines = clean.components(separatedBy: "\n")
             clean = lines.dropFirst().dropLast().joined(separator: "\n")
         }
-        guard let data = clean.data(using: .utf8), let result = try? JSONDecoder().decode(ConversionResult.self, from: data),
+        guard let data = clean.data(using: .utf8),
+              let envelope = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              Set(envelope.keys) == Set(["format", "content"]),
+              let result = try? JSONDecoder().decode(ConversionResult.self, from: data),
               result.format != .auto, result.format != .image, !result.content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw ClipError.message("The model returned an unexpected format. Try converting again or choose a specific format.")
         }
@@ -92,6 +96,10 @@ public enum ConversionProtocol {
             guard let json = result.content.data(using: .utf8), (try? JSONSerialization.jsonObject(with: json, options: [.fragmentsAllowed])) != nil else {
                 throw ClipError.message("The extracted JSON is invalid. Try converting again with more specific instructions.")
             }
+        }
+        if result.format == .yaml {
+            do { guard try Yams.compose(yaml: result.content) != nil else { throw ClipError.message("Empty YAML") } }
+            catch { throw ClipError.message("The extracted YAML is invalid. Try converting again with more specific instructions.") }
         }
         return result
     }
@@ -111,17 +119,45 @@ public enum ConversionProtocol {
     }
 
     public static func responseText(_ data: Data) throws -> String {
-        guard let object = try JSONSerialization.jsonObject(with: data) as? [String: Any] else { throw ClipError.message("Invalid response from OpenAI.") }
-        if let status = object["status"] as? String, status != "completed" {
-            throw ClipError.message("OpenAI did not finish the conversion (\(status)). Try a smaller capture.")
+        guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { throw ClipError.message("Invalid response from OpenAI.") }
+        guard object["status"] as? String == "completed",
+              object["error"] == nil || object["error"] is NSNull,
+              object["incomplete_details"] == nil || object["incomplete_details"] is NSNull else {
+            throw ClipError.message("OpenAI did not finish the conversion. Try a smaller capture.")
         }
-        let output = object["output"] as? [[String: Any]] ?? []
-        let content = output.flatMap { $0["content"] as? [[String: Any]] ?? [] }
-        if let refusal = content.first(where: { $0["type"] as? String == "refusal" })?["refusal"] as? String {
-            throw ClipError.message(refusal)
+        guard let output = object["output"] as? [[String: Any]], !output.isEmpty else {
+            throw ClipError.message("OpenAI returned no text. Try again.")
         }
-        let text = content.filter { $0["type"] as? String == "output_text" }.compactMap { $0["text"] as? String }.joined()
-        guard !text.isEmpty else { throw ClipError.message("OpenAI returned no text. Try again.") }
+        var text = ""
+        for item in output {
+            switch item["type"] as? String {
+            case "reasoning":
+                // Reasoning is allowed but must never become the extracted result.
+                if let status = item["status"], !(status is NSNull), status as? String != "completed" {
+                    throw ClipError.message("OpenAI did not finish the conversion. Try a smaller capture.")
+                }
+            case "message":
+                guard item["status"] as? String == "completed" else {
+                    throw ClipError.message("OpenAI did not finish the conversion. Try a smaller capture.")
+                }
+                guard item["role"] as? String == "assistant",
+                      let content = item["content"] as? [[String: Any]], !content.isEmpty else {
+                    throw ClipError.message("Invalid response from OpenAI.")
+                }
+                for part in content {
+                    if part["type"] as? String == "refusal" {
+                        throw ClipError.message("OpenAI declined to process this image. Try a different capture.")
+                    }
+                    guard part["type"] as? String == "output_text", let value = part["text"] as? String else {
+                        throw ClipError.message("OpenAI returned unsupported content instead of image extraction.")
+                    }
+                    text += value
+                }
+            default:
+                throw ClipError.message("OpenAI returned an unsupported action instead of image extraction.")
+            }
+        }
+        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw ClipError.message("OpenAI returned no text. Try again.") }
         return text
     }
 }

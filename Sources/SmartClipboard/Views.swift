@@ -167,7 +167,12 @@ struct CaptureView: View {
             }
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
-                    Text(model.output.isEmpty ? "RESULT" : model.resultFormat.title.uppercased()).font(.system(size: 10, weight: .semibold)).tracking(1)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(model.output.isEmpty ? "RESULT" : model.resultFormat.title.uppercased()).font(.system(size: 10, weight: .semibold)).tracking(1)
+                        if let origin = model.resultOrigin {
+                            Text(origin).font(.caption2).foregroundStyle(.secondary).lineLimit(1).help(origin)
+                        }
+                    }
                     Spacer()
                     if !model.savedConversions.isEmpty {
                         Menu("Saved formats") {
@@ -198,74 +203,13 @@ struct CaptureView: View {
 
 struct SettingsView: View {
     @ObservedObject var model: AppModel
-    @ViewState<String> private var apiKey = ""
     @ViewState<String> private var message = ""
-    @ViewState<Bool> private var working = false
-    @ViewState<Task<Void, Never>?> private var loginTask = nil
     @ViewState<String?> private var activeRecorder = nil
     @ViewState<Bool> private var loginEnabled = SMAppService.mainApp.status == .enabled
     var body: some View {
         TabView(selection: $model.settingsTab) {
-            Form {
-                Section("AI connection") {
-                    Picker("Connect with", selection: $model.provider) {
-                        Text("OpenAI API key").tag("api")
-                        Text("ChatGPT via Codex").tag("codex")
-                    }
-                    if model.provider == "api" {
-                        SecureField("New API key", text: $apiKey)
-                        Text("Your saved key remains in Keychain. Opening Settings does not read it.").font(.caption).foregroundStyle(.secondary)
-                        HStack {
-                            Button("Save key to Keychain") {
-                                let key = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
-                                working = true
-                                Task {
-                                    defer { working = false }
-                                    do { try await Task.detached { try KeyStore.save(key) }.value; apiKey = ""; message = "Key saved securely." }
-                                    catch { message = error.localizedDescription }
-                                }
-                            }.disabled(working || apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                            Link("Get an API key ↗", destination: URL(string: "https://platform.openai.com/api-keys")!)
-                        }
-                        HStack {
-                            Button("Authorize saved key") {
-                                working = true
-                                Task {
-                                    defer { working = false }
-                                    do { let exists = try await Task.detached { try !KeyStore.read(allowInteraction: true).isEmpty }.value; message = exists ? "Saved key is accessible." : "No API key saved yet." }
-                                    catch { message = error.localizedDescription }
-                                }
-                            }.disabled(working)
-                            Button("Remove saved key") {
-                                working = true
-                                Task {
-                                    defer { working = false }
-                                    do { try await Task.detached { try KeyStore.save("") }.value; message = "Key removed." }
-                                    catch { message = error.localizedDescription }
-                                }
-                            }.disabled(working)
-                            if working { ProgressView().controlSize(.small) }
-                        }
-                        TextField("Vision model", text: $model.apiModel)
-                        Text("API usage is billed to your OpenAI Platform account. Choose a model that supports images and structured outputs.").font(.caption).foregroundStyle(.secondary)
-                    } else {
-                        Text("Use your ChatGPT plan’s Codex access through the official Codex CLI. Subscription limits and workspace policies apply.").font(.callout).foregroundStyle(.secondary)
-                        TextField("Codex executable", text: $model.codexExecutable, prompt: Text("Auto-detect"))
-                        TextField("Model (optional)", text: $model.codexModel, prompt: Text("Codex default"))
-                        HStack {
-                            Button("Sign in with ChatGPT") { signIn() }.disabled(working)
-                            Button("Check connection") { checkConnection() }.disabled(working)
-                            if working { ProgressView().controlSize(.small); Button("Cancel") { loginTask?.cancel() } }
-                        }
-                        Link("Install / update Codex CLI ↗", destination: URL(string: "https://developers.openai.com/codex/cli")!)
-                        Text("Sign-in opens your browser. Credentials stay with Codex; this app does not read or copy your ChatGPT tokens. A recent CLI with --ignore-user-config is required.").font(.caption).foregroundStyle(.secondary)
-                    }
-                }
-                if !message.isEmpty { Text(message).font(.callout).textSelection(.enabled) }
-                Section("Your captures") {
-                    Text("Each selected screenshot or imported image uses your preferred format, then copies the result. AI formats send it to your configured connection. Pass through copies the image locally without extraction. On-device text extraction also works offline. Captured and imported images and their results are saved locally according to your History settings. Set the limit to zero to disable history. Codex uses temporary files removed after conversion.").font(.caption).foregroundStyle(.secondary)
-                }
-            }.formStyle(.grouped).tabItem { Label("Connection", systemImage: "network") }.tag("connection")
+            ConnectionSettingsView(store: model.connections)
+                .tabItem { Label("Connection", systemImage: "network") }.tag("connection")
             Form {
                 Section("App status") {
                     Label("Running in the background", systemImage: "checkmark.circle.fill").foregroundStyle(accent)
@@ -310,34 +254,12 @@ struct SettingsView: View {
                 }
                 Section("Smart Clipboard") {
                     Text("Capture once. Use it anywhere.").font(.headline)
-                    Text("Native macOS · Version 0.3.1\nThe app stays in your menu bar when you close its windows.").foregroundStyle(.secondary)
+                    Text("Native macOS · Version 0.4.0 (development)\nThe app stays in your menu bar when you close its windows.").foregroundStyle(.secondary)
                 }
                 if !message.isEmpty { Text(message).font(.callout) }
             }.formStyle(.grouped).tabItem { Label("General", systemImage: "slider.horizontal.3") }.tag("general")
             HistorySettingsView(model: model).tabItem { Label("History", systemImage: "clock.arrow.circlepath") }.tag("history")
         }.padding(12).frame(width: 640, height: 550).tint(accent)
-    }
-    private func signIn() {
-        working = true; message = "Complete sign-in in your browser."
-        loginTask = Task {
-            defer { working = false; loginTask = nil }
-            do {
-                let path = try AIService.codexPath(model.codexExecutable)
-                let (status, _) = try await ProcessRunner().run(path, ["login"], timeout: 300)
-                message = status == 0 ? "Signed in. Use Check connection to confirm ChatGPT access." : "Sign-in did not complete. Try again."
-            } catch { message = error is CancellationError ? "Sign-in cancelled." : error.localizedDescription }
-        }
-    }
-    private func checkConnection() {
-        working = true; message = "Checking Codex…"
-        loginTask = Task {
-            defer { working = false; loginTask = nil }
-            do {
-                let path = try AIService.codexPath(model.codexExecutable)
-                let (status, text) = try await ProcessRunner().run(path, ["login", "status"], timeout: 15)
-                message = status == 0 && text.localizedCaseInsensitiveContains("ChatGPT") ? "Connected with ChatGPT." : "No ChatGPT sign-in found. Choose Sign in with ChatGPT."
-            } catch { message = error.localizedDescription }
-        }
     }
 }
 

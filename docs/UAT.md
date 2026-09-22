@@ -60,6 +60,27 @@ G01–G12 must pass on the exact candidate before claiming the core experience i
 
 Untested configuration gates must be stated as limitations of the preview. Do not imply both connection types, login startup, multiple displays, or clean-machine installation are proven by testing one local configuration.
 
+## Multiple-provider candidate
+
+The development candidate adds Anthropic, Gemini, Perplexity and oMLX. It is not part of public v0.3.1. Track evidence for each exact provider/model/API or server version under Beads epic `clip-cqc`; source and fixture tests do not establish live support.
+
+Development checks on 22 September 2026: 114 tests passed (including the opt-in windowless render test), the optimized build passed, and all 10 isolated release-orchestration scenarios passed. Full connection forms were inspected in light/dark mode; detached native tabs and scrolling require live UI verification. No live provider call or native capture was used for this candidate's evidence. The installed app was left unchanged.
+
+| Connection | Live candidate status | Additional evidence required |
+| --- | --- | --- |
+| OpenAI API | Not yet rerun on this candidate | Existing-key migration, synthetic image test, G03/G04/G05/G07/G09/G11. |
+| ChatGPT via Codex | Unverified on this candidate | Actual ChatGPT login and image execution through supported CLI; preserve noninteractive background failure behavior. |
+| Anthropic | Unverified | Available vision/schema model, account access, complete-response parsing and no tools. |
+| Google Gemini | Unverified | Available model/project, Interactions image/schema request, optional storage disabled and no tools. |
+| Perplexity | Unverified | Explicit direct vision model, no presets/web search/tools/fallback list, schema cold-start behavior. |
+| oMLX | Unverified; installed checkpoint is text-only | Complete vision model, running server, grammar support, model fallback disabled, offline processing and local/LAN authentication. |
+
+For every advertised connection, run G03 and G04 twice consecutively on the exact candidate with app windows closed. Record actual paste content and type, focus and cursor recovery, model/account/server version, output validity and cold/warm duration. Do not put private screenshots or credentials in the evidence record.
+
+Additional regression cases: switch provider/model/address while selecting or converting and confirm the initial configuration is used; change a key or endpoint and confirm readiness is invalidated and keys are not sent to another destination; restore an unreadable configuration and confirm captures do not fall back to OpenAI; cancel a delayed request and confirm its late response does not copy; retry a history image with another provider and verify provenance even when output text is identical. Pass through must perform no model-list request, key lookup or AI call.
+
+Check invalid/revoked keys, unavailable models/server, local text-only model, oversized input, refusal, incomplete output, invalid JSON/YAML, rate/quota error, redirect and timeout. Each must preserve the clipboard, avoid app/credential windows, terminate busy state and allow a subsequent successful capture. Use the existing G01–G12/D01–D06 gates for install/startup/appearance/history and signed release acceptance.
+
 ## Fixtures and evidence
 
 Use synthetic/public content: a short sentence with a unique number, a two-column three-row table, a small record with string/number/boolean values, and a simple labelled diagram. Keep the complete fixture within the selected crop. Verify known values and paste type, not only the app's success label.

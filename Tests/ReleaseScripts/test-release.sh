@@ -96,6 +96,7 @@ new_case() {
     mkdir -p "$CASE_ROOT/scripts" "$CASE_ROOT/Resources" "$CASE_ROOT/docs"
     cp "$REPO/scripts/build-app.sh" "$REPO/scripts/package-release.sh" "$REPO/scripts/notarize-release.sh" "$CASE_ROOT/scripts/"
     cp "$REPO/Resources/Info.plist" "$CASE_ROOT/Resources/"
+    cp "$REPO/Resources/ThirdPartyNotices.txt" "$CASE_ROOT/Resources/"
     cp "$REPO/docs/INSTALL.txt" "$CASE_ROOT/docs/"
     : > "$CASE_ROOT/commands.log"
 }
@@ -110,6 +111,15 @@ assert_count() {
 new_case accepted
 if ! run_release; then cat "$CASE_ROOT/output.log" >&2; exit 1; fi
 [[ -f "$CASE_ROOT/dist/notarization-release/complete" ]]
+packaged_plist="$CASE_ROOT/dist/Smart Clipboard.app/Contents/Info.plist"
+/usr/bin/plutil -lint "$packaged_plist" >/dev/null
+cmp "$CASE_ROOT/Resources/Info.plist" "$packaged_plist"
+[[ -n "$(/usr/libexec/PlistBuddy -c 'Print :NSLocalNetworkUsageDescription' "$packaged_plist")" ]]
+[[ "$(/usr/libexec/PlistBuddy -c 'Print :NSAppTransportSecurity:NSAllowsLocalNetworking' "$packaged_plist")" == true ]]
+if /usr/libexec/PlistBuddy -c 'Print :NSAppTransportSecurity:NSAllowsArbitraryLoads' "$packaged_plist" >/dev/null 2>&1; then
+    echo 'Packaged app must not disable transport security globally.' >&2
+    exit 1
+fi
 assert_count "$CASE_ROOT/commands.log" '^swift build -c release --disable-sandbox$' 1
 assert_count "$CASE_ROOT/submissions.log" '^app$' 1
 assert_count "$CASE_ROOT/submissions.log" '^dmg$' 1

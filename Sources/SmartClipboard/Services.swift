@@ -68,8 +68,8 @@ enum KeyStore {
     // File-based macOS Keychain ignores some SecItem authentication-UI options.
     // Serialize our operations while temporarily suppressing its legacy prompts.
     private static let lock = NSLock()
-    static let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: "com.smartclipboard.app", kSecAttrAccount as String: "openai-api-key"]
-    static func read(allowInteraction: Bool = false) throws -> String {
+    static func query(account: String) -> [String: Any] { [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: "com.smartclipboard.app", kSecAttrAccount as String: account] }
+    static func read(account: String = "openai-api-key", allowInteraction: Bool = false) throws -> String {
         lock.lock(); defer { lock.unlock() }
         var previousInteraction = DarwinBoolean(true)
         let previousStatus = SecKeychainGetUserInteractionAllowed(&previousInteraction)
@@ -77,7 +77,7 @@ enum KeyStore {
         let interactionStatus = SecKeychainSetUserInteractionAllowed(allowInteraction)
         guard interactionStatus == errSecSuccess else { throw ClipError.message("Could not configure Keychain access. Open Settings → Connection to authorize your saved key.") }
         defer { SecKeychainSetUserInteractionAllowed(previousInteraction.boolValue) }
-        var q = query; q[kSecReturnData as String] = true; q[kSecMatchLimit as String] = kSecMatchLimitOne
+        var q = query(account: account); q[kSecReturnData as String] = true; q[kSecMatchLimit as String] = kSecMatchLimitOne
         if !allowInteraction { q[kSecUseAuthenticationUI as String] = kSecUseAuthenticationUIFail }
         var result: CFTypeRef?
         let status = SecItemCopyMatching(q as CFDictionary, &result)
@@ -87,8 +87,9 @@ enum KeyStore {
         }
         return String(data: data, encoding: .utf8) ?? ""
     }
-    static func save(_ key: String) throws {
+    static func save(_ key: String, account: String = "openai-api-key") throws {
         lock.lock(); defer { lock.unlock() }
+        let query = query(account: account)
         if key.isEmpty {
             let status = SecItemDelete(query as CFDictionary)
             guard status == errSecSuccess || status == errSecItemNotFound else { throw ClipError.message("Could not remove the key from Keychain (\(status)).") }; return
@@ -142,19 +143,10 @@ enum AIService {
     static func api(png: Data, key: String, model: String, format: OutputFormat, instruction: String) async throws -> ConversionResult {
         guard !key.isEmpty else { throw ClipError.message("Add your OpenAI API key in Settings → Connection, or choose ChatGPT via Codex.") }
         guard !model.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw ClipError.message("Enter an image-capable model in Settings.") }
-        var request = URLRequest(url: URL(string: "https://api.openai.com/v1/responses")!)
-        request.httpMethod = "POST"; request.timeoutInterval = 180
-        request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try ConversionProtocol.requestBody(png: png, model: model, format: format, instruction: instruction)
-        let (data, response) = try await URLSession.shared.data(for: request)
-        guard let http = response as? HTTPURLResponse else { throw ClipError.message("No response from OpenAI.") }
-        guard (200..<300).contains(http.statusCode) else {
-            let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
-            let detail = (object?["error"] as? [String: Any])?["message"] as? String
-            throw ClipError.message(detail ?? "OpenAI request failed (HTTP \(http.statusCode)).")
-        }
-        return try ConversionProtocol.decode(ConversionProtocol.responseText(data), requested: format)
+        let profile = ConnectionProfile(provider: .openai, model: model)
+        let client = ProviderClient()
+        defer { client.session.invalidateAndCancel() }
+        return try await client.convert(png: png, profile: profile, key: key, format: format, instruction: instruction).result
     }
     static func codexPath(_ configured: String) throws -> String {
         let candidates = [configured, NSHomeDirectory() + "/.local/bin/codex", "/opt/homebrew/bin/codex", "/usr/local/bin/codex", "/Applications/Codex.app/Contents/Resources/codex"]

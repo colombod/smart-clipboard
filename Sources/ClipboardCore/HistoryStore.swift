@@ -1,13 +1,27 @@
 import Foundation
 
+public struct ConversionProvenance: Codable, Equatable, Sendable {
+    public var providerID: String
+    public var profileID: String?
+    public var requestedModel: String
+    public var effectiveModel: String?
+    public var userEdited: Bool
+    public init(providerID: String, profileID: String? = nil, requestedModel: String = "", effectiveModel: String? = nil, userEdited: Bool = false) {
+        self.providerID = providerID; self.profileID = profileID; self.requestedModel = requestedModel
+        self.effectiveModel = effectiveModel; self.userEdited = userEdited
+    }
+}
+
 public struct SavedConversion: Codable, Equatable, Identifiable {
     public var id: OutputFormat { format }
     public let format: OutputFormat
     public var content: String
     public var instruction: String
     public var createdAt: Date
-    public init(format: OutputFormat, content: String, instruction: String, createdAt: Date = Date()) {
+    public var provenance: ConversionProvenance?
+    public init(format: OutputFormat, content: String, instruction: String, createdAt: Date = Date(), provenance: ConversionProvenance? = nil) {
         self.format = format; self.content = content; self.instruction = instruction; self.createdAt = createdAt
+        self.provenance = provenance
     }
 }
 

@@ -16,10 +16,7 @@ import ClipboardCore
     @Published var error: String?
     @Published var notice = ""
     @Published var settingsTab = "connection"
-    @Published var provider: String { didSet { defaults.set(provider, forKey: "provider") } }
-    @Published var apiModel: String { didSet { defaults.set(apiModel, forKey: "apiModel") } }
-    @Published var codexModel: String { didSet { defaults.set(codexModel, forKey: "codexModel") } }
-    @Published var codexExecutable: String { didSet { defaults.set(codexExecutable, forKey: "codexExecutable") } }
+    let connections: ConnectionStore
     @Published var defaultFormat: OutputFormat { didSet { defaults.set(defaultFormat.rawValue, forKey: "defaultFormat") } }
     @Published var defaultInstruction: String { didSet { defaults.set(defaultInstruction, forKey: "defaultInstruction") } }
     @Published var copyAutomatically: Bool { didSet { defaults.set(copyAutomatically, forKey: "copyAutomatically") } }
@@ -30,6 +27,14 @@ import ClipboardCore
     @Published private(set) var historyBytes: Int64 = 0
     @Published private(set) var activeHistoryID: UUID?
     private var resultInstruction = ""
+    private var resultProvenance: ConversionProvenance?
+    private var uneditedOutput = ""
+    var resultOrigin: String? {
+        guard let provenance = resultProvenance else { return nil }
+        let provider = AIProvider(rawValue: provenance.providerID)?.title ?? "On-device text extraction"
+        let model = provenance.effectiveModel ?? (provenance.requestedModel.isEmpty ? "Default model" : provenance.requestedModel)
+        return provider + (provenance.providerID == "apple-vision" ? "" : " · " + model) + (provenance.userEdited ? " · Edited" : "")
+    }
     private var historyStore: HistoryStore?
     private var historyWindow: NSWindow?
     @Published var menuBarInstalled = false
@@ -40,6 +45,7 @@ import ClipboardCore
     private let pasteboard: NSPasteboard
     private let presentsWindows: Bool
     private let conversionOverride: ((Data, OutputFormat, String, Bool) async throws -> ConversionResult)?
+    private let providerConversionOverride: ((Data, ConnectionProfile, OutputFormat, String) async throws -> ProviderConversion)?
     private let captureClient: CaptureClient
     private let registersHotkeys: Bool
     let hotkeys: HotKeyManager
@@ -70,19 +76,17 @@ import ClipboardCore
     private var panel: NSWindow?
     private var settings: NSWindow?
 
-    init(defaults: UserDefaults = .standard, historyDirectory: URL? = nil, registerHotkeys: Bool = true, hotkeyManager: HotKeyManager? = nil, captureClient: CaptureClient? = nil, pasteboard: NSPasteboard? = nil, presentsWindows: Bool = true, conversionOverride: ((Data, OutputFormat, String, Bool) async throws -> ConversionResult)? = nil) {
+    init(defaults: UserDefaults = .standard, historyDirectory: URL? = nil, registerHotkeys: Bool = true, hotkeyManager: HotKeyManager? = nil, captureClient: CaptureClient? = nil, pasteboard: NSPasteboard? = nil, presentsWindows: Bool = true, conversionOverride: ((Data, OutputFormat, String, Bool) async throws -> ConversionResult)? = nil, providerConversionOverride: ((Data, ConnectionProfile, OutputFormat, String) async throws -> ProviderConversion)? = nil) {
         self.pasteboard = pasteboard ?? .general
         self.presentsWindows = presentsWindows
         self.conversionOverride = conversionOverride
+        self.providerConversionOverride = providerConversionOverride
         self.captureClient = captureClient ?? CaptureClient()
         self.hotkeys = hotkeyManager ?? HotKeyManager()
         self.registersHotkeys = registerHotkeys
         self.defaults = defaults
+        self.connections = ConnectionStore(defaults: defaults)
         historyLimit = defaults.object(forKey: "historyLimit") == nil ? HistoryStore.defaultLimit : min(max(0, defaults.integer(forKey: "historyLimit")), HistoryStore.maximumLimit)
-        provider = defaults.string(forKey: "provider") ?? "api"
-        apiModel = defaults.string(forKey: "apiModel") ?? "gpt-5.6-luna"
-        codexModel = defaults.string(forKey: "codexModel") ?? ""
-        codexExecutable = defaults.string(forKey: "codexExecutable") ?? ""
         defaultFormat = OutputFormat(rawValue: defaults.string(forKey: "defaultFormat") ?? "") ?? .auto
         defaultInstruction = defaults.string(forKey: "defaultInstruction") ?? ""
         copyAutomatically = defaults.bool(forKey: "copyAutomatically")
@@ -157,6 +161,7 @@ import ClipboardCore
     func capture(window: Bool = false) {
         guard !capturing, !busy else { return }
         let preferred = defaultFormat, direction = defaultInstruction
+        guard let profile = selectedProfile(requiresAI: preferred != .image) else { return }
         refreshReadiness()
         capturing = true; error = nil; notice = ""
         persistCurrentOutput()
@@ -169,78 +174,91 @@ import ClipboardCore
                 }) else { notice = "Capture cancelled."; return }
                 try Task.checkCancellation()
                 capturing = false
-                try await finishCapture(data, source: window ? "Window capture" : "Region capture", preferred: preferred, direction: direction)
+                try await finishCapture(data, source: window ? "Window capture" : "Region capture", preferred: preferred, direction: direction, profile: profile)
             } catch is CancellationError { notice = "Capture cancelled." }
             catch { self.error = error.localizedDescription; refreshReadiness() }
         }
     }
     func importImage() {
         guard !busy, !capturing else { return }
+        let preferred = defaultFormat, direction = defaultInstruction
+        guard let profile = selectedProfile(requiresAI: preferred != .image) else { return }
         let picker = NSOpenPanel(); picker.allowedContentTypes = [.png, .jpeg, .tiff, .heic]; picker.canChooseDirectories = false
         guard picker.runModal() == .OK, let url = picker.url else { return }
         do {
             let data = try Data(contentsOf: url)
             guard let bitmap = NSBitmapImageRep(data: data), let normalized = bitmap.representation(using: .png, properties: [:]) else { throw ClipError.message("Could not read this image.") }
-            processImportedImage(normalized, source: url.lastPathComponent)
+            processImportedImage(normalized, source: url.lastPathComponent, profile: profile, preferred: preferred, direction: direction)
         } catch { self.error = error.localizedDescription }
     }
-    func processImportedImage(_ data: Data, source: String) {
+    func processImportedImage(_ data: Data, source: String, profile: ConnectionProfile? = nil, preferred: OutputFormat? = nil, direction: String? = nil) {
         guard !busy, !capturing else { return }
-        let preferred = defaultFormat, direction = defaultInstruction
+        let preferred = preferred ?? defaultFormat, direction = direction ?? defaultInstruction
+        guard let profile = profile ?? selectedProfile(requiresAI: preferred != .image) else { return }
         busy = true
         task = Task {
             defer { busy = false; task = nil }
-            do { try await finishCapture(data, source: source, preferred: preferred, direction: direction) }
+            do { try await finishCapture(data, source: source, preferred: preferred, direction: direction, profile: profile) }
             catch is CancellationError { notice = "Conversion cancelled." }
             catch { self.error = error.localizedDescription }
         }
     }
-    private func finishCapture(_ data: Data, source: String, preferred: OutputFormat, direction: String) async throws {
+    private func finishCapture(_ data: Data, source: String, preferred: OutputFormat, direction: String, profile: ConnectionProfile) async throws {
         acceptCapture(data, source: source)
         format = preferred; instruction = direction
         if preferred == .image { copyImage(); return }
         busy = true
-        try await convertCurrent(local: false, shouldCopy: true)
+        try await convertCurrent(local: false, shouldCopy: true, profile: profile, requested: preferred, extra: direction)
         // Success stays in the menu bar so the user can paste into the app they were using.
     }
     func convert(local: Bool = false) {
         guard png != nil, !busy, !capturing else { return }
         if format == .image && !local { copyImage(); return }
         let shouldCopy = copyAutomatically
+        guard let profile = selectedProfile(requiresAI: !local) else { return }
+        let requested = format, extra = instruction
         error = nil; busy = true
         task = Task {
             defer { busy = false; task = nil }
-            do { try await convertCurrent(local: local, shouldCopy: shouldCopy) }
+            do { try await convertCurrent(local: local, shouldCopy: shouldCopy, profile: profile, requested: requested, extra: extra) }
             catch is CancellationError { notice = "Conversion cancelled." }
             catch { if Task.isCancelled { notice = "Conversion cancelled." } else { self.error = error.localizedDescription } }
         }
     }
-    private func convertCurrent(local: Bool, shouldCopy: Bool) async throws {
+    private func convertCurrent(local: Bool, shouldCopy: Bool, profile: ConnectionProfile, requested: OutputFormat, extra: String) async throws {
         guard let png else { return }
-        let requested = format, extra = instruction, connection = provider, model = apiModel, cliModel = codexModel, executable = codexExecutable
         persistCurrentOutput()
         // Keep a history-save warning visible even when conversion itself succeeds.
         notice = ""; output = ""
         let result: ConversionResult
+        var effectiveModel: String?
         if let conversionOverride { result = try await conversionOverride(png, requested, extra, local) }
         else if local { result = ConversionResult(format: .text, content: try await CaptureService.recognize(png)) }
-        else if connection == "codex" { result = try await AIService.codex(png: png, executable: executable, model: cliModel, format: requested, instruction: extra) }
         else {
-            let key = try await Task.detached { try KeyStore.read() }.value
-            try Task.checkCancellation()
-            result = try await AIService.api(png: png, key: key, model: model, format: requested, instruction: extra)
+            let converted: ProviderConversion
+            if let providerConversionOverride { converted = try await providerConversionOverride(png, profile, requested, extra) }
+            else { converted = try await AIService.convert(png: png, profile: profile, format: requested, instruction: extra) }
+            result = converted.result; effectiveModel = converted.model
         }
         try Task.checkCancellation()
         resultFormat = result.format; output = result.content; resultInstruction = extra
+        uneditedOutput = output
+        resultProvenance = local ? ConversionProvenance(providerID: "apple-vision") : ConversionProvenance(providerID: profile.provider.rawValue, profileID: profile.id, requestedModel: profile.model, effectiveModel: effectiveModel)
         persistCurrentOutput()
         if shouldCopy { copyOutput() }
     }
     func cancel() { task?.cancel() }
+    private func selectedProfile(requiresAI: Bool) -> ConnectionProfile? {
+        guard requiresAI else { return connections.activeProfile }
+        do { return try connections.validatedProfile() }
+        catch { self.error = error.localizedDescription; return nil }
+    }
     func clear() { guard !busy, !capturing else { return }; persistCurrentOutput(); resetCurrent() }
-    private func resetCurrent() { activeHistoryID = nil; png = nil; output = ""; instruction = ""; notice = "" }
+    private func resetCurrent() { activeHistoryID = nil; png = nil; output = ""; instruction = ""; notice = ""; resultProvenance = nil; uneditedOutput = "" }
     func acceptCapture(_ data: Data, source: String) {
         persistCurrentOutput()
         png = data; output = ""; instruction = ""; format = defaultFormat; error = nil; notice = ""; activeHistoryID = nil
+        resultProvenance = nil; uneditedOutput = ""
         do {
             guard let historyStore else { throw ClipError.message("History storage is unavailable. Check the local history folder before saving more clips.") }
             activeHistoryID = try historyStore.add(png: data, source: source)?.id
@@ -256,8 +274,9 @@ import ClipboardCore
     func persistCurrentOutput() {
         guard let id = activeHistoryID, !output.isEmpty else { return }
         let existing = history.first(where: { $0.id == id })?.conversions.last(where: { $0.format == resultFormat })
-        guard existing?.content != output || existing?.instruction != resultInstruction else { return }
-        do { try historyStore?.save(SavedConversion(format: resultFormat, content: output, instruction: resultInstruction), for: id) }
+        if output != uneditedOutput { resultProvenance?.userEdited = true }
+        guard existing?.content != output || existing?.instruction != resultInstruction || existing?.provenance != resultProvenance else { return }
+        do { try historyStore?.save(SavedConversion(format: resultFormat, content: output, instruction: resultInstruction, provenance: resultProvenance), for: id) }
         catch { self.error = "Could not save the result in history: " + error.localizedDescription }
         refreshHistory()
     }
@@ -269,7 +288,8 @@ import ClipboardCore
             let data = try historyStore.image(for: entry.id)
             let current = historyStore.entries.first(where: { $0.id == entry.id }) ?? entry
             activeHistoryID = current.id; png = data; output = ""; instruction = ""; format = defaultFormat; error = nil
-            if let result = current.conversions.last { resultFormat = result.format; output = result.content; instruction = result.instruction; resultInstruction = result.instruction }
+            resultProvenance = nil; uneditedOutput = ""
+            if let result = current.conversions.last { resultFormat = result.format; output = result.content; instruction = result.instruction; resultInstruction = result.instruction; resultProvenance = result.provenance; uneditedOutput = result.content }
             notice = "Opened saved capture. Choose any format to convert the original again."
             if showWindow { showPanel() }
         } catch { self.error = error.localizedDescription }
@@ -279,6 +299,7 @@ import ClipboardCore
         guard !busy else { return }
         persistCurrentOutput()
         resultFormat = result.format; output = result.content; instruction = result.instruction; resultInstruction = result.instruction; format = result.format
+        resultProvenance = result.provenance; uneditedOutput = result.content
         notice = "Loaded saved \(result.format.title)."
     }
     func historyImageURL(_ entry: HistoryEntry) -> URL? { historyStore?.imageURL(for: entry.id) }
