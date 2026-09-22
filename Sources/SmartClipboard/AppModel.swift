@@ -151,7 +151,9 @@ import ClipboardCore
             window.titlebarAppearsTransparent = true
             window.isReleasedWhenClosed = false
             window.minSize = NSSize(width: 850, height: 590)
-            window.contentView = NSHostingView(rootView: CaptureView(model: self))
+            let contentView = NSHostingView(rootView: CaptureView(model: self))
+            contentView.setAccessibilityLabel("Clipboard editor")
+            window.contentView = contentView
             window.center(); panel = window
         }
         NSApp.activate(ignoringOtherApps: true)
@@ -166,7 +168,9 @@ import ClipboardCore
             window.title = "Smart Clipboard Settings"
             window.isReleasedWhenClosed = false
             window.contentMinSize = NSSize(width: 640, height: 550)
-            window.contentView = NSHostingView(rootView: SettingsView(model: self))
+            let contentView = NSHostingView(rootView: SettingsView(model: self))
+            contentView.setAccessibilityLabel("Smart Clipboard settings")
+            window.contentView = contentView
             window.center(); settings = window
         }
         NSApp.activate(ignoringOtherApps: true); settings?.makeKeyAndOrderFront(nil)
@@ -352,7 +356,9 @@ import ClipboardCore
             let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 620, height: 550), styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
             window.title = "Capture History"; window.isReleasedWhenClosed = false
             window.minSize = NSSize(width: 540, height: 380)
-            window.contentView = NSHostingView(rootView: HistoryView(model: self))
+            let contentView = NSHostingView(rootView: HistoryView(model: self))
+            contentView.setAccessibilityLabel("Capture history")
+            window.contentView = contentView
             window.center(); historyWindow = window
         }
         NSApp.activate(ignoringOtherApps: true); historyWindow?.makeKeyAndOrderFront(nil)

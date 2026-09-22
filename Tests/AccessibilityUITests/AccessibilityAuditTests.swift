@@ -94,10 +94,16 @@ final class AccessibilityAuditTests: XCTestCase {
         case "history": expectedContent = populated ? "# Accessibility sample" : "No saved captures yet"
         default: throw HarnessError("Unsupported audit screen.")
         }
-        // SwiftUI combines empty-state and history text into larger native labels.
-        let content = window.descendants(matching: .any)
+        // macOS exposes static text as value, while controls use label. SwiftUI
+        // also combines empty-state and history text into larger native elements.
+        let labelledContent = window.descendants(matching: .any)
             .matching(NSPredicate(format: "label CONTAINS %@", expectedContent)).firstMatch
-        guard content.waitForExistence(timeout: 5) else {
+        let textContent = window.staticTexts
+            .matching(NSPredicate(format: "value CONTAINS %@", expectedContent)).firstMatch
+        let contentAppeared = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            labelledContent.exists || textContent.exists
+        }, object: nil)
+        guard XCTWaiter.wait(for: [contentAppeared], timeout: 5) == .completed else {
             attach(app.debugDescription, name: "unexpected-\(screen)-state")
             throw HarnessError("The requested \(screen) state was not exposed in the native accessibility tree.")
         }

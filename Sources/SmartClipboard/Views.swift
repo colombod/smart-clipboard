@@ -232,6 +232,8 @@ struct SettingsView: View {
     var body: some View {
         TabView(selection: $model.settingsTab) {
             ConnectionSettingsView(store: model.connections)
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel("Connection settings")
                 .tabItem { Label("Connection", systemImage: "network") }.tag("connection")
             Form {
                 Section("App status") {
@@ -257,7 +259,10 @@ struct SettingsView: View {
                     Text("Click a shortcut and press a combination with ⌘ or ⌃. Escape cancels. Shortcuts pause while you record. During capture, Space switches between region and window.").font(.caption).foregroundStyle(.secondary)
                     Text(model.lastShortcutEvent).font(.caption.monospaced()).textSelection(.enabled)
                 }
-            }.formStyle(.grouped).tabItem { Label("Shortcuts", systemImage: "keyboard") }.tag("shortcuts")
+            }.formStyle(.grouped)
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel("Shortcut settings")
+                .tabItem { Label("Shortcuts", systemImage: "keyboard") }.tag("shortcuts")
             Form {
                 Section("General") {
                     Toggle("Launch at login", isOn: Binding(get: { loginEnabled }, set: { enabled in
@@ -281,9 +286,18 @@ struct SettingsView: View {
                     Button("About Smart Clipboard…") { model.settingsTab = "about" }
                 }
                 if !message.isEmpty { Text(message).font(.callout) }
-            }.formStyle(.grouped).tabItem { Label("General", systemImage: "slider.horizontal.3") }.tag("general")
-            HistorySettingsView(model: model).tabItem { Label("History", systemImage: "clock.arrow.circlepath") }.tag("history")
-            AboutView().tabItem { Label("About", systemImage: "info.circle") }.tag("about")
+            }.formStyle(.grouped)
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel("General settings")
+                .tabItem { Label("General", systemImage: "slider.horizontal.3") }.tag("general")
+            HistorySettingsView(model: model)
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel("History settings")
+                .tabItem { Label("History", systemImage: "clock.arrow.circlepath") }.tag("history")
+            AboutView()
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel("About Smart Clipboard")
+                .tabItem { Label("About", systemImage: "info.circle") }.tag("about")
         }.padding(12).frame(minWidth: 640, maxWidth: .infinity, minHeight: 550, maxHeight: .infinity).tint(accent)
     }
 }
@@ -426,7 +440,10 @@ struct HistorySettingsView: View {
                 Stepper(value: $draftLimit, in: 0...HistoryStore.maximumLimit) {
                     HStack {
                         Text("Keep up to")
-                        TextField("Clips", value: $draftLimit, format: .number).frame(width: 65)
+                        TextField("Clips", value: $draftLimit, format: .number)
+                            .accessibilityLabel("Maximum saved clips")
+                            .accessibilityHint("Choose zero to disable history.")
+                            .frame(width: 65)
                         Text("clips")
                     }
                 }.disabled(model.busy || model.capturing)
