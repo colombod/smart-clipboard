@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><!-- sparkle-sign-warning:
+IMPORTANT: This file was signed by Sparkle. Any modifications to this file requires re-signing this file with generate_appcast or sign_update! The signed signature will be embedded at the end of this file.
+--><rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0"><channel><item><title>Smart Clipboard 0.4.0 Preview</title><sparkle:version>11</sparkle:version><sparkle:shortVersionString>0.4.0</sparkle:shortVersionString><sparkle:channel>preview</sparkle:channel><sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion><sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements><pubDate>Tue, 22 Sep 2026 21:48:00 +0000</pubDate><description sparkle:format="plain-text"># Smart Clipboard 0.4.0 preview — build 11
+
+Capture a region or window, let Smart Clipboard prepare your preferred result, and paste it into the app you are using. This preview adds local AI and clearer feedback while keeping the everyday workflow in the menu bar.
+
+## What is new
+
+- **Ready and failure notifications.** Enable native macOS notifications in Settings → General. Choose successful copies, failures, or both, with optional sound. A ready notification means the result has actually reached the clipboard. No app window opens automatically, and captured content is never included in a notification.
+- **More AI connections.** Choose OpenAI, ChatGPT via Codex, Anthropic, Google Gemini, Perplexity or Local / oMLX. Each connection keeps its own settings and credentials. Auto detect chooses an output format using the connection you selected.
+- **Local processing with oMLX.** Connect to an existing vision model on your Mac or a chosen server. The connection test uses a synthetic image, never your captures.
+- **About, help and updates.** Find the running version, setup guide and release links in About. Optional daily update checks stay quiet; you choose when to install. Preview updates require opting into previews.
+- **Accessibility foundations.** Improved control names, status announcements, keyboard behavior and resizable settings. Full assistive-technology acceptance remains incomplete; see the limitations below.
+
+[Get started](https://github.com/colombod/smart-clipboard/blob/7cdf6985e98da19e98de60b44247150689f35521/docs/USER-GUIDE.md) · [Download and install](https://github.com/colombod/smart-clipboard/blob/7cdf6985e98da19e98de60b44247150689f35521/README.md#get-started)
+
+## Which local model should I use?
+
+For **text, tables and structured extraction**, start with **[mlx-community/Qwen3-VL-8B-Instruct-4bit](https://huggingface.co/mlx-community/Qwen3-VL-8B-Instruct-4bit)**. It is the smaller tested option: about 5.78 GB to download. Plan for at least 16 GB unified memory; this is an estimate, not a tested minimum.
+
+The larger **[mlx-community/Qwen3-VL-32B-Instruct-4bit](https://huggingface.co/mlx-community/Qwen3-VL-32B-Instruct-4bit)** also reads the tested text and tables, but **did not fix Description or SVG accuracy**. Its verified download is 19.64 GB / 18.29 GiB. Plan for 48 GB or more unified memory as an estimate. We do not recommend downloading it solely to solve those two limitations.
+
+Tests used a 128 GiB Apple Silicon Mac and the unmodified official **oMLX 0.7.0.dev2 prerelease**. Tested oMLX 0.6.4 has a structured-output bug; installing a larger model does not repair that server issue. Newer server versions and lower-memory Macs are not covered by these results. Use the [local setup and model guide](https://github.com/colombod/smart-clipboard/blob/7cdf6985e98da19e98de60b44247150689f35521/docs/USER-GUIDE.md#set-up-local-image-processing-with-omlx) for the exact setup and server/model checks.
+
+## Known limitations
+
+- **Description and SVG are experimental with the tested local models.** Descriptions can invent alignment or styling details; SVG can add rows or distort layout. Supplying image dimensions improved canvas sizes but did not establish a reliable fix. Review results. [Synthetic evidence](https://github.com/colombod/smart-clipboard/blob/7cdf6985e98da19e98de60b44247150689f35521/docs/testing/OMLX.md).
+- **Cloud routes are not all live-verified.** Request/response tests cover the implemented connections, but account access, model availability and real capture workflows require verification on each service. [Provider status](https://github.com/colombod/smart-clipboard/blob/7cdf6985e98da19e98de60b44247150689f35521/docs/PROVIDERS.md).
+- **Accessibility is partial.** Full VoiceOver use, pointer-free selection, text enlargement and alternative-input workflows are not yet accepted. [Accessibility status](https://github.com/colombod/smart-clipboard/blob/7cdf6985e98da19e98de60b44247150689f35521/docs/ACCESSIBILITY.md).
+- **macOS controls notification delivery.** Notifications require your explicit permission; Focus and screen-sharing settings can hide banners or silence sounds. The menu-bar status remains available.
+- **Migrating from an old development build may need renewed screen approval.** Preferences and history are preserved, but macOS can retain a Screen Recording grant tied to the old ad-hoc signature even with its switch on. [Recovery guidance](https://github.com/colombod/smart-clipboard/blob/7cdf6985e98da19e98de60b44247150689f35521/docs/USER-GUIDE.md#if-capture-does-not-work).
+
+This is an opt-in preview, not a claim that every provider, output type, assistive technology or hardware configuration has passed all acceptance gates. The [UAT criteria](https://github.com/colombod/smart-clipboard/blob/7cdf6985e98da19e98de60b44247150689f35521/docs/UAT.md) distinguish automated checks, synthetic tests and actual capture evidence.
+</description><enclosure url="https://github.com/colombod/smart-clipboard/releases/download/v0.4.0-preview.11/Smart-Clipboard-0.4.0-macOS-arm64.zip" sparkle:edSignature="RvrNPN6aUEID18zw5zIYTBnQNuT+mZUzOkVyAqobLeBiJorCfrCUZ//GsqvarGDOp5Q3q5Vd+pxjU2i9f585Cg==" length="3555318" type="application/octet-stream"></enclosure></item><title>Smart Clipboard updates</title><link>https://colombod.github.io/smart-clipboard/appcast.xml</link><description>Signed Smart Clipboard releases</description></channel></rss><!-- sparkle-signatures:
+edSignature: 7oDSTq0nFI59hq5vGRBpjbqI06MDPq3+RPQkb4EZxDjMaZey+573UT/Q4g7ST/xE+9OU8Deixa0MgCyGEPQtCg==
+length: 6243
+-->
