@@ -94,6 +94,8 @@ Choose **When a capture is ready to paste**, **When capture or conversion fails*
 
 The banner shows only a status and output format, never your screenshot, extracted text or detailed provider error. Click it to open Smart Clipboard explicitly. Posting it does not open the app or take focus. **Turn off notifications** disables them in the app; **Open notification settings** lets you choose macOS banner/alert style and sound permissions. Focus modes may hide or silence alerts. The Clip menu always keeps its status indicator.
 
+If **Clip ✓** appears but you see no notification or hear no sound, macOS may be suppressing alerts while your display is being shared, mirrored or recorded. Taking a screenshot is different from an ongoing sharing or recording session: Smart Clipboard’s Screen Recording permission does not mean it continuously records your screen. Stop any ongoing sharing or recording session, then try another capture. Also check whether a Focus, such as Sleep, is active—including one synced from another device. Smart Clipboard respects these macOS policies. Allowing notifications during screen sharing is a system-wide choice that can reveal other apps’ notifications to viewers; it is not required for normal capture and is not the recommended first troubleshooting step.
+
 ## Reuse a previous capture
 
 Choose **Clip → History**, open a capture, select another format and click **Convert with AI**. The original image is reused. **Saved formats** retrieves an already generated result without another AI request. **Extract text on device** uses Apple's local text recognition and returns plain text without an AI connection.

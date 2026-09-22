@@ -76,6 +76,16 @@ The accessibility foundation update is in development version 0.4.0 build 9. It 
 
 Later on 22 September, signed/notarized **0.4.0 build 10** was installed locally as a private bootstrap, preserving preferences/history and selecting the existing 8B local model on the official packaged oMLX 0.7.0.dev2 server. The native Connection test passed. Renewed Screen Recording approval required clearing only the obsolete ad-hoc app entry and adding the installed signed app after user authorization; the warning then cleared. Native capture-to-paste acceptance is still pending. Both 8B and the newly downloaded 32B model pass useful synthetic extraction checks but fail Description/SVG fidelity; [the current evidence](testing/OMLX.md) records those failures. The updater's private installation test and native accessibility acceptance remain open. No 0.4 release was public at that stage. Later preview publication must keep these limitations explicit and does not retroactively pass unverified gates.
 
+### Installed build 11: notification and updater checks
+
+The final signed/notarized **0.4.0 build 11** was built from commit `8d195552c5363672d26c929837f66ac60c46679a`. Its final offline regression reported **177 passed and two opt-in tests skipped**, across 111 application tests and 68 core tests (179 total). Live oMLX and windowless rendering were the opt-in skips; they are not counted as passes. Later documentation-only corrections do not change that binary, source revision or prepared signed assets.
+
+The user confirmed both native **ready** and **failure** banners and their sounds on the installed final app. Earlier missing alerts were traced to macOS suppression: first the policy for shared/recorded displays, then an active Sleep Focus. With the user's explicit approval, those settings were temporarily adjusted for the check. The sharing policy was then restored to **Notifications Off** and verified in System Settings; the user confirmed Sleep Focus was restored. This verifies visible/audible delivery when macOS permits it, not an ability to bypass Focus or screen-sharing privacy policy. Notification-click behavior and every wider capture gate are not implied by this result.
+
+In the private Sparkle updater rehearsal, the installed app rejected a modified feed and a modified archive, then successfully installed signed/notarized build 11 over build 10. The installed bundle matched the prepared candidate, and existing preferences/history were preserved. This is evidence for that upgrade path; it does not substitute for verifying a published download on a clean installation under D06.
+
+These are bounded preview results, not full accessibility, cloud-provider, native capture-matrix or Description/SVG quality acceptance. The local-model failures and unverified gates remain explicit. An optional demo recording did not show the intended capture-to-paste sequence, so no demo is published or promised; a future synthetic recording remains deferred under `clip-bkc.16`.
+
 | Connection | Live candidate status | Additional evidence required |
 | --- | --- | --- |
 | OpenAI API | Not yet rerun on this candidate | Existing-key migration, synthetic image test, G03/G04/G05/G07/G09/G11. |
@@ -83,7 +93,7 @@ Later on 22 September, signed/notarized **0.4.0 build 10** was installed locally
 | Anthropic | Unverified | Available vision/schema model, account access, complete-response parsing and no tools. |
 | Google Gemini | Unverified | Available model/project, Interactions image/schema request, optional storage disabled and no tools. |
 | Perplexity | Unverified | Explicit direct vision model, no presets/web search/tools/fallback list, schema cold-start behavior. |
-| oMLX | Synthetic conversion/private clipboard/history checks pass with a complete Qwen3-VL-8B model and temporary upstream grammar fix; Description/SVG quality fails manual review | Resolve output quality, verify a packaged fixed server, native G03/G04/G05/G07/G09/G11, model fallback disabled, offline processing and local/LAN authentication. |
+| oMLX | Synthetic conversion/private clipboard/history checks exercised complete Qwen3-VL 8B/32B models on the unmodified official oMLX 0.7.0.dev2 package; useful extraction works, while Description/SVG fidelity fails | Resolve output quality; complete native G03/G04/G05/G07/G09/G11 evidence, model fallback disabled, offline processing and local/LAN authentication. |
 
 For every advertised connection, run G03 and G04 twice consecutively on the exact candidate with app windows closed. Record actual paste content and type, focus and cursor recovery, model/account/server version, output validity and cold/warm duration. Do not put private screenshots or credentials in the evidence record.
 

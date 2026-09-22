@@ -10,10 +10,6 @@ Turn a screenshot into editable text, notes, a table or structured data—or sim
 
 Choose the **0.4 preview** for local AI, multiple providers and completion notifications. It is an early release with [known limitations](docs/releases/v0.4.0-preview.md), especially local Description/SVG quality and accessibility. Official downloads are signed and notarized by Apple.
 
-[![A short Smart Clipboard capture-to-paste demo](https://colombod.github.io/smart-clipboard/demo.gif)](https://colombod.github.io/smart-clipboard/demo.mp4)
-
-[Watch the short demo](https://colombod.github.io/smart-clipboard/demo.mp4) · [Read the setup guide](docs/USER-GUIDE.md)
-
 ## Get started
 
 ### 1. Install
