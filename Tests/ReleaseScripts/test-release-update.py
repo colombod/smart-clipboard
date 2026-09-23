@@ -105,6 +105,67 @@ class ReleaseUpdateTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'provenance'):
             self.prepare()
 
+    def tracer_fixture(self):
+        app = self.root / 'dist/Smart Clipboard.app'
+        files = {'tracerSHA256': app / 'Contents/Helpers/SmartClipboardTrace',
+                 'tracerLockSHA256': app / 'Contents/Resources/TraceCargo.lock'}
+        provenance_path = self.root / 'dist/build-source.json'
+        provenance = json.loads(provenance_path.read_text())
+        for key, path in files.items():
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(key + ' fixture')
+            provenance[key] = release.sha(path)
+        provenance_path.write_text(json.dumps(provenance))
+        return app, files, provenance_path, provenance
+
+    def test_tracer_hashes_are_checked_and_recorded(self):
+        _, files, _, provenance = self.tracer_fixture()
+        _, manifest = self.prepare()
+        for key in files:
+            self.assertEqual(manifest[key], provenance[key])
+
+    def test_tracer_missing_partial_changed_and_symlink_records_fail_before_signing(self):
+        app, files, path, original = self.tracer_fixture()
+        for key in files:
+            with self.subTest(missing_field=key):
+                record = dict(original); del record[key]; path.write_text(json.dumps(record))
+                with self.assertRaisesRegex(ValueError, 'both helper'):
+                    self.prepare()
+                self.assertEqual(self.calls, [])
+        path.write_text(json.dumps(original))
+        for key, file in files.items():
+            with self.subTest(changed_file=key):
+                content = file.read_bytes(); file.write_bytes(b'changed')
+                with self.assertRaisesRegex(ValueError, 'does not match'):
+                    self.prepare()
+                file.unlink()
+                with self.assertRaisesRegex(ValueError, 'does not match'):
+                    self.prepare()
+                other = file.with_suffix('.other'); other.write_bytes(content); file.symlink_to(other)
+                with self.assertRaisesRegex(ValueError, 'does not match'):
+                    self.prepare()
+                file.unlink(); other.unlink(); file.write_bytes(content)
+                self.assertEqual(self.calls, [])
+
+    def test_unrecorded_tracer_and_invalid_hashes_are_not_legacy(self):
+        app, files, _, original = self.tracer_fixture()
+        legacy = {k: v for k, v in original.items() if k not in files}
+        with self.assertRaisesRegex(ValueError, 'both helper'):
+            release.verify_tracer_provenance(app, legacy)
+        for value in [None, '', 'x' * 64, 123]:
+            with self.subTest(value=value):
+                record = dict(original, tracerSHA256=value)
+                with self.assertRaisesRegex(ValueError, 'invalid hash'):
+                    release.verify_tracer_provenance(app, record)
+
+    def test_legacy_build12_without_tracer_can_still_prepare(self):
+        path = self.root / 'dist/Smart Clipboard.app/Contents/Info.plist'
+        info = plistlib.loads(path.read_bytes()); info['CFBundleVersion'] = '12'; path.write_bytes(plistlib.dumps(info))
+        self.args.tag = 'v0.4.0-preview.12'
+        _, manifest = self.prepare()
+        self.assertEqual(manifest['build'], 12)
+        self.assertNotIn('tracerSHA256', manifest)
+
     def test_first_feed_cannot_replace_existing_feed(self):
         with self.assertRaisesRegex(ValueError, 'first-feed'):
             self.prepare(download=lambda *a, **k: True)

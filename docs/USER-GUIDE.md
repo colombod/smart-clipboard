@@ -2,7 +2,9 @@
 
 Smart Clipboard stays in the menu bar. Set your connection and preferred output once, then capture and paste into the app you are already using.
 
-This guide covers the **0.4 preview**. If you are using 0.3.1, install the new preview to get local oMLX, additional providers, About, notifications, update checks, five interface languages and optional capture translation. See the [preview notes](releases/v0.4.0-preview.md) for current limitations.
+The current public release in the **0.4 preview** series is **[build 11](https://github.com/colombod/smart-clipboard/releases/tag/v0.4.0-preview.11)**. If you are using 0.3.1, the preview adds local oMLX, additional providers, About, notifications and update checks. See the [preview notes](releases/v0.4.0-preview.md) for current limitations.
+
+**Development build 13 is not published yet.** It adds five interface languages, optional capture translation and local SVG tracing. Those sections below are explicitly labelled development; their controls are not available in the current public download.
 
 ## Install and start
 
@@ -86,7 +88,36 @@ In **Settings → General → Preferred format**, choose:
 
 All AI outputs, including HTML and SVG, are copied as text. The app does not render or execute generated markup. **Default direction** adds an instruction to subsequent captures, for example “Preserve table columns.” AI output can contain mistakes; our small local model has known Description and SVG quality limitations documented in the [preview notes](releases/v0.4.0-preview.md).
 
+## Trace a picture to SVG
+
+**Development build 13:** the following controls are not in the published preview build 11. Native capture and installation acceptance must finish before this feature is advertised as released.
+
+SVG has two methods:
+
+| Method | When to use it | What it needs |
+| --- | --- | --- |
+| **Reconstruct with AI** | Ask your model to rebuild a diagram or illustration as vector source. It can interpret instructions, but may change or invent details. This remains the default, including after upgrading. | Your configured AI connection. |
+| **Trace on device** | Follow the visible shapes and colours of a photo, logo or line drawing. The result is an approximation made of vector shapes. | The helper included with Smart Clipboard. No AI connection, API key, model download, server or additional installation. |
+
+To make local tracing your everyday capture result:
+
+1. Open **Settings → General** and set **Preferred format** to **SVG**.
+2. Set **SVG method** to **Trace on device**.
+3. Choose a **Trace preset**: **Photo** for pictures with many colours, **Logo** for logos and flat artwork, or **Line drawing** for drawings with clear lines.
+4. Choose **Balanced** detail to start. **Detailed** preserves more shapes and colours, with larger files.
+5. Close Settings. Use your normal rectangle or window shortcut, wait for **Clip ✓** or the ready notification, then paste.
+
+These choices are saved; capture does not open a method or preset chooser. **Clip …** shows that processing is in progress. Ready notifications follow your notification settings and are sent only after copying. Failure leaves the previous clipboard contents in place and reports through the menu and configured failure notification. Cancelling stays quiet and also preserves the clipboard.
+
+The clipboard contains **SVG source text**, rather than an image attachment. To use the result as artwork, open the result from History, choose **Save…** and save an `.svg` file, then open or import it in your vector editor. Pasting into a text editor shows the SVG code; whether another app accepts pasted SVG source depends on that app. Large SVGs are kept out of Smart Clipboard’s text editor so it stays responsive; you can still copy or save them.
+
+Tracing stays on this Mac and uses the bundled [VTracer](https://github.com/visioncortex/vtracer) helper. It keeps the background and makes visible words into vector outlines; the words are not editable text. **Default direction** and **Output language** do not change a local trace. Choose AI reconstruction or text extraction when you need language processing. Automatic background removal and recovery of accurate chart data are not included. A traced chart is a picture made of shapes, not a data table or a guarantee of accurate values.
+
+For an earlier screenshot, open **Clip → History**, select the capture, choose **SVG** and **Trace on device**, adjust the preset and detail, then choose **Trace to SVG**. Use **Copy** when you want the result on your clipboard, or enable **Copy after manual conversion**. Simply opening History never changes the clipboard. **Saved formats** keeps local traces by preset and detail, alongside your AI versions; reopening one does not process the image again. You can return to **Reconstruct with AI** when you want the model to interpret the original image instead.
+
 ## Languages and translation
+
+**Development build 13:** these interface languages and translation controls are not in the published preview build 11.
 
 The interface follows your Mac’s preferred supported language: English, Italian, Spanish, French or German, with English as the fallback. This includes menus, settings, notifications and accessibility labels. Restart Smart Clipboard after changing its language in macOS. Provider names, your captures and model identifiers are kept as they are.
 
@@ -114,7 +145,9 @@ If **Clip ✓** appears but you see no notification or hear no sound, macOS may 
 
 ## Reuse a previous capture
 
-Choose **Clip → History**, open a capture, select another format or **Output language**, and click **Convert with AI**. The original image is reused. For example, a Spanish capture can have separate Spanish, English and French plain-text results. Repeating the same format and language replaces only that version; other language versions remain saved. **Saved formats** lists both the format and language and retrieves an existing result without another AI request. Opening history does not copy anything automatically; use **Copy**, or enable **Copy after manual conversion**. **Extract text on device** uses Apple's local text recognition and returns source-language plain text without an AI connection.
+Choose **Clip → History**, open a capture, select another format, and click **Convert with AI**. The original image is reused. **Saved formats** retrieves an existing result without another AI request. Opening history does not copy anything automatically; use **Copy**, or enable **Copy after manual conversion**. **Extract text on device** uses Apple's local text recognition and returns source-language plain text without an AI connection.
+
+**Development build 13** adds **Output language** and separate saved versions for each format and language. For example, a Spanish capture can have separate Spanish, English and French plain-text results. Repeating the same format and language replaces only that version; other language versions remain saved. **Saved formats** identifies the format and language. The same development build also supports [local SVG traces](#trace-a-picture-to-svg), saved by preset and detail.
 
 In **Settings → History**, choose the maximum number of saved clips and apply the limit. The default is 50; the maximum is 500. Oldest clips are removed first. Zero clears and disables history. You can delete one clip or clear all history. Deletion does not remove exported files or change what is already on the system clipboard.
 

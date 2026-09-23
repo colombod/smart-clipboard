@@ -100,6 +100,25 @@ def source_state():
     return run('git', '-C', REPO, 'rev-parse', 'HEAD').strip(), run('git', '-C', REPO, 'status', '--porcelain', '--untracked-files=normal')
 
 
+def verify_tracer_provenance(app, provenance):
+    files = {'tracerSHA256': app / 'Contents/Helpers/SmartClipboardTrace',
+             'tracerLockSHA256': app / 'Contents/Resources/TraceCargo.lock'}
+    recorded = {key for key in files if key in provenance}
+    # Pre-tracing releases, including build 12, have neither fields nor files.
+    # A partial record or an unrecorded bundled helper is never legacy evidence.
+    if not recorded and not any(path.exists() or path.is_symlink() for path in files.values()):
+        return {}
+    if recorded != set(files):
+        fail('Native tracer provenance must include both helper and dependency-lock hashes.')
+    for key, path in files.items():
+        digest = provenance[key]
+        if not isinstance(digest, str) or not re.fullmatch(r'[a-f0-9]{64}', digest):
+            fail('Native tracer provenance contains an invalid hash.')
+        if path.is_symlink() or not path.is_file() or sha(path) != digest:
+            fail('Native tracer helper or dependency lock does not match build provenance.')
+    return {key: provenance[key] for key in files}
+
+
 def prepare(args):
     dist = REPO / 'dist'
     state = dist / 'notarization-release'
@@ -111,6 +130,7 @@ def prepare(args):
     executable_hash = sha(app / 'Contents/MacOS/SmartClipboard')
     if dirty or provenance['dirty'] or provenance['commit'] != commit or provenance['executableSHA256'] != executable_hash:
         fail('Commit the reviewed source, then build/notarize that exact clean commit. The current build provenance does not match.')
+    tracer_provenance = verify_tracer_provenance(app, provenance)
     if (state / 'app.sha256').read_text().strip() != executable_hash:
         fail('Notarization state does not match the current app.')
     run('codesign', '--verify', '--deep', '--strict', app)
@@ -201,7 +221,7 @@ def prepare(args):
                 'commit': commit, 'appSHA256': executable_hash, 'feedURL': FEED,
                 'feedSHA256': sha(output / 'appcast.xml'), 'previousFeedSHA256': previous_hash,
                 'publicKey': info['SUPublicEDKey'], 'account': args.account, 'assets': assets,
-                'notesSHA256': sha(output / 'release-notes.txt')}
+                'notesSHA256': sha(output / 'release-notes.txt'), **tracer_provenance}
     (output / 'release.json').write_text(json.dumps(manifest, indent=2) + '\n')
     print(f'Prepared {output}. Review release.json, release-notes.txt and appcast.xml before publishing.')
 

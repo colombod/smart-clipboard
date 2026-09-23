@@ -63,7 +63,7 @@ struct CaptureView: View {
                 }
                 HStack(spacing: 6) {
                     Image(systemName: model.notice.isEmpty ? "lock.shield" : "checkmark.circle.fill")
-                    Text(model.notice.isEmpty ? (model.defaultFormat != .image ? L10n.text("Automatic capture uses your AI connection, then copies the result.") : L10n.text("Pass through copies your screenshot directly without extraction.")) : model.notice)
+                    Text(model.notice.isEmpty ? (model.defaultUsesTracing ? L10n.text("Automatic capture traces locally, then copies the SVG.") : (model.defaultFormat != .image ? L10n.text("Automatic capture uses your AI connection, then copies the result.") : L10n.text("Pass through copies your screenshot directly without extraction."))) : model.notice)
                     Spacer()
                 }.font(.caption).foregroundStyle(model.notice.isEmpty ? Color.secondary : accent)
             }.padding(28).frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -154,7 +154,7 @@ struct CaptureView: View {
     private func captureContent(_ image: NSImage) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .top, spacing: 16) {
-                Image(nsImage: image).resizable().scaledToFit().frame(maxWidth: .infinity).frame(height: 160)
+                Image(nsImage: image).resizable().scaledToFit().frame(maxWidth: .infinity).frame(height: model.format == .svg ? 120 : 160)
                     .padding(12).background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 12))
                     .accessibilityLabel(L10n.text("Original capture"))
                 VStack(alignment: .leading, spacing: 12) {
@@ -170,13 +170,18 @@ struct CaptureView: View {
                 if model.format == .auto {
                     Text(L10n.text("AI picks the most useful format from the source: prose, tables, code, layouts or diagrams.")).font(.caption).foregroundStyle(.secondary)
                 }
-                HStack {
+                if model.format == .svg {
+                    SVGOptionsView(method: $model.svgMethod, settings: $model.traceSettings).disabled(model.busy)
+                }
+                if !model.usesTracing {
+                  HStack {
                     Image(systemName: "text.bubble").foregroundStyle(.secondary)
                     TextField(L10n.text("Optional direction — e.g. preserve table columns…"), text: $model.instruction).textFieldStyle(.plain).disabled(model.busy)
                         .accessibilityLabel(L10n.text("Conversion direction"))
                 }.padding(12).background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 9))
                 OutputLanguagePicker(title: L10n.text("Output language"), selection: $model.outputLanguage)
                     .disabled(model.busy)
+                }
                 HStack {
                     if model.busy {
                         ProgressView().controlSize(.small).accessibilityLabel(L10n.text("Converting capture"))
@@ -184,7 +189,7 @@ struct CaptureView: View {
                         Spacer()
                         Button(L10n.text("Cancel")) { model.cancel() }
                     } else {
-                        Button { model.convert() } label: { Label(L10n.text("Convert with AI"), systemImage: "sparkles") }.buttonStyle(.borderedProminent).tint(prominentAccent).controlSize(.large)
+                        Button { model.convert() } label: { Label(model.usesTracing ? L10n.text("Trace to SVG") : L10n.text("Convert with AI"), systemImage: model.usesTracing ? "bezier.path" : "sparkles") }.buttonStyle(.borderedProminent).tint(prominentAccent).controlSize(.large)
                         Button(L10n.text("Extract text on device")) { model.convert(local: true) }.help(L10n.text("Apple Vision OCR. No upload; keeps the source language and ignores translation and additional directions."))
                         Spacer()
                     }
@@ -217,6 +222,12 @@ struct CaptureView: View {
                         Image(systemName: model.format.symbol).font(.title2).foregroundStyle(accent.opacity(0.7))
                         Text(model.format == .image ? L10n.text("Your image is ready to copy or save.") : (model.format == .auto ? L10n.text("Your automatically chosen format will appear here.") : L10n.text("Your \(model.format.title) will appear here."))).foregroundStyle(.secondary)
                     }.frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if model.resultFormat == .svg && model.output.utf8.count > 131_072 {
+                    VStack(spacing: 8) {
+                        Image(systemName: "bezier.path").font(.title2).foregroundStyle(accent)
+                        Text(L10n.text("Your SVG is ready to copy or save.")).font(.headline)
+                        Text(L10n.text("Large SVG results are kept out of the text editor so the app stays responsive. Save the SVG to edit it in a vector app.")).font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                    }.padding().frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     TextEditor(text: $model.output).font(.system(.body, design: .monospaced)).padding(8).scrollContentBackground(.hidden)
                         .accessibilityLabel(L10n.text("Converted result"))
@@ -296,13 +307,18 @@ Form {
                 }
                 Section(L10n.text("Capture workflow")) {
                     Picker(L10n.text("Preferred format"), selection: $model.defaultFormat) { ForEach(OutputFormat.allCases) { Text($0.title).tag($0) } }
+                    if model.defaultFormat == .svg {
+                        SVGOptionsView(method: $model.defaultSVGMethod, settings: $model.defaultTraceSettings)
+                    }
                     TextField(L10n.text("Default direction"), text: $model.defaultInstruction, prompt: Text(L10n.text("Optional — e.g. preserve table columns")))
+                        .disabled(model.defaultUsesTracing)
                     Text(L10n.text("Every capture uses this format and direction, then copies the result. No app windows open; progress appears in the menu bar. Enable notifications below to hear or see when it is ready to paste or needs attention.")).font(.caption).foregroundStyle(.secondary)
-                    Text(L10n.text("Auto detect lets AI choose the best format. Pass through copies the original PNG without extraction or AI. Other formats use your configured connection.")).font(.caption).foregroundStyle(.secondary)
+                    Text(L10n.text("Auto detect uses AI. Pass through copies the original PNG. SVG can trace on device or reconstruct with your AI connection.")).font(.caption).foregroundStyle(.secondary)
                 }
                 Section(L10n.text("Languages")) {
                     Text(L10n.text("Menus and settings follow your Mac’s preferred supported language. English is used when a translation is unavailable.")).font(.caption).foregroundStyle(.secondary)
                     OutputLanguagePicker(title: L10n.text("Capture output"), selection: $model.defaultOutputLanguage)
+                        .disabled(model.defaultUsesTracing)
                     Text(L10n.text("Keep source language preserves the language detected in the image. Choose System language or a specific language to translate every AI capture automatically.")).font(.caption).foregroundStyle(.secondary)
                     Text(L10n.text("This language choice takes priority over translation directions. Pass through keeps the original image; on-device text extraction keeps the source language. You can choose a different language when reopening history.")).font(.caption).foregroundStyle(.secondary)
                 }
@@ -319,6 +335,30 @@ Form {
                 }
                 if !message.isEmpty { Text(message).font(.callout) }
             }.formStyle(.grouped)
+    }
+}
+
+struct SVGOptionsView: View {
+    @Binding var method: SVGMethod
+    @Binding var settings: TraceSettings
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Picker(L10n.text("SVG method"), selection: $method) {
+                ForEach(SVGMethod.allCases, id: \.self) { Text($0.title).tag($0) }
+            }
+            if method == .trace {
+                HStack {
+                    Picker(L10n.text("Trace preset"), selection: $settings.preset) {
+                        ForEach(TracePreset.allCases, id: \.self) { Text($0.title).tag($0) }
+                    }
+                    Picker(L10n.text("Detail"), selection: $settings.detail) {
+                        ForEach(TraceDetail.allCases, id: \.self) { Text($0.title).tag($0) }
+                    }.help(L10n.text("Detailed traces preserve more shapes and colours, but create larger files."))
+                }
+                Text(L10n.text("Tracing stays on this Mac. Text becomes outlines; directions and translation do not apply. The background is kept."))
+                    .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            }
+        }
     }
 }
 
@@ -477,7 +517,7 @@ struct HistorySettingsView: View {
                 }
             }
             Section(L10n.text("Stored on this Mac")) {
-                Text(L10n.text("History keeps original images and the latest result for each format and language across app restarts. Reopen a capture, choose an output language, then convert with AI to save another version. Previous languages remain available under Saved formats. The app does not monitor other apps’ clipboard activity.")).font(.callout).foregroundStyle(.secondary)
+                Text(L10n.text("History keeps original images and saved versions across app restarts. AI results keep their format and language; local SVG traces keep their preset and detail. Reopen a capture to make another version or switch Saved formats without converting again. The app does not monitor other apps’ clipboard activity.")).font(.callout).foregroundStyle(.secondary)
                 Text(L10n.text("Files are saved in your local Application Support folder with access restricted to your macOS user. They are not separately encrypted by this app. Clearing history does not remove exported files or the system clipboard.")).font(.caption).foregroundStyle(.secondary)
             }
             if let error = model.error { Text(error).foregroundStyle(.orange).font(.caption) }

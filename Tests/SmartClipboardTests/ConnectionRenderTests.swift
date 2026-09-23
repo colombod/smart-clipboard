@@ -7,6 +7,39 @@ import ClipboardCore
 /// Opt in with SMART_CLIPBOARD_RENDER_DIR. The host stays windowless throughout.
 /// Appearance/layout snapshots do not establish macOS Dynamic Type, live AX, or VoiceOver behavior.
 @MainActor struct ConnectionRenderTests {
+    @Test(.enabled(if: ProcessInfo.processInfo.environment["SMART_CLIPBOARD_TRACE_RENDER_DIR"] != nil))
+    func traceSettingsAndLargeSVGRemainUsableAtMinimumSize() async throws {
+        let originalArguments = UserDefaults.standard.volatileDomain(forName: UserDefaults.argumentDomain)
+        if let language = ProcessInfo.processInfo.environment["SMART_CLIPBOARD_TRACE_RENDER_LANGUAGE"] {
+            var arguments = originalArguments; arguments["AppleLanguages"] = [language]
+            UserDefaults.standard.setVolatileDomain(arguments, forName: UserDefaults.argumentDomain)
+        }
+        defer { UserDefaults.standard.setVolatileDomain(originalArguments, forName: UserDefaults.argumentDomain) }
+        let directory = try #require(ProcessInfo.processInfo.environment["SMART_CLIPBOARD_TRACE_RENDER_DIR"])
+        let output = URL(fileURLWithPath: directory)
+        try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
+        let history = FileManager.default.temporaryDirectory.appendingPathComponent("trace-render-" + UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: history) }
+        let board = NSPasteboard.withUniqueName()
+        defer { board.releaseGlobally() }
+        let svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 40 40\">" + String(repeating: "<path fill=\"#308060\" d=\"M0 0H40V40H0Z\"/>", count: 4000) + "</svg>"
+        let model = AppModel(defaults: RenderDefaults(), historyDirectory: history, registerHotkeys: false,
+                             pasteboard: board, presentsWindows: false,
+                             traceOverride: { _, _ in VectorTraceResult(svg: svg, engineVersion: "0.6.5") })
+        model.defaultFormat = .svg; model.defaultSVGMethod = .trace
+        model.defaultTraceSettings = TraceSettings(preset: .photo, detail: .detailed)
+        model.processImportedImage(try syntheticCapturePNG(), source: "Synthetic trace layout")
+        let deadline = Date().addingTimeInterval(5)
+        while model.busy && Date() < deadline { try await Task.sleep(for: .milliseconds(10)) }
+        try #require(!model.busy && model.error == nil)
+        for scheme in [ColorScheme.light, .dark] {
+            let suffix = scheme == .dark ? "-dark" : "-light"
+            try await render(GeneralSettingsView(model: model), name: "trace-general" + suffix,
+                             scheme: scheme, size: NSSize(width: 640, height: 1100), to: output)
+            try await render(CaptureView(model: model), name: "trace-capture-minimum" + suffix,
+                             scheme: scheme, size: NSSize(width: 900, height: 700), to: output)
+        }
+    }
     /// Run separately with --filter translatedLanguageScreens, one locale per process.
     @Test(.enabled(if: ProcessInfo.processInfo.environment["SMART_CLIPBOARD_LANGUAGE_RENDER"] != nil))
     func translatedLanguageScreens() async throws {

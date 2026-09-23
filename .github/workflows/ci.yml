@@ -37,6 +37,26 @@ jobs:
           swift --version
           python3 --version
 
+      - name: Prepare native tracing toolchain
+        run: |
+          command -v uv >/dev/null || brew install uv
+          if ! command -v rustup >/dev/null; then
+            brew install rustup
+            RUSTUP_BIN="$(brew --prefix rustup)/bin"
+            echo "$RUSTUP_BIN" >> "$GITHUB_PATH"
+            export PATH="$RUSTUP_BIN:$PATH"
+          fi
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          export PATH="$HOME/.cargo/bin:$PATH"
+          rustup toolchain install 1.94.0 --profile minimal
+
+      - name: Build and test native tracer
+        run: |
+          TRACE_HELPER="$(bash scripts/build-tracer.sh)"
+          echo "SMART_CLIPBOARD_TRACE_HELPER=$TRACE_HELPER" >> "$GITHUB_ENV"
+          CARGO_TARGET_DIR="$PWD/.build/tracer" cargo +1.94.0 test --locked --manifest-path native/SmartClipboardTrace/Cargo.toml
+          uv run --no-project python native/SmartClipboardTrace/test_cli.py --binary "$TRACE_HELPER"
+
       - name: Check shell syntax
         run: |
           for script in scripts/*.sh Tests/ReleaseScripts/*.sh; do
@@ -47,15 +67,15 @@ jobs:
         run: bash Tests/ReleaseScripts/test-release.sh
 
       - name: Test publication guards
-        run: python3 Tests/ReleaseScripts/test-release-update.py
+        run: uv run --no-project python Tests/ReleaseScripts/test-release-update.py
 
       - name: Test packaged bundle comparison
-        run: python3 Tests/ReleaseScripts/test-compare-bundles.py
+        run: uv run --no-project python Tests/ReleaseScripts/test-compare-bundles.py
 
       - name: Test app and core
         run: bash scripts/test.sh
 
       - name: Check interface translations
         run: |
-          python3 Tests/ReleaseScripts/test-localizations.py
-          python3 scripts/check-localizations.py
+          uv run --no-project python Tests/ReleaseScripts/test-localizations.py
+          uv run --no-project python scripts/check-localizations.py
