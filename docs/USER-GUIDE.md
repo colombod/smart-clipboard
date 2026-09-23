@@ -2,7 +2,7 @@
 
 Smart Clipboard stays in the menu bar. Set your connection and preferred output once, then capture and paste into the app you are already using.
 
-This guide covers the **0.4 preview**. If you are using 0.3.1, install the new preview to get local oMLX, additional providers, About, notifications and update checks. See the [preview notes](releases/v0.4.0-preview.md) for current limitations.
+This guide covers the **0.4 preview**. If you are using 0.3.1, install the new preview to get local oMLX, additional providers, About, notifications, update checks, five interface languages and optional capture translation. See the [preview notes](releases/v0.4.0-preview.md) for current limitations.
 
 ## Install and start
 

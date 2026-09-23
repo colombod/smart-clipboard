@@ -8,7 +8,7 @@ Turn a screenshot into editable text, notes, a table or structured data—or sim
 
 **[Download for Mac](https://github.com/colombod/smart-clipboard/releases)** · Apple Silicon (M1 or newer) · macOS 14+
 
-Choose the **0.4 preview** for local AI, multiple providers and completion notifications. It is an early release with [known limitations](docs/releases/v0.4.0-preview.md), especially local Description/SVG quality and accessibility. Official downloads are signed and notarized by Apple.
+Choose **[0.4 preview build 12](https://github.com/colombod/smart-clipboard/releases/tag/v0.4.0-preview.12)** for local AI, multiple providers, completion notifications, five interface languages and optional capture translation. It is an early release with [known limitations](docs/releases/v0.4.0-preview.md), especially local Description/SVG quality and accessibility. Official downloads are signed and notarized by Apple.
 
 ## Get started
 
