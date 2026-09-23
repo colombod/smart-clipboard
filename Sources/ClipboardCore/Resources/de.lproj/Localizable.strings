@@ -11,9 +11,11 @@
 "%1$@ is reserved by an enabled macOS shortcut. Choose another combination or change it in System Settings → Keyboard → Keyboard Shortcuts." = "%1$@ ist durch einen aktiven macOS-Tastaturkurzbefehl reserviert. Wähle eine andere Kombination oder ändere sie unter Systemeinstellungen → Tastatur → Tastaturkurzbefehle.";
 "%1$@ of %2$@ clips · %3$@ on this Mac" = "%1$@ von %2$@ Aufnahmen · %3$@ auf diesem Mac";
 "%1$@ · Edited" = "%1$@ · Bearbeitet";
-"%1$@ — %2$@" = "%1$@ — %2$@";
+"%1$@ — %2$@ — %3$@" = "%1$@ — %2$@ — %3$@";
+"%1$@ — %2$@ — %3$@, %4$@" = "%1$@ — %2$@ — %3$@, %4$@";
 "A little clip. A lot of possibility." = "Kleine Aufnahme. Viele Möglichkeiten.";
 "A server key is optional for localhost (127.0.0.1). Other server addresses require a key." = "Für localhost (127.0.0.1) ist ein Serverschlüssel optional. Für andere Serveradressen ist ein Schlüssel erforderlich.";
+"AI" = "KI";
 "AI connection" = "KI-Verbindung";
 "AI picks the most useful format from the source: prose, tables, code, layouts or diagrams." = "Die KI wählt das passende Format für den Inhalt: Text, Tabellen, Code, Layouts oder Diagramme.";
 "About" = "Info";
