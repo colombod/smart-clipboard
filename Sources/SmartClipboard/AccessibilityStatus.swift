@@ -7,48 +7,53 @@ struct AccessibilityStatusSnapshot: Equatable {
     enum Notice: Equatable {
         case none, imageCopied, resultCopied(OutputFormat), captureCancelled, conversionCancelled
 
-        init(_ notice: String) {
-            switch notice {
-            case "Image copied.": self = .imageCopied
-            case "Capture cancelled.": self = .captureCancelled
-            case "Conversion cancelled.": self = .conversionCancelled
-            default:
-                if let format = OutputFormat.allCases.first(where: { notice == "\($0.title) copied." }) {
-                    self = .resultCopied(format)
-                } else { self = .none }
+        var copied: Bool {
+            switch self {
+            case .imageCopied, .resultCopied: return true
+            default: return false
+            }
+        }
+
+        var message: String {
+            switch self {
+            case .none: return ""
+            case .imageCopied: return L10n.text("Image copied.")
+            case .resultCopied(let format): return L10n.text("\(format.title) copied.")
+            case .captureCancelled: return L10n.text("Capture cancelled.")
+            case .conversionCancelled: return L10n.text("Conversion cancelled.")
             }
         }
 
         var announcement: String? {
             switch self {
             case .none: return nil
-            case .imageCopied: return "Image copied. Ready to paste."
-            case .resultCopied(let format): return "\(format.title) copied. Ready to paste."
-            case .captureCancelled: return "Capture cancelled."
-            case .conversionCancelled: return "Conversion cancelled."
+            case .imageCopied: return L10n.text("Image copied. Ready to paste.")
+            case .resultCopied(let format): return L10n.text("\(format.title) copied. Ready to paste.")
+            case .captureCancelled: return L10n.text("Capture cancelled.")
+            case .conversionCancelled: return L10n.text("Conversion cancelled.")
             }
         }
     }
 
-    static let failureMessage = "Smart Clipboard needs attention. Open Clipboard from the menu bar for details."
+    static var failureMessage: String { L10n.text("Smart Clipboard needs attention. Open Clipboard from the menu bar for details.") }
     let capturing: Bool
     let processing: Bool
     let failed: Bool
     let notice: Notice
 
-    init(capturing: Bool = false, processing: Bool = false, failed: Bool = false, notice: String = "") {
+    init(capturing: Bool = false, processing: Bool = false, failed: Bool = false, notice: Notice = .none) {
         self.capturing = capturing
         self.processing = processing
         self.failed = failed
-        self.notice = Notice(notice)
+        self.notice = notice
     }
 
     func accessibilityValue(ready: Bool, preferredFormat: OutputFormat) -> String {
-        if processing { return "Processing your capture." }
-        if capturing { return "Select a region or window. Press Escape to cancel." }
+        if processing { return L10n.text("Processing your capture.") }
+        if capturing { return L10n.text("Select a region or window. Press Escape to cancel.") }
         if failed { return Self.failureMessage }
         if let announcement = notice.announcement { return announcement }
-        return ready ? "Ready. Preferred format: \(preferredFormat.title)." : "Setup needs attention."
+        return ready ? L10n.text("Ready. Preferred format: \(preferredFormat.title).") : L10n.text("Setup needs attention.")
     }
 }
 
@@ -88,13 +93,13 @@ struct AccessibilityStatusSnapshot: Equatable {
             message = notice
         } else if state.processing && !old.processing {
             operationHasOutcome = false
-            message = "Processing your capture."
+            message = L10n.text("Processing your capture.")
         } else if state.capturing && !old.capturing {
             operationHasOutcome = false
-            message = "Select a region or window. Press Escape to cancel."
+            message = L10n.text("Select a region or window. Press Escape to cancel.")
         } else if old.processing && !state.processing && !state.failed && !operationHasOutcome {
             operationHasOutcome = true
-            message = "Conversion complete."
+            message = L10n.text("Conversion complete.")
         } else { message = nil }
         if let message, isVoiceOverEnabled() { post(message) }
     }

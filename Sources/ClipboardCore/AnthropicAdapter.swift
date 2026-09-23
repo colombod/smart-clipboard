@@ -20,7 +20,7 @@ public struct AnthropicAdapter: ImageProviderAdapter {
         var request = try ProviderWire.request(url: URL(string: "https://api.anthropic.com/v1/messages")!, key: key, body: body)
         request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
         guard let size = request.httpBody?.count, size <= 32_000_000 else {
-            throw ClipError.message("This capture and its instructions exceed Anthropic’s request limit. Try a smaller capture or shorter instructions.")
+            throw ClipError.message(L10n.text("This capture and its instructions exceed Anthropic’s request limit. Try a smaller capture or shorter instructions."))
         }
         return request
     }
@@ -28,36 +28,36 @@ public struct AnthropicAdapter: ImageProviderAdapter {
     public func response(_ data: Data) throws -> ProviderResponse {
         guard let body = try? ProviderWire.json(data), body["type"] as? String == "message",
               body["role"] as? String == "assistant" else {
-            throw ClipError.message("Anthropic returned an unreadable response. Try again.")
+            throw ClipError.message(L10n.text("Anthropic returned an unreadable response. Try again."))
         }
         let stop = body["stop_reason"] as? String
         if stop == "refusal" || (body["stop_details"] as? [String: Any])?["type"] as? String == "refusal" {
-            throw ClipError.message("Anthropic declined this conversion. Try a different capture.")
+            throw ClipError.message(L10n.text("Anthropic declined this conversion. Try a different capture."))
         }
         guard stop == "end_turn" else {
-            throw ClipError.message("Anthropic did not finish the conversion. Try a smaller capture.")
+            throw ClipError.message(L10n.text("Anthropic did not finish the conversion. Try a smaller capture."))
         }
         guard let blocks = body["content"] as? [[String: Any]] else {
-            throw ClipError.message("Anthropic returned no conversion text. Try again.")
+            throw ClipError.message(L10n.text("Anthropic returned no conversion text. Try again."))
         }
         var parts: [String] = []
         for block in blocks {
             switch block["type"] as? String {
             case "text":
                 guard let text = block["text"] as? String else {
-                    throw ClipError.message("Anthropic returned unreadable conversion text. Try again.")
+                    throw ClipError.message(L10n.text("Anthropic returned unreadable conversion text. Try again."))
                 }
                 parts.append(text)
             case "thinking", "redacted_thinking":
                 continue
             default:
                 // Tools are never requested; do not accept a partial answer alongside one.
-                throw ClipError.message("Anthropic returned an unsupported response instead of a conversion. Try again.")
+                throw ClipError.message(L10n.text("Anthropic returned an unsupported response instead of a conversion. Try again."))
             }
         }
         let text = parts.joined()
         guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw ClipError.message("Anthropic returned no conversion text. Try again.")
+            throw ClipError.message(L10n.text("Anthropic returned no conversion text. Try again."))
         }
         return ProviderResponse(text: text, model: body["model"] as? String)
     }
@@ -70,7 +70,7 @@ public struct AnthropicAdapter: ImageProviderAdapter {
 
     public func modelsResponse(_ data: Data) throws -> [ProviderModel] {
         guard let body = try? ProviderWire.json(data), let rows = body["data"] as? [[String: Any]] else {
-            throw ClipError.message("Could not read Anthropic’s model list. Enter a model manually.")
+            throw ClipError.message(L10n.text("Could not read Anthropic’s model list. Enter a model manually."))
         }
         return rows.compactMap { row in
             guard let id = row["id"] as? String, !id.isEmpty else { return nil }

@@ -3,6 +3,7 @@ dist/
 .DS_Store
 *.xcodeproj/xcuserdata/
 .swiftpm/
+__pycache__/
 
 # Beads / Dolt files
 .dolt/

@@ -15,36 +15,36 @@ struct ConnectionSettingsView: View {
 
     var body: some View {
         Form {
-            Section("AI connection") {
-                Picker("Provider", selection: $store.activeProvider) {
+            Section(L10n.text("AI connection")) {
+                Picker(L10n.text("Provider"), selection: $store.activeProvider) {
                     ForEach(AIProvider.allCases) { Text($0.title).tag($0) }
                 }
-                Text("Captures use this connection. Auto detect chooses the output format; it keeps your selected provider.")
+                Text(L10n.text("Captures use this connection. Auto detect chooses the output format; it keeps your selected provider."))
                     .font(.caption).foregroundStyle(.secondary)
                 if store.activeProvider == .omlx {
-                    TextField("Server address", text: field(\.endpoint), prompt: Text("http://127.0.0.1:8000/v1"))
-                    Text("Connect to an already running oMLX server with an image-capable model. Screenshots go to this address, which may be on this Mac or your local network.")
+                    TextField(L10n.text("Server address"), text: field(\.endpoint), prompt: Text("http://127.0.0.1:8000/v1"))
+                    Text(L10n.text("Connect to an already running oMLX server with an image-capable model. Screenshots go to this address, which may be on this Mac or your local network."))
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 if store.activeProvider == .codex {
-                    TextField("Codex executable", text: field(\.executable), prompt: Text("Auto-detect"))
-                    Text("Use your ChatGPT plan’s Codex access through the official Codex CLI. Credentials stay with Codex. Subscription limits and workspace policies apply.")
+                    TextField(L10n.text("Codex executable"), text: field(\.executable), prompt: Text(L10n.text("Auto-detect")))
+                    Text(L10n.text("Use your ChatGPT plan’s Codex access through the official Codex CLI. Credentials stay with Codex. Subscription limits and workspace policies apply."))
                         .font(.caption).foregroundStyle(.secondary)
-                    Button("Sign in with ChatGPT") { signIn() }.disabled(working)
-                    Link("Install / update Codex CLI ↗", destination: URL(string: "https://developers.openai.com/codex/cli")!)
+                    Button(L10n.text("Sign in with ChatGPT")) { signIn() }.disabled(working)
+                    Link(L10n.text("Install / update Codex CLI ↗"), destination: URL(string: "https://developers.openai.com/codex/cli")!)
                 } else {
                     keyControls
                 }
             }
-            Section("Image processing") {
-                TextField(store.activeProvider == .codex ? "Model (optional)" : "Vision model", text: field(\.model), prompt: Text(store.activeProvider == .codex ? "Codex default" : "Enter an image-capable model"))
+            Section(L10n.text("Image processing")) {
+                TextField(store.activeProvider == .codex ? L10n.text("Model (optional)") : L10n.text("Vision model"), text: field(\.model), prompt: Text(store.activeProvider == .codex ? L10n.text("Codex default") : L10n.text("Enter an image-capable model")))
                 if store.activeProvider != .codex {
                     HStack {
-                        Button("Refresh models") { refreshModels() }.disabled(working || hasUnsavedKey)
+                        Button(L10n.text("Refresh models")) { refreshModels() }.disabled(working || hasUnsavedKey)
                         if modelsRevision == store.revision, !models.isEmpty {
-                            Menu("Choose a listed model") {
+                            Menu(L10n.text("Choose a listed model")) {
                                 ForEach(models) { model in
-                                    Button(model.id + (model.imageInput == nil ? " (image support unverified)" : "")) {
+                                    Button(model.imageInput == nil ? L10n.text("\(model.id) (image support unverified)") : model.id) {
                                         var profile = store.activeProfile
                                         profile.model = model.id
                                         store.update(profile)
@@ -53,22 +53,22 @@ struct ConnectionSettingsView: View {
                             }
                         }
                     }
-                    Text("Models known to accept only text are hidden. You can enter a model manually; a model list alone does not confirm image support.")
+                    Text(L10n.text("Models known to accept only text are hidden. You can enter a model manually; a model list alone does not confirm image support."))
                         .font(.caption).foregroundStyle(.secondary)
                 }
-                Text("Test image processing sends a small synthetic image with sample text through this connection. It does not use your captures. Provider charges or subscription usage may apply.")
+                Text(L10n.text("Test image processing sends a small synthetic image with sample text through this connection. It does not use your captures. Provider charges or subscription usage may apply."))
                     .font(.caption).foregroundStyle(.secondary)
                 HStack {
-                    Button("Test image processing") { testImageProcessing() }.disabled(working || hasUnsavedKey)
+                    Button(L10n.text("Test image processing")) { testImageProcessing() }.disabled(working || hasUnsavedKey)
                     if working {
-                        ProgressView().controlSize(.small).accessibilityLabel("Updating connection")
-                        Button("Cancel") { operation?.cancel() }
+                        ProgressView().controlSize(.small).accessibilityLabel(L10n.text("Updating connection"))
+                        Button(L10n.text("Cancel")) { operation?.cancel() }
                     }
                 }
                 if let success = store.testSuccess {
                     Label(success, systemImage: "checkmark.circle.fill").foregroundStyle(.green)
                 } else {
-                    Text("Image processing has not been verified for this configuration.")
+                    Text(L10n.text("Image processing has not been verified for this configuration."))
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 if messageRevision == store.revision, !message.isEmpty {
@@ -78,8 +78,8 @@ struct ConnectionSettingsView: View {
                     Text(warning).font(.callout).foregroundStyle(.orange)
                 }
             }
-            Section("Your captures") {
-                Text("Each selected screenshot or imported image uses your preferred format, then copies the result. AI formats send it to the selected connection. Pass through copies the image locally. On-device text extraction works offline. History keeps captures and results locally according to your History settings. Set the limit to zero to disable history. Codex removes its temporary files after conversion.")
+            Section(L10n.text("Your captures")) {
+                Text(L10n.text("Each selected screenshot or imported image uses your preferred format, then copies the result. AI formats send it to the selected connection. Pass through copies the image locally. On-device text extraction works offline. History keeps captures and results locally according to your History settings. Set the limit to zero to disable history. Codex removes its temporary files after conversion."))
                     .font(.caption).foregroundStyle(.secondary)
             }
         }
@@ -90,21 +90,21 @@ struct ConnectionSettingsView: View {
 
     private var keyControls: some View {
         Group {
-            SecureField(store.activeProvider.requiresKey ? "New API key" : "New API key (optional)", text: $newKey).disabled(working)
+            SecureField(store.activeProvider.requiresKey ? L10n.text("New API key") : L10n.text("New API key (optional)"), text: $newKey).disabled(working)
             if store.activeProvider == .omlx {
-                Text("A server key is optional for localhost (127.0.0.1). Other server addresses require a key.")
+                Text(L10n.text("A server key is optional for localhost (127.0.0.1). Other server addresses require a key."))
                     .font(.caption).foregroundStyle(.secondary)
             } else {
-                Text("Use this provider’s API key. API access and billing are separate from chat subscriptions.")
+                Text(L10n.text("Use this provider’s API key. API access and billing are separate from chat subscriptions."))
                     .font(.caption).foregroundStyle(.secondary)
             }
-            Text("Keys are saved separately in Keychain. Opening Settings does not read them. Save a new key before refreshing models or testing.")
+            Text(L10n.text("Keys are saved separately in Keychain. Opening Settings does not read them. Save a new key before refreshing models or testing."))
                 .font(.caption).foregroundStyle(.secondary)
             HStack {
-                Button("Save key") { keyAction(.save) }
+                Button(L10n.text("Save key")) { keyAction(.save) }
                     .disabled(working || newKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                Button("Authorize saved key") { keyAction(.authorize) }.disabled(working)
-                Button("Remove saved key") { keyAction(.remove) }.disabled(working)
+                Button(L10n.text("Authorize saved key")) { keyAction(.authorize) }.disabled(working)
+                Button(L10n.text("Remove saved key")) { keyAction(.remove) }.disabled(working)
             }
         }
     }
@@ -129,13 +129,13 @@ struct ConnectionSettingsView: View {
     private enum KeyAction: Sendable, Equatable { case save, authorize, remove }
     private func keyAction(_ action: KeyAction) {
         #if ACCESSIBILITY_AUDIT
-        show("Keychain changes are unavailable in the isolated accessibility audit.")
+        show(L10n.text("Keychain changes are unavailable in the isolated accessibility audit."))
         #else
         let profile = store.activeProfile
         let account = profile.credentialAccount
         let key = newKey.trimmingCharacters(in: .whitespacesAndNewlines)
         working = true
-        show("Updating Keychain…")
+        show(L10n.text("Updating Keychain…"))
         operation = Task {
             defer { working = false; operation = nil }
             do {
@@ -143,14 +143,14 @@ struct ConnectionSettingsView: View {
                     switch action {
                     case .save:
                         try KeyStore.save(key, account: account)
-                        return "Key saved securely. Test image processing to verify this connection."
+                        return L10n.text("Key saved securely. Test image processing to verify this connection.")
                     case .authorize:
                         return try KeyStore.read(account: account, allowInteraction: true).isEmpty
-                            ? "No API key is saved for this connection."
-                            : "Saved key is accessible. Test image processing to verify this connection."
+                            ? L10n.text("No API key is saved for this connection.")
+                            : L10n.text("Saved key is accessible. Test image processing to verify this connection.")
                     case .remove:
                         try KeyStore.save("", account: account)
-                        return "Saved key removed."
+                        return L10n.text("Saved key removed.")
                     }
                 }.value
                 store.credentialsDidChange(for: profile)
@@ -166,14 +166,14 @@ struct ConnectionSettingsView: View {
 
     private func refreshModels() {
         #if ACCESSIBILITY_AUDIT
-        show("Network requests are unavailable in the isolated accessibility audit.")
+        show(L10n.text("Network requests are unavailable in the isolated accessibility audit."))
         #else
         let profile: ConnectionProfile
         do { profile = try store.validatedProfile() }
         catch { show(error.localizedDescription); return }
         let revision = store.revision
         working = true
-        show("Loading models…")
+        show(L10n.text("Loading models…"))
         operation = Task {
             defer { working = false; operation = nil }
             do {
@@ -183,10 +183,10 @@ struct ConnectionSettingsView: View {
                 var seen = Set<String>()
                 models = listed.filter { $0.imageInput != false && seen.insert($0.id).inserted }.sorted { $0.id < $1.id }
                 modelsRevision = revision
-                show(models.isEmpty ? "No image-capable candidates were listed. Enter a model manually and test image processing." : "Model list refreshed. Choose a model, then test image processing.")
+                show(models.isEmpty ? L10n.text("No image-capable candidates were listed. Enter a model manually and test image processing.") : L10n.text("Model list refreshed. Choose a model, then test image processing."))
             } catch {
                 if store.activeProfile == profile, store.revision == revision {
-                    show(error is CancellationError ? "Model refresh cancelled." : error.localizedDescription)
+                    show(error is CancellationError ? L10n.text("Model refresh cancelled.") : error.localizedDescription)
                 }
             }
         }
@@ -195,7 +195,7 @@ struct ConnectionSettingsView: View {
 
     private func testImageProcessing() {
         #if ACCESSIBILITY_AUDIT
-        show("Provider tests are unavailable in the isolated accessibility audit.")
+        show(L10n.text("Provider tests are unavailable in the isolated accessibility audit."))
         #else
         let profile: ConnectionProfile
         do { profile = try store.validatedProfile() }
@@ -203,7 +203,7 @@ struct ConnectionSettingsView: View {
         let revision = store.revision
         store.clearTestSuccess()
         working = true
-        show("Testing a synthetic image…")
+        show(L10n.text("Testing a synthetic image…"))
         operation = Task {
             defer { working = false; operation = nil }
             do {
@@ -212,7 +212,7 @@ struct ConnectionSettingsView: View {
                 if store.recordTestSuccess(result, for: profile, revision: revision) { show("") }
             } catch {
                 if store.activeProfile == profile, store.revision == revision {
-                    show(error is CancellationError ? "Image test cancelled." : error.localizedDescription)
+                    show(error is CancellationError ? L10n.text("Image test cancelled.") : error.localizedDescription)
                 }
             }
         }
@@ -221,13 +221,13 @@ struct ConnectionSettingsView: View {
 
     private func signIn() {
         #if ACCESSIBILITY_AUDIT
-        show("Account sign-in is unavailable in the isolated accessibility audit.")
+        show(L10n.text("Account sign-in is unavailable in the isolated accessibility audit."))
         #else
         let profile = store.activeProfile
         store.credentialsDidChange(for: profile)
         let revision = store.revision
         working = true
-        show("Complete sign-in in your browser.")
+        show(L10n.text("Complete sign-in in your browser."))
         operation = Task {
             defer { working = false; operation = nil }
             do {
@@ -235,11 +235,11 @@ struct ConnectionSettingsView: View {
                 let (status, _) = try await ProcessRunner().run(path, ["login"], timeout: 300)
                 try Task.checkCancellation()
                 if store.activeProfile == profile, store.revision == revision {
-                    show(status == 0 ? "Sign-in completed. Test image processing to verify ChatGPT access." : "Sign-in did not complete. Try again.")
+                    show(status == 0 ? L10n.text("Sign-in completed. Test image processing to verify ChatGPT access.") : L10n.text("Sign-in did not complete. Try again."))
                 }
             } catch {
                 if store.activeProfile == profile, store.revision == revision {
-                    show(error is CancellationError ? "Sign-in cancelled." : error.localizedDescription)
+                    show(error is CancellationError ? L10n.text("Sign-in cancelled.") : error.localizedDescription)
                 }
             }
         }

@@ -54,3 +54,8 @@ jobs:
 
       - name: Test app and core
         run: bash scripts/test.sh
+
+      - name: Check interface translations
+        run: |
+          python3 Tests/ReleaseScripts/test-localizations.py
+          python3 scripts/check-localizations.py

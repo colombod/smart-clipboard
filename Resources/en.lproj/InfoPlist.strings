@@ -1,0 +1,2 @@
+"NSScreenCaptureUsageDescription" = "Capture only the screen region or window you select to copy or convert its content.";
+"NSLocalNetworkUsageDescription" = "Connect to the local image-processing server you choose to list models, test image processing, or convert selected captures.";

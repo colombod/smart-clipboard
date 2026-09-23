@@ -21,14 +21,14 @@ enum CaptureNotificationMessage: Equatable {
 
     var title: String {
         switch self {
-        case .copied: return "Ready to paste"
-        case .failed: return "Capture couldn't finish"
+        case .copied: return L10n.text("Ready to paste")
+        case .failed: return L10n.text("Capture couldn't finish")
         }
     }
     var body: String {
         switch self {
-        case .copied(let format, _): return "\(format.title) is on the clipboard. Paste with ⌘V."
-        case .failed: return "Open Smart Clipboard to check the status and try again."
+        case .copied(let format, _): return L10n.text("\(format.title) is on the clipboard. Paste with ⌘V.")
+        case .failed: return L10n.text("Open Smart Clipboard to check the status and try again.")
         }
     }
     var sound: Bool {
@@ -101,15 +101,15 @@ enum CaptureNotificationMessage: Equatable {
 
     var isAvailable: Bool { backend != nil }
     var status: String {
-        guard isAvailable else { return "Notifications are unavailable in this test or audit build." }
+        guard isAvailable else { return L10n.text("Notifications are unavailable in this test or audit build.") }
         switch authorization {
-        case .unknown: return "Notification permission has not been checked."
-        case .notDetermined: return "Choose Enable notifications to ask macOS for permission."
-        case .denied: return "Notifications are blocked in macOS. Allow them in System Settings."
-        case .provisional: return "macOS allows quiet notifications. Enable banners in System Settings if desired."
+        case .unknown: return L10n.text("Notification permission has not been checked.")
+        case .notDetermined: return L10n.text("Choose Enable notifications to ask macOS for permission.")
+        case .denied: return L10n.text("Notifications are blocked in macOS. Allow them in System Settings.")
+        case .provisional: return L10n.text("macOS allows quiet notifications. Enable banners in System Settings if desired.")
         case .authorized:
-            if !alertsEnabled { return "macOS banners are off. Check notification settings to show alerts." }
-            return enabled ? "Notifications are enabled for Smart Clipboard." : "macOS permission is granted. Notifications are off in this app."
+            if !alertsEnabled { return L10n.text("macOS banners are off. Check notification settings to show alerts.") }
+            return enabled ? L10n.text("Notifications are enabled for Smart Clipboard.") : L10n.text("macOS permission is granted. Notifications are off in this app.")
         }
     }
 
@@ -128,7 +128,7 @@ enum CaptureNotificationMessage: Equatable {
             defaults.set(enabled, forKey: Key.enabled)
         } catch {
             guard revision == preferenceRevision else { return }
-            message = "macOS could not enable notifications. Check System Settings and try again."
+            message = L10n.text("macOS could not enable notifications. Check System Settings and try again.")
         }
     }
 
@@ -148,7 +148,7 @@ enum CaptureNotificationMessage: Equatable {
     func openSystemSettings() {
         guard let backend else { return }
         if !backend.openSystemSettings() {
-            message = "Open System Settings → Notifications → Smart Clipboard."
+            message = L10n.text("Open System Settings → Notifications → Smart Clipboard.")
         }
     }
 
@@ -176,7 +176,7 @@ enum CaptureNotificationMessage: Equatable {
                 try await backend.post(content)
                 self.message = nil
             }
-            catch { self.message = "macOS could not deliver a notification. The capture status remains available in the Clip menu." }
+            catch { self.message = L10n.text("macOS could not deliver a notification. The capture status remains available in the Clip menu.") }
         }
     }
 

@@ -7,11 +7,11 @@ public enum AIProvider: String, CaseIterable, Codable, Identifiable, Sendable {
     public var title: String {
         switch self {
         case .openai: return "OpenAI"
-        case .codex: return "ChatGPT via Codex"
+        case .codex: return L10n.text("ChatGPT via Codex")
         case .anthropic: return "Anthropic"
         case .google: return "Google Gemini"
         case .perplexity: return "Perplexity"
-        case .omlx: return "Local / oMLX"
+        case .omlx: return L10n.text("Local / oMLX")
         }
     }
     public var requiresKey: Bool { self != .codex && self != .omlx }
@@ -76,7 +76,7 @@ public enum ProviderWire {
     }
     public static func json(_ data: Data) throws -> [String: Any] {
         guard let body = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            throw ClipError.message("The provider returned an unreadable response.")
+            throw ClipError.message(L10n.text("The provider returned an unreadable response."))
         }
         return body
     }
@@ -91,17 +91,17 @@ public enum ProviderWire {
     }
     public static func requireModel(_ profile: ConnectionProfile) throws -> String {
         let model = profile.model.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !model.isEmpty else { throw ClipError.message("Choose an image-capable model in Settings → Connection.") }
+        guard !model.isEmpty else { throw ClipError.message(L10n.text("Choose an image-capable model in Settings → Connection.")) }
         return model
     }
     public static func requireImage(_ png: Data, maximumBytes: Int) throws {
         guard !png.isEmpty, png.count <= maximumBytes else {
-            throw ClipError.message("This image exceeds the selected provider’s limit. Try a smaller capture.")
+            throw ClipError.message(L10n.text("This image exceeds the selected provider’s limit. Try a smaller capture."))
         }
     }
     public static func listedModels(_ data: Data) throws -> [ProviderModel] {
         let body = try json(data)
-        guard let rows = body["data"] as? [[String: Any]] else { throw ClipError.message("Could not read the provider’s model list. Enter a model manually.") }
+        guard let rows = body["data"] as? [[String: Any]] else { throw ClipError.message(L10n.text("Could not read the provider’s model list. Enter a model manually.")) }
         return rows.compactMap { row in (row["id"] as? String).map { ProviderModel(id: $0) } }.sorted { $0.id < $1.id }
     }
 }

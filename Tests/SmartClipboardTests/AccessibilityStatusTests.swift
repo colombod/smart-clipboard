@@ -38,7 +38,7 @@ import Testing
         // Use the same synchronous publishers as AppDelegate, with the real
         // AppModel's @Published ordering and a collector instead of live speech.
         let subscription = Publishers.CombineLatest4(model.$capturing, model.$busy,
-                                                      model.$error.map { $0 != nil }, model.$notice)
+                                                      model.$error.map { $0 != nil }, model.$operationNotice)
             .sink { state in
                 announcer.observe(.init(capturing: state.0, processing: state.1, failed: state.2, notice: state.3))
             }
@@ -110,7 +110,7 @@ import Testing
     @Test func startupAndRepeatedRefreshesAreSilent() {
         var spoken: [String] = []
         let announcer = AccessibilityStatusAnnouncer(isVoiceOverEnabled: { true }, post: { spoken.append($0) })
-        let stale = AccessibilityStatusSnapshot(notice: "Markdown copied.")
+        let stale = AccessibilityStatusSnapshot(notice: .resultCopied(.markdown))
         announcer.observe(stale)
         for _ in 0..<10 { announcer.observe(stale) }
         #expect(spoken.isEmpty)
@@ -124,9 +124,9 @@ import Testing
             announcer.observe(.init(capturing: true))
             announcer.observe(.init())
             announcer.observe(.init(processing: true))
-            announcer.observe(.init(processing: true, notice: "Markdown copied."))
-            announcer.observe(.init(notice: "Markdown copied."))
-            announcer.observe(.init(notice: "Markdown copied."))
+            announcer.observe(.init(processing: true, notice: .resultCopied(.markdown)))
+            announcer.observe(.init(notice: .resultCopied(.markdown)))
+            announcer.observe(.init(notice: .resultCopied(.markdown)))
         }
         #expect(spoken == Array(repeating: ["Select a region or window. Press Escape to cancel.",
                                            "Processing your capture.", "Markdown copied. Ready to paste."], count: 2).flatMap { $0 })
@@ -138,8 +138,8 @@ import Testing
         announcer.observe(.init())
         for _ in 0..<2 {
             announcer.observe(.init(capturing: true))
-            announcer.observe(.init(capturing: true, notice: "Image copied."))
-            announcer.observe(.init(notice: "Image copied."))
+            announcer.observe(.init(capturing: true, notice: .imageCopied))
+            announcer.observe(.init(notice: .imageCopied))
         }
         #expect(spoken.filter { $0 == "Image copied. Ready to paste." }.count == 2)
         #expect(!spoken.contains("Conversion complete."))
@@ -151,8 +151,8 @@ import Testing
         announcer.observe(.init())
         announcer.observe(.init(processing: true))
         announcer.observe(.init())
-        announcer.observe(.init(notice: "Plain text copied."))
-        announcer.observe(.init(notice: "Image copied."))
+        announcer.observe(.init(notice: .resultCopied(.text)))
+        announcer.observe(.init(notice: .imageCopied))
         #expect(spoken == ["Processing your capture.", "Conversion complete.", "Plain text copied. Ready to paste.",
                            "Image copied. Ready to paste."])
     }
@@ -162,11 +162,11 @@ import Testing
         let announcer = AccessibilityStatusAnnouncer(isVoiceOverEnabled: { true }, post: { spoken.append($0) })
         announcer.observe(.init())
         announcer.observe(.init(capturing: true))
-        announcer.observe(.init(capturing: true, notice: "Capture cancelled."))
-        announcer.observe(.init(notice: "Capture cancelled."))
+        announcer.observe(.init(capturing: true, notice: .captureCancelled))
+        announcer.observe(.init(notice: .captureCancelled))
         announcer.observe(.init(processing: true))
-        announcer.observe(.init(processing: true, notice: "Conversion cancelled."))
-        announcer.observe(.init(notice: "Conversion cancelled."))
+        announcer.observe(.init(processing: true, notice: .conversionCancelled))
+        announcer.observe(.init(notice: .conversionCancelled))
         #expect(spoken == ["Select a region or window. Press Escape to cancel.", "Capture cancelled.",
                            "Processing your capture.", "Conversion cancelled."])
     }
@@ -184,18 +184,19 @@ import Testing
                 == AccessibilityStatusSnapshot.failureMessage)
     }
 
-    @Test func arbitraryNoticesNeverBecomeSpeechOrAccessibilityValues() {
-        var spoken: [String] = []
-        let announcer = AccessibilityStatusAnnouncer(isVoiceOverEnabled: { true }, post: { spoken.append($0) })
-        announcer.observe(.init())
-        for notice in ["Saved private-account-number.png.", "copied SECRET TOKEN", "Markdown copied. SECRET TOKEN",
-                       "Provider error with private capture text", "Opened saved capture. Choose any format to convert the original again."] {
-            let state = AccessibilityStatusSnapshot(notice: notice)
-            announcer.observe(state)
-            #expect(state.notice == .none)
-            #expect(state.accessibilityValue(ready: true, preferredFormat: .json) == "Ready. Preferred format: JSON.")
+    @Test func arbitraryNoticesNeverBecomeSpeechOrAccessibilityValues() async throws {
+        try await withObservedModel(convert: { _, _, _, _ in
+            ProviderConversion(result: ConversionResult(format: .text, content: "Unused"))
+        }) { model, _, collector, _ in
+            for notice in ["Saved private-account-number.png.", "copied SECRET TOKEN", "Markdown copied. SECRET TOKEN",
+                           "Image copied.", "Provider error with private capture text"] {
+                model.notice = notice
+                let state = AccessibilityStatusSnapshot(notice: model.operationNotice)
+                #expect(state.notice == .none)
+                #expect(state.accessibilityValue(ready: true, preferredFormat: .json) == "Ready. Preferred format: JSON.")
+            }
+            #expect(collector.messages.isEmpty)
         }
-        #expect(spoken.isEmpty)
     }
 
     @Test func enablingVoiceOverDoesNotReplayOffStateOutcomes() {
@@ -204,14 +205,14 @@ import Testing
         let announcer = AccessibilityStatusAnnouncer(isVoiceOverEnabled: { enabled }, post: { spoken.append($0) })
         announcer.observe(.init())
         announcer.observe(.init(processing: true))
-        announcer.observe(.init(processing: true, notice: "JSON copied."))
-        announcer.observe(.init(notice: "JSON copied."))
+        announcer.observe(.init(processing: true, notice: .resultCopied(.json)))
+        announcer.observe(.init(notice: .resultCopied(.json)))
         enabled = true
-        announcer.observe(.init(notice: "JSON copied."))
+        announcer.observe(.init(notice: .resultCopied(.json)))
         #expect(spoken.isEmpty)
         announcer.observe(.init(processing: true))
-        announcer.observe(.init(processing: true, notice: "JSON copied."))
-        announcer.observe(.init(notice: "JSON copied."))
+        announcer.observe(.init(processing: true, notice: .resultCopied(.json)))
+        announcer.observe(.init(notice: .resultCopied(.json)))
         #expect(spoken == ["Processing your capture.", "JSON copied. Ready to paste."])
     }
 

@@ -38,7 +38,7 @@ import ClipboardCore
                 model.defaultFormat = .yaml; model.defaultInstruction = "Changed while selecting"
                 model.capture(window: !window) // Ignore a second capture while selecting.
                 try await finish(model)
-                #expect(modes == [window]); #expect(requests == [.json]); #expect(directions == ["Keep field names"])
+                #expect(modes == [window]); #expect(requests == [.json]); #expect(directions == [OutputLanguage.instruction(userInstruction: "Keep field names", resolvedIdentifier: nil)])
                 #expect(defaults.string(forKey: "defaultFormat") == OutputFormat.yaml.rawValue)
                 #expect(defaults.string(forKey: "defaultInstruction") == "Changed while selecting")
                 #expect(board.string(forType: .string) == "{\"count\":3}")

@@ -15,12 +15,15 @@ enum CaptureFeedback: Equatable {
     @Published var output = ""
     @Published var resultFormat: OutputFormat = .text
     @Published var format: OutputFormat = .auto
+    @Published var outputLanguage: OutputLanguage = .source
+    @Published private(set) var resultOutputLanguage: String?
     @Published var instruction = ""
     @Published var busy = false
     @Published var capturing = false
     @Published private(set) var choosingFile = false
     @Published var error: String?
-    @Published var notice = ""
+    @Published var notice = "" { didSet { operationNotice = .none } }
+    @Published private(set) var operationNotice: AccessibilityStatusSnapshot.Notice = .none
     @Published var settingsTab = "connection"
     let connections: ConnectionStore
     // Supplied only by the production app lifecycle, never by tests or audit builds.
@@ -30,6 +33,7 @@ enum CaptureFeedback: Equatable {
     var operationFeedback: ((CaptureFeedback) -> Void)?
     @Published var defaultFormat: OutputFormat { didSet { defaults.set(defaultFormat.rawValue, forKey: "defaultFormat") } }
     @Published var defaultInstruction: String { didSet { defaults.set(defaultInstruction, forKey: "defaultInstruction") } }
+    @Published var defaultOutputLanguage: OutputLanguage { didSet { defaults.set(defaultOutputLanguage.rawValue, forKey: "defaultOutputLanguage") } }
     @Published var copyAutomatically: Bool { didSet { defaults.set(copyAutomatically, forKey: "copyAutomatically") } }
     @Published var regionShortcut: Shortcut
     @Published var windowShortcut: Shortcut
@@ -42,9 +46,10 @@ enum CaptureFeedback: Equatable {
     private var uneditedOutput = ""
     var resultOrigin: String? {
         guard let provenance = resultProvenance else { return nil }
-        let provider = AIProvider(rawValue: provenance.providerID)?.title ?? "On-device text extraction"
-        let model = provenance.effectiveModel ?? (provenance.requestedModel.isEmpty ? "Default model" : provenance.requestedModel)
-        return provider + (provenance.providerID == "apple-vision" ? "" : " · " + model) + (provenance.userEdited ? " · Edited" : "")
+        let provider = AIProvider(rawValue: provenance.providerID)?.title ?? L10n.text("On-device text extraction")
+        let model = provenance.effectiveModel ?? (provenance.requestedModel.isEmpty ? L10n.text("Default model") : provenance.requestedModel)
+        let origin = provenance.providerID == "apple-vision" ? provider : "\(provider) · \(model)"
+        return provenance.userEdited ? L10n.text("\(origin) · Edited") : origin
     }
     private var historyStore: HistoryStore?
     private var historyWindow: NSWindow?
@@ -52,19 +57,20 @@ enum CaptureFeedback: Equatable {
     @Published private(set) var screenAccess = false
     @Published private(set) var shortcutProblems: [UInt32: String] = [:]
     @Published private(set) var shortcutsPaused = false
-    @Published private(set) var lastShortcutEvent = "No shortcut received yet"
+    @Published private(set) var lastShortcutEvent = L10n.text("No shortcut received yet")
     private let pasteboard: NSPasteboard
     private let presentsWindows: Bool
     private let conversionOverride: ((Data, OutputFormat, String, Bool) async throws -> ConversionResult)?
     private let providerConversionOverride: ((Data, ConnectionProfile, OutputFormat, String) async throws -> ProviderConversion)?
     private let captureClient: CaptureClient
     private let registersHotkeys: Bool
+    private let systemLanguage: () -> String
     let hotkeys: HotKeyManager
     var captureReady: Bool { screenAccess && !shortcutsPaused && shortcutProblems.isEmpty && hotkeys.isRegistered(1) && hotkeys.isRegistered(2) }
     func shortcutStatus(_ id: UInt32) -> String {
-        if shortcutsPaused { return "Paused while recording a shortcut" }
+        if shortcutsPaused { return L10n.text("Paused while recording a shortcut") }
         if let problem = shortcutProblems[id] { return problem }
-        return hotkeys.isRegistered(id) ? "Registered and listening" : "Not registered"
+        return hotkeys.isRegistered(id) ? L10n.text("Registered and listening") : L10n.text("Not registered")
     }
     func refreshReadiness() {
         screenAccess = captureClient.hasAccess()
@@ -99,7 +105,7 @@ enum CaptureFeedback: Equatable {
     private var panel: NSWindow?
     private var settings: NSWindow?
 
-    init(defaults: UserDefaults = .standard, historyDirectory: URL? = nil, registerHotkeys: Bool = true, hotkeyManager: HotKeyManager? = nil, captureClient: CaptureClient? = nil, pasteboard: NSPasteboard? = nil, presentsWindows: Bool = true, conversionOverride: ((Data, OutputFormat, String, Bool) async throws -> ConversionResult)? = nil, providerConversionOverride: ((Data, ConnectionProfile, OutputFormat, String) async throws -> ProviderConversion)? = nil) {
+    init(defaults: UserDefaults = .standard, historyDirectory: URL? = nil, registerHotkeys: Bool = true, hotkeyManager: HotKeyManager? = nil, captureClient: CaptureClient? = nil, pasteboard: NSPasteboard? = nil, presentsWindows: Bool = true, conversionOverride: ((Data, OutputFormat, String, Bool) async throws -> ConversionResult)? = nil, providerConversionOverride: ((Data, ConnectionProfile, OutputFormat, String) async throws -> ProviderConversion)? = nil, systemLanguage: @escaping () -> String = { OutputLanguage.systemLanguageIdentifier }) {
         self.pasteboard = pasteboard ?? .general
         self.presentsWindows = presentsWindows
         self.conversionOverride = conversionOverride
@@ -107,17 +113,28 @@ enum CaptureFeedback: Equatable {
         self.captureClient = captureClient ?? CaptureClient()
         self.hotkeys = hotkeyManager ?? HotKeyManager()
         self.registersHotkeys = registerHotkeys
+        self.systemLanguage = systemLanguage
         self.defaults = defaults
         self.connections = ConnectionStore(defaults: defaults)
         historyLimit = defaults.object(forKey: "historyLimit") == nil ? HistoryStore.defaultLimit : min(max(0, defaults.integer(forKey: "historyLimit")), HistoryStore.maximumLimit)
         defaultFormat = OutputFormat(rawValue: defaults.string(forKey: "defaultFormat") ?? "") ?? .auto
-        defaultInstruction = defaults.string(forKey: "defaultInstruction") ?? ""
+        let savedDirection = defaults.string(forKey: "defaultInstruction") ?? ""
+        defaultInstruction = savedDirection
+        if let savedLanguage = defaults.string(forKey: "defaultOutputLanguage") {
+            defaultOutputLanguage = OutputLanguage(rawValue: savedLanguage) ?? .source
+        } else {
+            // Existing translation directions must not silently stop working on upgrade.
+            let migratedLanguage: OutputLanguage = savedDirection.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .source : .directions
+            defaultOutputLanguage = migratedLanguage
+            defaults.set(migratedLanguage.rawValue, forKey: "defaultOutputLanguage")
+        }
         copyAutomatically = defaults.bool(forKey: "copyAutomatically")
         regionShortcut = Self.loadShortcut("regionShortcut", defaults: defaults) ?? .region
         windowShortcut = Self.loadShortcut("windowShortcut", defaults: defaults) ?? .window
         hotkeys.handler = { [weak self] id in
             guard let self else { return }
-            self.lastShortcutEvent = "\(id == 2 ? "Window" : "Region") shortcut received at \(Date().formatted(date: .omitted, time: .standard))"
+            let time = Date().formatted(date: .omitted, time: .standard)
+            self.lastShortcutEvent = id == 2 ? L10n.text("Window shortcut received at \(time)") : L10n.text("Region shortcut received at \(time)")
             self.capture(window: id == 2)
         }
         if registerHotkeys { refreshReadiness() }
@@ -125,14 +142,14 @@ enum CaptureFeedback: Equatable {
             let directory = historyDirectory ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Smart Clipboard/History", isDirectory: true)
             historyStore = try HistoryStore(directory: directory, limit: historyLimit)
             refreshHistory()
-        } catch { self.error = "Could not open capture history: " + error.localizedDescription }
+        } catch { self.error = L10n.text("Could not open capture history: \(error.localizedDescription)") }
     }
     static func loadShortcut(_ key: String, defaults: UserDefaults) -> Shortcut? {
         defaults.data(forKey: key).flatMap { try? JSONDecoder().decode(Shortcut.self, from: $0) }
     }
     func setShortcut(_ shortcut: Shortcut, window: Bool) throws {
         let other = window ? regionShortcut : windowShortcut
-        guard shortcut.key != other.key || shortcut.modifiers != other.modifiers else { throw ClipError.message("Use different shortcuts for region and window capture.") }
+        guard shortcut.key != other.key || shortcut.modifiers != other.modifiers else { throw ClipError.message(L10n.text("Use different shortcuts for region and window capture.")) }
         try hotkeys.register(shortcut, id: window ? 2 : 1)
         shortcutProblems[window ? 2 : 1] = nil
         if window { windowShortcut = shortcut } else { regionShortcut = shortcut }
@@ -161,9 +178,9 @@ enum CaptureFeedback: Equatable {
             window.title = "Smart Clipboard"
             window.titlebarAppearsTransparent = true
             window.isReleasedWhenClosed = false
-            window.minSize = NSSize(width: 850, height: 590)
+            window.minSize = NSSize(width: 900, height: 700)
             let contentView = NSHostingView(rootView: CaptureView(model: self))
-            contentView.setAccessibilityLabel("Clipboard editor")
+            contentView.setAccessibilityLabel(L10n.text("Clipboard editor"))
             window.contentView = contentView
             window.center(); panel = window
         }
@@ -176,11 +193,11 @@ enum CaptureFeedback: Equatable {
         if let tab { settingsTab = tab }
         if settings == nil {
             let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 640, height: 560), styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
-            window.title = "Smart Clipboard Settings"
+            window.title = L10n.text("Smart Clipboard Settings")
             window.isReleasedWhenClosed = false
             window.contentMinSize = NSSize(width: 640, height: 550)
             let contentView = NSHostingView(rootView: SettingsView(model: self))
-            contentView.setAccessibilityLabel("Smart Clipboard settings")
+            contentView.setAccessibilityLabel(L10n.text("Smart Clipboard settings"))
             window.contentView = contentView
             window.center(); settings = window
         }
@@ -189,6 +206,7 @@ enum CaptureFeedback: Equatable {
     func capture(window: Bool = false) {
         guard !capturing, !busy else { return }
         let preferred = defaultFormat, direction = defaultInstruction
+        let language = defaultOutputLanguage, resolvedLanguage = defaultOutputLanguage.resolvedIdentifier(systemLanguage: systemLanguage())
         guard let profile = selectedProfile(requiresAI: preferred != .image) else { return }
         refreshReadiness()
         capturing = true; error = nil; notice = ""
@@ -200,13 +218,13 @@ enum CaptureFeedback: Equatable {
                 guard let data = try await captureClient.capture(window: window, willBegin: { [self] in
                     screenAccess = true
                     if presentsWindows { for window in NSApp.windows { window.orderOut(nil) } }
-                }) else { notice = "Capture cancelled."; return }
+                }) else { setOperationNotice(.captureCancelled); return }
                 try Task.checkCancellation()
                 capturing = false
-                try await finishCapture(data, source: window ? "Window capture" : "Region capture", preferred: preferred, direction: direction, profile: profile)
-            } catch is CancellationError { notice = "Capture cancelled." }
+                try await finishCapture(data, source: window ? L10n.text("Window capture") : L10n.text("Region capture"), preferred: preferred, direction: direction, profile: profile, language: language, resolvedLanguage: resolvedLanguage)
+            } catch is CancellationError { setOperationNotice(.captureCancelled) }
             catch {
-                if Task.isCancelled { notice = "Capture cancelled." }
+                if Task.isCancelled { setOperationNotice(.captureCancelled) }
                 else { reportOperationFailure(error.localizedDescription); refreshReadiness() }
             }
         }
@@ -214,6 +232,7 @@ enum CaptureFeedback: Equatable {
     func importImage() {
         guard !busy, !capturing, !choosingFile else { return }
         let preferred = defaultFormat, direction = defaultInstruction
+        let language = defaultOutputLanguage, resolvedLanguage = defaultOutputLanguage.resolvedIdentifier(systemLanguage: systemLanguage())
         guard let profile = selectedProfile(requiresAI: preferred != .image) else { return }
         let picker = NSOpenPanel(); picker.allowedContentTypes = [.png, .jpeg, .tiff, .heic]; picker.canChooseDirectories = false
         choosingFile = true
@@ -221,32 +240,36 @@ enum CaptureFeedback: Equatable {
         guard picker.runModal() == .OK, let url = picker.url else { return }
         do {
             let data = try Data(contentsOf: url)
-            guard let bitmap = NSBitmapImageRep(data: data), let normalized = bitmap.representation(using: .png, properties: [:]) else { throw ClipError.message("Could not read this image.") }
-            processImportedImage(normalized, source: url.lastPathComponent, profile: profile, preferred: preferred, direction: direction)
+            guard let bitmap = NSBitmapImageRep(data: data), let normalized = bitmap.representation(using: .png, properties: [:]) else { throw ClipError.message(L10n.text("Could not read this image.")) }
+            startImportedImage(normalized, source: url.lastPathComponent, profile: profile, preferred: preferred, direction: direction, language: language, resolvedLanguage: resolvedLanguage)
         } catch { reportOperationFailure(error.localizedDescription) }
     }
-    func processImportedImage(_ data: Data, source: String, profile: ConnectionProfile? = nil, preferred: OutputFormat? = nil, direction: String? = nil) {
+    func processImportedImage(_ data: Data, source: String, profile: ConnectionProfile? = nil, preferred: OutputFormat? = nil, direction: String? = nil, language: OutputLanguage? = nil) {
         guard !busy, !capturing else { return }
         let preferred = preferred ?? defaultFormat, direction = direction ?? defaultInstruction
         guard let profile = profile ?? selectedProfile(requiresAI: preferred != .image) else { return }
+        let language = language ?? defaultOutputLanguage
+        startImportedImage(data, source: source, profile: profile, preferred: preferred, direction: direction, language: language, resolvedLanguage: language.resolvedIdentifier(systemLanguage: systemLanguage()))
+    }
+    private func startImportedImage(_ data: Data, source: String, profile: ConnectionProfile, preferred: OutputFormat, direction: String, language: OutputLanguage, resolvedLanguage: String?) {
         busy = true
         task = Task {
             defer { busy = false; task = nil }
-            do { try await finishCapture(data, source: source, preferred: preferred, direction: direction, profile: profile) }
-            catch is CancellationError { notice = "Conversion cancelled." }
+            do { try await finishCapture(data, source: source, preferred: preferred, direction: direction, profile: profile, language: language, resolvedLanguage: resolvedLanguage) }
+            catch is CancellationError { setOperationNotice(.conversionCancelled) }
             catch {
-                if Task.isCancelled { notice = "Conversion cancelled." }
+                if Task.isCancelled { setOperationNotice(.conversionCancelled) }
                 else { reportOperationFailure(error.localizedDescription) }
             }
         }
     }
-    private func finishCapture(_ data: Data, source: String, preferred: OutputFormat, direction: String, profile: ConnectionProfile) async throws {
+    private func finishCapture(_ data: Data, source: String, preferred: OutputFormat, direction: String, profile: ConnectionProfile, language: OutputLanguage, resolvedLanguage: String?) async throws {
         try Task.checkCancellation()
         acceptCapture(data, source: source)
-        format = preferred; instruction = direction
+        format = preferred; instruction = direction; outputLanguage = language
         if preferred == .image { copyImage(); return }
         busy = true
-        try await convertCurrent(local: false, shouldCopy: true, profile: profile, requested: preferred, extra: direction)
+        try await convertCurrent(local: false, shouldCopy: true, profile: profile, requested: preferred, extra: direction, resolvedLanguage: resolvedLanguage)
         // Success stays in the menu bar so the user can paste into the app they were using.
     }
     func convert(local: Bool = false) {
@@ -255,35 +278,41 @@ enum CaptureFeedback: Equatable {
         let shouldCopy = copyAutomatically
         guard let profile = selectedProfile(requiresAI: !local) else { return }
         let requested = format, extra = instruction
+        let resolvedLanguage = local ? nil : outputLanguage.resolvedIdentifier(systemLanguage: systemLanguage())
         error = nil; busy = true
         task = Task {
             defer { busy = false; task = nil }
-            do { try await convertCurrent(local: local, shouldCopy: shouldCopy, profile: profile, requested: requested, extra: extra) }
-            catch is CancellationError { notice = "Conversion cancelled." }
-            catch { if Task.isCancelled { notice = "Conversion cancelled." } else { reportOperationFailure(error.localizedDescription) } }
+            do { try await convertCurrent(local: local, shouldCopy: shouldCopy, profile: profile, requested: requested, extra: extra, resolvedLanguage: resolvedLanguage) }
+            catch is CancellationError { setOperationNotice(.conversionCancelled) }
+            catch { if Task.isCancelled { setOperationNotice(.conversionCancelled) } else { reportOperationFailure(error.localizedDescription) } }
         }
     }
-    private func convertCurrent(local: Bool, shouldCopy: Bool, profile: ConnectionProfile, requested: OutputFormat, extra: String) async throws {
+    private func convertCurrent(local: Bool, shouldCopy: Bool, profile: ConnectionProfile, requested: OutputFormat, extra: String, resolvedLanguage: String?) async throws {
         guard let png else { return }
         persistCurrentOutput()
         // Keep a history-save warning visible even when conversion itself succeeds.
         notice = ""; output = ""
         let result: ConversionResult
+        let providerInstruction = local ? extra : OutputLanguage.instruction(userInstruction: extra, resolvedIdentifier: resolvedLanguage)
         var effectiveModel: String?
-        if let conversionOverride { result = try await conversionOverride(png, requested, extra, local) }
+        if let conversionOverride { result = try await conversionOverride(png, requested, providerInstruction, local) }
         else if local { result = ConversionResult(format: .text, content: try await CaptureService.recognize(png)) }
         else {
             let converted: ProviderConversion
-            if let providerConversionOverride { converted = try await providerConversionOverride(png, profile, requested, extra) }
-            else { converted = try await AIService.convert(png: png, profile: profile, format: requested, instruction: extra) }
+            if let providerConversionOverride { converted = try await providerConversionOverride(png, profile, requested, providerInstruction) }
+            else { converted = try await AIService.convert(png: png, profile: profile, format: requested, instruction: providerInstruction) }
             result = converted.result; effectiveModel = converted.model
         }
         try Task.checkCancellation()
-        resultFormat = result.format; output = result.content; resultInstruction = extra
+        resultFormat = result.format; output = result.content; resultInstruction = extra; resultOutputLanguage = resolvedLanguage
         uneditedOutput = output
         resultProvenance = local ? ConversionProvenance(providerID: "apple-vision") : ConversionProvenance(providerID: profile.provider.rawValue, profileID: profile.id, requestedModel: profile.model, effectiveModel: effectiveModel)
         persistCurrentOutput()
         if shouldCopy { copyOutput() }
+    }
+    private func setOperationNotice(_ value: AccessibilityStatusSnapshot.Notice) {
+        notice = value.message
+        operationNotice = value
     }
     func cancel() { task?.cancel() }
     private func selectedProfile(requiresAI: Bool) -> ConnectionProfile? {
@@ -296,16 +325,17 @@ enum CaptureFeedback: Equatable {
         operationFeedback?(.failed)
     }
     func clear() { guard !busy, !capturing else { return }; persistCurrentOutput(); resetCurrent() }
-    private func resetCurrent() { activeHistoryID = nil; png = nil; output = ""; instruction = ""; notice = ""; resultProvenance = nil; uneditedOutput = "" }
+    private func resetCurrent() { activeHistoryID = nil; png = nil; output = ""; instruction = ""; notice = ""; resultProvenance = nil; uneditedOutput = ""; resultOutputLanguage = nil; outputLanguage = defaultOutputLanguage }
     func acceptCapture(_ data: Data, source: String) {
         persistCurrentOutput()
         png = data; output = ""; instruction = ""; format = defaultFormat; error = nil; notice = ""; activeHistoryID = nil
         resultProvenance = nil; uneditedOutput = ""
+        resultOutputLanguage = nil; outputLanguage = defaultOutputLanguage
         do {
-            guard let historyStore else { throw ClipError.message("History storage is unavailable. Check the local history folder before saving more clips.") }
+            guard let historyStore else { throw ClipError.message(L10n.text("History storage is unavailable. Check the local history folder before saving more clips.")) }
             activeHistoryID = try historyStore.add(png: data, source: source)?.id
         }
-        catch { self.error = "Capture opened, but could not save history: " + error.localizedDescription }
+        catch { self.error = L10n.text("Capture opened, but could not save history: \(error.localizedDescription)") }
         refreshHistory()
     }
     private func refreshHistory() {
@@ -315,11 +345,11 @@ enum CaptureFeedback: Equatable {
     }
     func persistCurrentOutput() {
         guard let id = activeHistoryID, !output.isEmpty else { return }
-        let existing = history.first(where: { $0.id == id })?.conversions.last(where: { $0.format == resultFormat })
+        let existing = history.first(where: { $0.id == id })?.conversions.last(where: { $0.format == resultFormat && $0.outputLanguage == resultOutputLanguage })
         if output != uneditedOutput { resultProvenance?.userEdited = true }
         guard existing?.content != output || existing?.instruction != resultInstruction || existing?.provenance != resultProvenance else { return }
-        do { try historyStore?.save(SavedConversion(format: resultFormat, content: output, instruction: resultInstruction, provenance: resultProvenance), for: id) }
-        catch { self.error = "Could not save the result in history: " + error.localizedDescription }
+        do { try historyStore?.save(SavedConversion(format: resultFormat, content: output, instruction: resultInstruction, provenance: resultProvenance, outputLanguage: resultOutputLanguage), for: id) }
+        catch { self.error = L10n.text("Could not save the result in history: \(error.localizedDescription)") }
         refreshHistory()
     }
     func openHistory(_ entry: HistoryEntry, showWindow: Bool = true) {
@@ -331,8 +361,9 @@ enum CaptureFeedback: Equatable {
             let current = historyStore.entries.first(where: { $0.id == entry.id }) ?? entry
             activeHistoryID = current.id; png = data; output = ""; instruction = ""; format = defaultFormat; error = nil
             resultProvenance = nil; uneditedOutput = ""
-            if let result = current.conversions.last { resultFormat = result.format; output = result.content; instruction = result.instruction; resultInstruction = result.instruction; resultProvenance = result.provenance; uneditedOutput = result.content }
-            notice = "Opened saved capture. Choose any format to convert the original again."
+            resultOutputLanguage = nil; outputLanguage = defaultOutputLanguage
+            if let result = current.conversions.last { loadSavedConversion(result) }
+            notice = L10n.text("Opened saved capture. Choose a format and language to convert the original again.")
             if showWindow { showPanel() }
         } catch { self.error = error.localizedDescription }
     }
@@ -340,16 +371,20 @@ enum CaptureFeedback: Equatable {
     func useSavedConversion(_ result: SavedConversion) {
         guard !busy else { return }
         persistCurrentOutput()
+        loadSavedConversion(result)
+        notice = L10n.text("Loaded saved \(result.format.title).")
+    }
+    private func loadSavedConversion(_ result: SavedConversion) {
         resultFormat = result.format; output = result.content; instruction = result.instruction; resultInstruction = result.instruction; format = result.format
         resultProvenance = result.provenance; uneditedOutput = result.content
-        notice = "Loaded saved \(result.format.title)."
+        resultOutputLanguage = result.outputLanguage; outputLanguage = .fromResolvedIdentifier(result.outputLanguage)
     }
     func historyImageURL(_ entry: HistoryEntry) -> URL? { historyStore?.imageURL(for: entry.id) }
     func setHistoryLimit(_ value: Int) {
         guard !busy, !capturing else { return }
         persistCurrentOutput()
         do {
-            guard let historyStore else { throw ClipError.message("History storage is unavailable.") }
+            guard let historyStore else { throw ClipError.message(L10n.text("History storage is unavailable.")) }
             try historyStore.setLimit(value)
             historyLimit = historyStore.limit; defaults.set(historyLimit, forKey: "historyLimit")
             if historyLimit == 0 { resetCurrent() }
@@ -359,7 +394,7 @@ enum CaptureFeedback: Equatable {
     func deleteHistory(_ entry: HistoryEntry) {
         guard !busy, !capturing else { return }
         do {
-            guard let historyStore else { throw ClipError.message("History storage is unavailable; no files were deleted.") }
+            guard let historyStore else { throw ClipError.message(L10n.text("History storage is unavailable; no files were deleted.")) }
             try historyStore.remove(entry.id)
             if activeHistoryID == entry.id { resetCurrent() }
         } catch { self.error = error.localizedDescription }
@@ -368,8 +403,8 @@ enum CaptureFeedback: Equatable {
     func clearHistory() {
         guard !busy, !capturing else { return }
         do {
-            guard let historyStore else { throw ClipError.message("History storage is unavailable; no files were deleted.") }
-            try historyStore.clear(); resetCurrent(); notice = "History cleared."
+            guard let historyStore else { throw ClipError.message(L10n.text("History storage is unavailable; no files were deleted.")) }
+            try historyStore.clear(); resetCurrent(); notice = L10n.text("History cleared.")
         }
         catch { self.error = error.localizedDescription }
         refreshHistory()
@@ -379,10 +414,10 @@ enum CaptureFeedback: Equatable {
         persistCurrentOutput()
         if historyWindow == nil {
             let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 620, height: 550), styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
-            window.title = "Capture History"; window.isReleasedWhenClosed = false
+            window.title = L10n.text("Capture History"); window.isReleasedWhenClosed = false
             window.minSize = NSSize(width: 540, height: 380)
             let contentView = NSHostingView(rootView: HistoryView(model: self))
-            contentView.setAccessibilityLabel("Capture history")
+            contentView.setAccessibilityLabel(L10n.text("Capture history"))
             window.contentView = contentView
             window.center(); historyWindow = window
         }
@@ -391,9 +426,9 @@ enum CaptureFeedback: Equatable {
     func copyImage() {
         guard let png else { return }
         guard ClipboardWriter.writePNG(png, to: pasteboard) else {
-            reportOperationFailure("Could not copy the image. Try Copy image again."); return
+            reportOperationFailure(L10n.text("Could not copy the image. Try Copy image again.")); return
         }
-        notice = "Image copied."
+        setOperationNotice(.imageCopied)
         operationFeedback?(.copied(.image))
     }
     func copyOutput() {
@@ -401,9 +436,9 @@ enum CaptureFeedback: Equatable {
         guard !output.isEmpty else { return }
         // Keep generated markup inert; don't put unreviewed HTML on the rich-text pasteboard.
         guard ClipboardWriter.writeText(output, to: pasteboard) else {
-            reportOperationFailure("Could not copy the result. Try Copy again."); return
+            reportOperationFailure(L10n.text("Could not copy the result. Try Copy again.")); return
         }
-        notice = "\(resultFormat.title) copied."
+        setOperationNotice(.resultCopied(resultFormat))
         operationFeedback?(.copied(resultFormat))
     }
     func save(image: Bool = false) {
@@ -418,7 +453,7 @@ enum CaptureFeedback: Equatable {
         guard dialog.runModal() == .OK, let url = dialog.url else { return }
         do {
             if image { try png?.write(to: url, options: .atomic) } else { try output.write(to: url, atomically: true, encoding: .utf8) }
-            notice = "Saved \(url.lastPathComponent)."
+            notice = L10n.text("Saved \(url.lastPathComponent).")
         } catch { self.error = error.localizedDescription }
     }
     func setLaunchAtLogin(_ enabled: Bool) throws {

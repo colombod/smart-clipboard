@@ -15,6 +15,10 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN_DIR/SmartClipboard" "$APP/Contents/MacOS/SmartClipboard"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
 cp Resources/ThirdPartyNotices.txt "$APP/Contents/Resources/ThirdPartyNotices.txt"
+cp -R "$BIN_DIR/SmartClipboard_ClipboardCore.bundle" "$APP/Contents/Resources/"
+for LOCALIZATION in Resources/*.lproj; do
+    cp -R "$LOCALIZATION" "$APP/Contents/Resources/"
+done
 ./scripts/embed-sparkle.sh "$APP" "$BIN_DIR"
 /usr/libexec/PlistBuddy -c 'Set :CFBundleIdentifier com.smartclipboard.accessibility-audit' "$APP/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c 'Set :CFBundleName Smart Clipboard Audit' "$APP/Contents/Info.plist"

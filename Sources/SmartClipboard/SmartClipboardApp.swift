@@ -1,5 +1,6 @@
 import SwiftUI
 import Combine
+import ClipboardCore
 
 // An AppKit lifecycle avoids SwiftUI automatically presenting a Settings scene.
 @main enum SmartClipboardApp {
@@ -82,20 +83,20 @@ import Combine
         let bar = NSMenu()
         let appItem = NSMenuItem(); bar.addItem(appItem)
         let appMenu = NSMenu(); appItem.submenu = appMenu
-        add("About Smart Clipboard…", action: #selector(openAbout), to: appMenu)
+        add(L10n.text("About Smart Clipboard…"), action: #selector(openAbout), to: appMenu)
         addUpdateItem(to: appMenu)
         appMenu.addItem(.separator())
-        let settings = NSMenuItem(title: "Settings…", action: #selector(openSettings), keyEquivalent: ",")
+        let settings = NSMenuItem(title: L10n.text("Settings…"), action: #selector(openSettings), keyEquivalent: ",")
         settings.target = self; appMenu.addItem(settings)
-        let quit = NSMenuItem(title: "Quit Smart Clipboard", action: #selector(quit), keyEquivalent: "q")
+        let quit = NSMenuItem(title: L10n.text("Quit Smart Clipboard"), action: #selector(quit), keyEquivalent: "q")
         quit.target = self; appMenu.addItem(quit)
-        let fileItem = NSMenuItem(title: "File", action: nil, keyEquivalent: ""); bar.addItem(fileItem)
-        let file = NSMenu(title: "File"); fileItem.submenu = file
+        let fileItem = NSMenuItem(title: L10n.text("File"), action: nil, keyEquivalent: ""); bar.addItem(fileItem)
+        let file = NSMenu(title: L10n.text("File")); fileItem.submenu = file
         // A nil target uses the responder chain to close only the current window.
-        file.addItem(NSMenuItem(title: "Close Window", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w"))
-        let editItem = NSMenuItem(title: "Edit", action: nil, keyEquivalent: ""); bar.addItem(editItem)
-        let edit = NSMenu(title: "Edit"); editItem.submenu = edit
-        for (title, action, key) in [("Undo", "undo:", "z"), ("Cut", "cut:", "x"), ("Copy", "copy:", "c"), ("Paste", "paste:", "v"), ("Select All", "selectAll:", "a")] {
+        file.addItem(NSMenuItem(title: L10n.text("Close Window"), action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w"))
+        let editItem = NSMenuItem(title: L10n.text("Edit"), action: nil, keyEquivalent: ""); bar.addItem(editItem)
+        let edit = NSMenu(title: L10n.text("Edit")); editItem.submenu = edit
+        for (title, action, key) in [(L10n.text("Undo"), "undo:", "z"), (L10n.text("Cut"), "cut:", "x"), (L10n.text("Copy"), "copy:", "c"), (L10n.text("Paste"), "paste:", "v"), (L10n.text("Select All"), "selectAll:", "a")] {
             edit.addItem(NSMenuItem(title: title, action: NSSelectorFromString(action), keyEquivalent: key))
         }
         NSApp.mainMenu = bar
@@ -110,25 +111,25 @@ import Combine
             button.image?.isTemplate = true
             button.imagePosition = .imageLeading
             button.title = " Clip"
-            button.toolTip = "Smart Clipboard — capture, history and settings"
+            button.toolTip = L10n.text("Smart Clipboard — capture, history and settings")
             button.setAccessibilityLabel("Smart Clipboard")
         }
         let menu = NSMenu(); menu.delegate = self
         menu.addItem(readinessItem)
         menu.addItem(.separator())
-        add("Capture Region…", action: #selector(captureRegion), to: menu)
-        add("Capture Window…", action: #selector(captureWindow), to: menu)
+        add(L10n.text("Capture Region…"), action: #selector(captureRegion), to: menu)
+        add(L10n.text("Capture Window…"), action: #selector(captureWindow), to: menu)
         menu.addItem(.separator())
-        add("Open Clipboard…", action: #selector(openClipboard), to: menu)
-        add("History…", action: #selector(openHistory), to: menu)
-        add("Import Image…", action: #selector(importImage), to: menu)
+        add(L10n.text("Open Clipboard…"), action: #selector(openClipboard), to: menu)
+        add(L10n.text("History…"), action: #selector(openHistory), to: menu)
+        add(L10n.text("Import Image…"), action: #selector(importImage), to: menu)
         menu.addItem(.separator())
-        add("Cancel Capture / Conversion", action: #selector(cancelOperation), to: menu)
-        add("Settings & Status…", action: #selector(openSettings), to: menu)
-        add("About Smart Clipboard…", action: #selector(openAbout), to: menu)
+        add(L10n.text("Cancel Capture / Conversion"), action: #selector(cancelOperation), to: menu)
+        add(L10n.text("Settings & Status…"), action: #selector(openSettings), to: menu)
+        add(L10n.text("About Smart Clipboard…"), action: #selector(openAbout), to: menu)
         addUpdateItem(to: menu)
         menu.addItem(.separator())
-        add("Quit Smart Clipboard", action: #selector(quit), to: menu)
+        add(L10n.text("Quit Smart Clipboard"), action: #selector(quit), to: menu)
         item.menu = menu
         statusItem = item
         model.menuBarInstalled = item.button != nil
@@ -138,7 +139,7 @@ import Combine
         // Read the publishers' new values synchronously: a quick image capture
         // can start and copy before the deferred visual status update runs.
         accessibilitySubscription = Publishers.CombineLatest4(model.$capturing, model.$busy,
-                                                               model.$error.map { $0 != nil }, model.$notice)
+                                                               model.$error.map { $0 != nil }, model.$operationNotice)
             .sink { [weak self] state in
                 self?.accessibilityAnnouncements.observe(AccessibilityStatusSnapshot(capturing: state.0, processing: state.1,
                                                                                      failed: state.2, notice: state.3))
@@ -153,15 +154,15 @@ import Combine
         }
         let message: String
         let suffix: String
-        if model.capturing { message = "Select a region or window"; suffix = " …" }
-        else if model.busy { message = "Converting your capture…"; suffix = " …" }
+        if model.capturing { message = L10n.text("Select a region or window"); suffix = " …" }
+        else if model.busy { message = L10n.text("Converting your capture…"); suffix = " …" }
         else if let error = model.error { message = error; suffix = " !" }
-        else if model.notice.contains("copied") { message = model.notice + " Ready to paste."; suffix = " ✓" }
-        else { message = model.captureReady ? "Ready · " + model.defaultFormat.title : "Setup needs attention"; suffix = "" }
+        else if model.operationNotice.copied { message = model.operationNotice.announcement ?? model.notice; suffix = " ✓" }
+        else { message = model.captureReady ? L10n.text("Ready · \(model.defaultFormat.title)") : L10n.text("Setup needs attention"); suffix = "" }
         statusItem?.button?.title = " Clip" + suffix
         statusItem?.button?.toolTip = message
         let accessibleStatus = AccessibilityStatusSnapshot(capturing: model.capturing, processing: model.busy,
-                                                            failed: model.error != nil, notice: model.notice)
+                                                            failed: model.error != nil, notice: model.operationNotice)
         statusItem?.button?.setAccessibilityValue(accessibleStatus.accessibilityValue(ready: model.captureReady,
                                                                                      preferredFormat: model.defaultFormat))
         readinessItem.title = message
@@ -171,7 +172,7 @@ import Combine
     }
     private func addUpdateItem(to menu: NSMenu) {
         guard model.updates != nil else { return }
-        let item = NSMenuItem(title: "Check for Updates…", action: #selector(checkForUpdates), keyEquivalent: "")
+        let item = NSMenuItem(title: L10n.text("Check for Updates…"), action: #selector(checkForUpdates), keyEquivalent: "")
         item.target = self
         menu.addItem(item)
         updateItems.append(item)

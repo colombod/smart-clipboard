@@ -7,14 +7,19 @@ SOURCE_COMMIT="$(git rev-parse HEAD 2>/dev/null || true)"
 SOURCE_DIRTY="$(git status --porcelain --untracked-files=normal 2>/dev/null || true)"
 swift build -c release --disable-sandbox
 BIN_DIR="$(swift build -c release --show-bin-path --disable-sandbox)"
-mkdir -p "$PWD/dist"
-STAGING="$(mktemp -d "$PWD/dist/build.XXXXXX")"
+BUILD_OUTPUT_DIR="${BUILD_OUTPUT_DIR:-$PWD/dist}"
+mkdir -p "$BUILD_OUTPUT_DIR"
+STAGING="$(mktemp -d "$BUILD_OUTPUT_DIR/build.XXXXXX")"
 trap 'rm -rf "$STAGING"' EXIT
 APP="$STAGING/Smart Clipboard.app"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN_DIR/SmartClipboard" "$APP/Contents/MacOS/SmartClipboard"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
 cp Resources/ThirdPartyNotices.txt "$APP/Contents/Resources/ThirdPartyNotices.txt"
+cp -R "$BIN_DIR/SmartClipboard_ClipboardCore.bundle" "$APP/Contents/Resources/"
+for LOCALIZATION in Resources/*.lproj; do
+    cp -R "$LOCALIZATION" "$APP/Contents/Resources/"
+done
 ./scripts/embed-sparkle.sh "$APP" "$BIN_DIR"
 swift scripts/generate-icon.swift "$PWD/.build/AppIcon.iconset"
 iconutil -c icns "$PWD/.build/AppIcon.iconset" -o "$APP/Contents/Resources/AppIcon.icns"
@@ -24,9 +29,9 @@ else
     codesign --force --sign - "$APP"
 fi
 codesign --verify --deep --strict "$APP"
-rm -rf "$PWD/dist/Smart Clipboard.app"
-mv "$APP" "$PWD/dist/Smart Clipboard.app"
-APP="$PWD/dist/Smart Clipboard.app"
+rm -rf "$BUILD_OUTPUT_DIR/Smart Clipboard.app"
+mv "$APP" "$BUILD_OUTPUT_DIR/Smart Clipboard.app"
+APP="$BUILD_OUTPUT_DIR/Smart Clipboard.app"
 SOURCE_COMMIT="$SOURCE_COMMIT" SOURCE_DIRTY="$SOURCE_DIRTY" python3 - "$APP" <<'PY'
 import hashlib, json, os, pathlib, sys
 app = pathlib.Path(sys.argv[1])

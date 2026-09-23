@@ -18,10 +18,10 @@ enum ShortcutRecorderInput {
 
 extension Shortcut {
     var spokenDescription: String {
-        label.replacingOccurrences(of: "⌃", with: "Control ")
-            .replacingOccurrences(of: "⌥", with: "Option ")
-            .replacingOccurrences(of: "⇧", with: "Shift ")
-            .replacingOccurrences(of: "⌘", with: "Command ")
+        label.replacingOccurrences(of: "⌃", with: L10n.text("Control") + " ")
+            .replacingOccurrences(of: "⌥", with: L10n.text("Option") + " ")
+            .replacingOccurrences(of: "⇧", with: L10n.text("Shift") + " ")
+            .replacingOccurrences(of: "⌘", with: L10n.text("Command") + " ")
     }
 }
 
@@ -53,12 +53,12 @@ extension Shortcut {
         if let eventHandler { RemoveEventHandler(eventHandler) }
     }
     func register(_ shortcut: Shortcut, id: UInt32) throws {
-        guard handlerStatus == noErr else { throw ClipError.message("Keyboard event handler could not start (macOS error \(handlerStatus)). Reopen the app.") }
+        guard handlerStatus == noErr else { throw ClipError.message(L10n.text("Keyboard event handler could not start (macOS error \(handlerStatus)). Reopen the app.")) }
         var ref: EventHotKeyRef?
         let status = RegisterEventHotKey(shortcut.key, shortcut.modifiers, EventHotKeyID(signature: 0x53434C50, id: id), GetApplicationEventTarget(), 0, &ref)
         guard status == noErr, let ref else {
-            if status == eventHotKeyExistsErr { throw ClipError.message("\(shortcut.label) is registered by another app. Choose another combination.") }
-            throw ClipError.message("Could not register \(shortcut.label) (macOS error \(status)). Choose another combination or reopen the app.")
+            if status == eventHotKeyExistsErr { throw ClipError.message(L10n.text("\(shortcut.label) is registered by another app. Choose another combination.")) }
+            throw ClipError.message(L10n.text("Could not register \(shortcut.label) (macOS error \(status)). Choose another combination or reopen the app."))
         }
         refs[id] = ref
     }
@@ -84,13 +84,13 @@ extension Shortcut {
         var values: Unmanaged<CFArray>?
         let status = CopySymbolicHotKeys(&values)
         guard status == noErr, let rows = values?.takeRetainedValue() as? [[String: Any]] else {
-            throw ClipError.message("Could not check macOS shortcuts (error \(status)). Try Check again.")
+            throw ClipError.message(L10n.text("Could not check macOS shortcuts (error \(status)). Try Check again."))
         }
         return rows.compactMap { row in
             guard (row[kHISymbolicHotKeyEnabled as String] as? NSNumber)?.boolValue == true,
                   let key = row[kHISymbolicHotKeyCode as String] as? NSNumber,
                   let modifiers = row[kHISymbolicHotKeyModifiers as String] as? NSNumber else { return nil }
-            return Shortcut(key: key.uint32Value, modifiers: modifiers.uint32Value, label: "macOS shortcut")
+            return Shortcut(key: key.uint32Value, modifiers: modifiers.uint32Value, label: L10n.text("macOS shortcut"))
         }
     }
     func isRegistered(_ id: UInt32) -> Bool { registrations[id] != nil }
@@ -99,13 +99,13 @@ extension Shortcut {
         registrations.removeAll()
     }
     func register(_ shortcut: Shortcut, id: UInt32) throws {
-        guard shortcut.modifiers & UInt32(cmdKey | controlKey) != 0 else { throw ClipError.message("Include Command or Control.") }
+        guard shortcut.modifiers & UInt32(cmdKey | controlKey) != 0 else { throw ClipError.message(L10n.text("Include Command or Control.")) }
         let matches: (Shortcut) -> Bool = { $0.key == shortcut.key && $0.modifiers == shortcut.modifiers }
         guard !registrations.contains(where: { $0.key != id && matches($0.value.shortcut) }) else {
-            throw ClipError.message("That combination is already assigned to the other capture action.")
+            throw ClipError.message(L10n.text("That combination is already assigned to the other capture action."))
         }
         guard try !systemShortcuts().contains(where: matches) else {
-            throw ClipError.message("\(shortcut.label) is reserved by an enabled macOS shortcut. Choose another combination or change it in System Settings → Keyboard → Keyboard Shortcuts.")
+            throw ClipError.message(L10n.text("\(shortcut.label) is reserved by an enabled macOS shortcut. Choose another combination or change it in System Settings → Keyboard → Keyboard Shortcuts."))
         }
         if let old = registrations[id], matches(old.shortcut) { return }
         // Reserve the replacement first. A failed registration must leave the old key working.

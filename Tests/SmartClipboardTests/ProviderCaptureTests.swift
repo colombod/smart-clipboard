@@ -73,7 +73,7 @@ import ClipboardCore
             #expect(requests.first?.credentialAccount == original.credentialAccount)
             #expect(requests.first?.credentialAccount != model.connections.activeProfile.credentialAccount)
             #expect(requestedFormats == [.json])
-            #expect(requestedInstructions == ["Keep field names"])
+            #expect(requestedInstructions == [OutputLanguage.instruction(userInstruction: "Keep field names", resolvedIdentifier: nil)])
             #expect(board.string(forType: .string) == "{\"count\":3}")
             let provenance = try #require(model.savedConversions.first?.provenance)
             #expect(provenance == ConversionProvenance(providerID: "anthropic", profileID: original.id,
@@ -142,7 +142,7 @@ import ClipboardCore
             #expect(requests.count == 1)
             #expect(requests.first?.0 == beforePicker)
             #expect(requests.first?.1 == .text)
-            #expect(requests.first?.2 == "Original instruction")
+            #expect(requests.first?.2 == OutputLanguage.instruction(userInstruction: "Original instruction", resolvedIdentifier: nil))
             #expect(board.string(forType: .string) == "Imported text")
         }
     }

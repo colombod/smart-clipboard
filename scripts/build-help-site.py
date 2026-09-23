@@ -2,7 +2,7 @@
 """Build the static GitHub Pages help bundle. Requires Pandoc; never publishes.
 
 Example:
-  python3 scripts/build-help-site.py --ref v0.4.0-preview.11 \
+  python3 scripts/build-help-site.py --ref v0.4.0-preview.12 \
       --output /private/tmp/smart-clipboard-deploy/help-site
 
 README.md and docs/USER-GUIDE.md remain the content sources. Other repository

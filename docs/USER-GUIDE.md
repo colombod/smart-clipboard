@@ -2,7 +2,7 @@
 
 Smart Clipboard stays in the menu bar. Set your connection and preferred output once, then capture and paste into the app you are already using.
 
-This guide covers the **0.4 preview**. If you are using 0.3.1, install the new preview to get local oMLX, additional providers, About, notifications and update checks. See the [preview notes](releases/v0.4.0-preview.md) for current limitations.
+This guide covers the **0.4 preview**. If you are using 0.3.1, install the new preview to get local oMLX, additional providers, About, notifications, update checks, five interface languages and optional capture translation. See the [preview notes](releases/v0.4.0-preview.md) for current limitations.
 
 ## Install and start
 
@@ -84,7 +84,23 @@ In **Settings → General → Preferred format**, choose:
 | SVG | Editable vector source; reconstruction may be approximate. |
 | Description | A written description of the image. |
 
-All AI outputs, including HTML and SVG, are copied as text. The app does not render or execute generated markup. **Default direction** adds an instruction to subsequent captures, for example “Translate to English.” AI output can contain mistakes; our small local model has known Description and SVG quality limitations documented in the [preview notes](releases/v0.4.0-preview.md).
+All AI outputs, including HTML and SVG, are copied as text. The app does not render or execute generated markup. **Default direction** adds an instruction to subsequent captures, for example “Preserve table columns.” AI output can contain mistakes; our small local model has known Description and SVG quality limitations documented in the [preview notes](releases/v0.4.0-preview.md).
+
+## Languages and translation
+
+The interface follows your Mac’s preferred supported language: English, Italian, Spanish, French or German, with English as the fallback. This includes menus, settings, notifications and accessibility labels. Restart Smart Clipboard after changing its language in macOS. Provider names, your captures and model identifiers are kept as they are.
+
+Captured content has its own language setting. In **Settings → General → Languages → Capture output**, choose:
+
+| Choice | What happens on the next AI capture |
+| --- | --- |
+| **Keep source language** (default) | Text stays in the language or languages detected in the image, even when your Mac uses another language. |
+| **System language** | Human-readable content is translated into your Mac’s preferred language. |
+| **A specific language** | Human-readable content is translated into that language, independently of your Mac and the app interface. |
+
+An explicit language choice takes priority over conflicting translation requests in **Default direction**. When upgrading with existing directions, **Use saved directions** keeps their previous behavior until you choose a language. Older saved results with directions retain that choice too. Select **Keep source language** to stop translation, or select a target to use the new controls. The language and other capture preferences are fixed when an operation starts; changing Settings affects the next operation.
+
+Translation uses your selected AI connection, including local oMLX, and its quality depends on the model and source image. Code, identifiers, numbers and structured syntax are requested to stay intact. **Pass through** always copies the original image without AI. **Extract text on device** reads the source language and does not translate. For descriptions without readable text, the source-language mode uses English; choose a target language if you want a different one.
 
 ## Completion and failure notifications
 
@@ -98,7 +114,7 @@ If **Clip ✓** appears but you see no notification or hear no sound, macOS may 
 
 ## Reuse a previous capture
 
-Choose **Clip → History**, open a capture, select another format and click **Convert with AI**. The original image is reused. **Saved formats** retrieves an already generated result without another AI request. **Extract text on device** uses Apple's local text recognition and returns plain text without an AI connection.
+Choose **Clip → History**, open a capture, select another format or **Output language**, and click **Convert with AI**. The original image is reused. For example, a Spanish capture can have separate Spanish, English and French plain-text results. Repeating the same format and language replaces only that version; other language versions remain saved. **Saved formats** lists both the format and language and retrieves an existing result without another AI request. Opening history does not copy anything automatically; use **Copy**, or enable **Copy after manual conversion**. **Extract text on device** uses Apple's local text recognition and returns source-language plain text without an AI connection.
 
 In **Settings → History**, choose the maximum number of saved clips and apply the limit. The default is 50; the maximum is 500. Oldest clips are removed first. Zero clears and disables history. You can delete one clip or clear all history. Deletion does not remove exported files or change what is already on the system clipboard.
 

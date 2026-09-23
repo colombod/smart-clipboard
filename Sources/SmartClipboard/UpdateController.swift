@@ -1,11 +1,12 @@
 import AppKit
 import Combine
 import Sparkle
+import ClipboardCore
 
 enum UpdateChannel: String, CaseIterable, Identifiable {
     case stable, preview
     var id: String { rawValue }
-    var title: String { self == .stable ? "Stable releases" : "Stable and preview releases" }
+    var title: String { self == .stable ? L10n.text("Stable releases") : L10n.text("Stable and preview releases") }
     var allowedChannels: Set<String> { self == .preview ? ["preview"] : [] }
 }
 
@@ -33,7 +34,7 @@ struct UpdatePolicy {
 @MainActor final class UpdateController: NSObject, ObservableObject {
     static let channelKey = "updateReleaseChannel"
     @Published private(set) var availableVersion: String?
-    @Published private(set) var status = "Updates have not been checked."
+    @Published private(set) var status = L10n.text("Updates have not been checked.")
     @Published private(set) var channel: UpdateChannel = .stable
     @Published private(set) var automaticallyChecks = false
     @Published private(set) var ready = false
@@ -82,23 +83,23 @@ struct UpdatePolicy {
             ready = true
             refreshState()
         } catch {
-            status = "Updates are unavailable in this build. Download a signed release from the Releases link."
+            status = L10n.text("Updates are unavailable in this build. Download a signed release from the Releases link.")
         }
     }
 
     var canCheckForUpdates: Bool { ready && engineCanCheck && !activityInProgress && pendingInstallation == nil }
     var canChangePreferences: Bool { ready && !sessionInProgress && !installationRequested }
-    var menuTitle: String { availableVersion.map { "Update to \($0)…" } ?? "Check for Updates…" }
+    var menuTitle: String { availableVersion.map { L10n.text("Update to \($0)…") } ?? L10n.text("Check for Updates…") }
     var policy: UpdatePolicy { UpdatePolicy(userInitiated: userInitiated, activityInProgress: isBusy()) }
 
     func checkForUpdates() {
         refreshState()
         guard canCheckForUpdates else {
-            if activityInProgress { status = "Finish the current capture, conversion or file selection before checking for updates." }
+            if activityInProgress { status = L10n.text("Finish the current capture, conversion or file selection before checking for updates.") }
             return
         }
         userInitiated = true
-        status = "Checking for updates…"
+        status = L10n.text("Checking for updates…")
         engine?.checkForUpdates()
         refreshState()
     }
@@ -115,7 +116,7 @@ struct UpdatePolicy {
         channel = value
         defaults.set(value.rawValue, forKey: Self.channelKey)
         availableVersion = nil
-        status = "Release preference changed. Check for updates when ready."
+        status = L10n.text("Release preference changed. Check for updates when ready.")
         engine?.resetUpdateCycle()
     }
 
@@ -133,11 +134,11 @@ struct UpdatePolicy {
     func foundUpdate(version: String, offeredChannel: String? = nil) {
         guard offeredChannel == nil || channel.allowedChannels.contains(offeredChannel!) else {
             availableVersion = nil
-            status = "That update is outside your selected release preference."
+            status = L10n.text("That update is outside your selected release preference.")
             return
         }
         availableVersion = version
-        status = "Version \(version) is available."
+        status = L10n.text("Version \(version) is available.")
     }
 
     func suppressedOfferChoice(channel offeredChannel: String?, userInitiated: Bool) -> SPUUserUpdateChoice? {
@@ -152,7 +153,7 @@ struct UpdatePolicy {
         guard userInitiated else { return }
         installationRequested = true
         if isBusy() {
-            status = "The update will continue when the current capture, conversion or file selection finishes."
+            status = L10n.text("The update will continue when the current capture, conversion or file selection finishes.")
             pendingInstallation = install
         } else { install() }
     }
@@ -205,7 +206,7 @@ extension UpdateController: SPUUpdaterDelegate {
     func updater(_ updater: SPUUpdater, mayPerform updateCheck: SPUUpdateCheck) throws {
         guard !isBusy() else {
             throw NSError(domain: "SmartClipboard.Update", code: 1,
-                          userInfo: [NSLocalizedDescriptionKey: "Finish the current capture, conversion or file selection before updating."])
+                          userInfo: [NSLocalizedDescriptionKey: L10n.text("Finish the current capture, conversion or file selection before updating.")])
         }
     }
     func updater(_ updater: SPUUpdater, didFindValidUpdate item: SUAppcastItem) {
@@ -213,11 +214,11 @@ extension UpdateController: SPUUpdaterDelegate {
     }
     func updaterDidNotFindUpdate(_ updater: SPUUpdater, error: Error) {
         availableVersion = nil
-        status = "No compatible new update was found for this release preference."
+        status = L10n.text("No compatible new update was found for this release preference.")
     }
     func updater(_ updater: SPUUpdater, didAbortWithError error: Error) {
         if (error as NSError).code != SUError.noUpdateError.rawValue {
-            status = "The update check could not finish. Try again later or use the Releases link."
+            status = L10n.text("The update check could not finish. Try again later or use the Releases link.")
         }
         cancelInstallation()
     }

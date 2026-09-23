@@ -1,0 +1,2 @@
+"NSLocalNetworkUsageDescription" = "Se connecte au serveur local de traitement d’images que vous choisissez pour lister les modèles, tester le traitement d’images ou convertir les captures sélectionnées.";
+"NSScreenCaptureUsageDescription" = "Capture uniquement la zone de l’écran ou la fenêtre que vous sélectionnez pour en copier ou convertir le contenu.";
