@@ -2,9 +2,9 @@
 
 Smart Clipboard stays in the menu bar. Set your connection and preferred output once, then capture and paste into the app you are already using.
 
-The current public release in the **0.4 preview** series is **[build 11](https://github.com/colombod/smart-clipboard/releases/tag/v0.4.0-preview.11)**. If you are using 0.3.1, the preview adds local oMLX, additional providers, About, notifications and update checks. See the [preview notes](releases/v0.4.0-preview.md) for current limitations.
+This guide covers **[0.4 preview build 14](https://github.com/colombod/smart-clipboard/releases/tag/v0.4.0-preview.14)**, with local SVG tracing, five interface languages and optional capture translation. It also includes local oMLX, additional providers, About, notifications and update checks. See the [preview notes](releases/v0.4.0-preview.md) for current limitations.
 
-**Development build 14 is not published yet.** It adds five interface languages, optional capture translation and local SVG tracing. Those sections below are explicitly labelled development; their controls are not available in the current public download.
+**Start with the job:** [trace a photo, logo or drawing](#trace-a-picture-to-svg), [extract text with local AI](#set-up-local-image-processing-with-omlx), or [translate captured text](#languages-and-translation). Local tracing needs no AI connection.
 
 ## Install and start
 
@@ -83,14 +83,14 @@ In **Settings → General → Preferred format**, choose:
 | Markdown | Editable document or table markup. |
 | JSON / YAML | Structured data reconstructed from the source. |
 | HTML | Editable HTML source. |
-| SVG | Editable vector source; reconstruction may be approximate. |
+| SVG | Vector source made by local tracing or AI reconstruction; choose the method below. |
 | Description | A written description of the image. |
 
 All AI outputs, including HTML and SVG, are copied as text. The app does not render or execute generated markup. **Default direction** adds an instruction to subsequent captures, for example “Preserve table columns.” AI output can contain mistakes; our small local model has known Description and SVG quality limitations documented in the [preview notes](releases/v0.4.0-preview.md).
 
 ## Trace a picture to SVG
 
-**Development build 14:** the following controls are not in the published preview build 11. Native capture and installation acceptance must finish before this feature is advertised as released.
+Use **Trace on device** for a scalable version of a visible picture: a pet photo, a logo or a line drawing. Use **Reconstruct with AI** when you want a model to interpret and rebuild a simple diagram or illustration. Both produce SVG source that you can save for a vector editor.
 
 SVG has two methods:
 
@@ -98,6 +98,8 @@ SVG has two methods:
 | --- | --- | --- |
 | **Reconstruct with AI** | Ask your model to rebuild a diagram or illustration as vector source. It can interpret instructions, but may change or invent details. This remains the default, including after upgrading. | Your configured AI connection. |
 | **Trace on device** | Follow the visible shapes and colours of a photo, logo or line drawing. The result is an approximation made of vector shapes. | The helper included with Smart Clipboard. No AI connection, API key, model download, server or additional installation. |
+
+### Trace photos, logos and drawings on your Mac
 
 To make local tracing your everyday capture result:
 
@@ -107,17 +109,25 @@ To make local tracing your everyday capture result:
 4. Choose **Balanced** detail to start. **Detailed** preserves more shapes and colours, with larger files.
 5. Close Settings. Use your normal rectangle or window shortcut, wait for **Clip ✓** or the ready notification, then paste.
 
-These choices are saved; capture does not open a method or preset chooser. **Clip …** shows that processing is in progress. Ready notifications follow your notification settings and are sent only after copying. Failure leaves the previous clipboard contents in place and reports through the menu and configured failure notification. Cancelling stays quiet and also preserves the clipboard.
+These choices are saved; capture does not open a method or preset chooser. Tracing works offline, and a failed trace never switches to an AI connection automatically. **Clip …** shows that processing is in progress. Ready notifications follow your notification settings and are sent only after copying. Failure leaves the previous clipboard contents in place and reports through the menu and configured failure notification. Cancelling stays quiet and also preserves the clipboard.
 
 The clipboard contains **SVG source text**, rather than an image attachment. To use the result as artwork, open the result from History, choose **Save…** and save an `.svg` file, then open or import it in your vector editor. Pasting into a text editor shows the SVG code; whether another app accepts pasted SVG source depends on that app. Large SVGs are kept out of Smart Clipboard’s text editor so it stays responsive; you can still copy or save them.
 
 Tracing stays on this Mac and uses the bundled [VTracer](https://github.com/visioncortex/vtracer) helper. It keeps the background and makes visible words into vector outlines; the words are not editable text. **Default direction** and **Output language** do not change a local trace. Choose AI reconstruction or text extraction when you need language processing. Automatic background removal and recovery of accurate chart data are not included. A traced chart is a picture made of shapes, not a data table or a guarantee of accurate values.
 
-For an earlier screenshot, open **Clip → History**, select the capture, choose **SVG** and **Trace on device**, adjust the preset and detail, then choose **Trace to SVG**. Use **Copy** when you want the result on your clipboard, or enable **Copy after manual conversion**. Simply opening History never changes the clipboard. **Saved formats** keeps local traces by preset and detail, alongside your AI versions; reopening one does not process the image again. You can return to **Reconstruct with AI** when you want the model to interpret the original image instead.
+### Trace an earlier screenshot
+
+For an earlier screenshot, open **Clip → History**, select the capture, choose **SVG** and **Trace on device**, adjust the preset and detail, then choose **Trace to SVG**. Use **Copy** when you want the result on your clipboard, or enable **Copy after manual conversion**. Simply opening History never changes the clipboard. **Saved formats** identifies local traces by method, preset and detail, alongside your AI versions; reopening one does not process the image again. Changing these choices in History applies to that manual conversion. Your automatic capture preferences remain in **Settings → General**.
+
+### Reconstruct with your AI connection
+
+1. In **Settings → Connection**, choose an image-capable provider/model and run **Test image processing**. Local oMLX works here too when its server is running.
+2. In **Settings → General**, choose **SVG → Reconstruct with AI**. Add a **Default direction** or choose a translation language if needed.
+3. Close Settings and use your normal capture shortcut. Wait for the ready status, then paste the SVG source or open History and **Save…** to import it into a vector editor.
+
+For a saved image, open it in History, select **SVG → Reconstruct with AI**, add directions if needed, then choose **Convert with AI**. The model may simplify, change or invent details; check its result against the original.
 
 ## Languages and translation
-
-**Development build 14:** these interface languages and translation controls are not in the published preview build 11.
 
 The interface follows your Mac’s preferred supported language: English, Italian, Spanish, French or German, with English as the fallback. This includes menus, settings, notifications and accessibility labels. Restart Smart Clipboard after changing its language in macOS. Provider names, your captures and model identifiers are kept as they are.
 
@@ -141,13 +151,13 @@ Choose **When a capture is ready to paste**, **When capture or conversion fails*
 
 The banner shows only a status and output format, never your screenshot, extracted text or detailed provider error. Click it to open Smart Clipboard explicitly. Posting it does not open the app or take focus. **Turn off notifications** disables them in the app; **Open notification settings** lets you choose macOS banner/alert style and sound permissions. Focus modes may hide or silence alerts. The Clip menu always keeps its status indicator.
 
-If **Clip ✓** appears but you see no notification or hear no sound, macOS may be suppressing alerts while your display is being shared, mirrored or recorded. Taking a screenshot is different from an ongoing sharing or recording session: Smart Clipboard’s Screen Recording permission does not mean it continuously records your screen. Stop any ongoing sharing or recording session, then try another capture. Also check whether a Focus, such as Sleep, is active—including one synced from another device. Smart Clipboard respects these macOS policies. Allowing notifications during screen sharing is a system-wide choice that can reveal other apps’ notifications to viewers; it is not required for normal capture and is not the recommended first troubleshooting step.
+If **Clip ✓** appears but you see no notification or hear no sound, macOS may be suppressing alerts while your display is being shared, mirrored or recorded—even when notifications are enabled and no Focus is active. **Clip ✓** still means the result is ready to paste. Taking a screenshot is different from an ongoing sharing or recording session: Smart Clipboard’s Screen Recording permission does not mean it continuously records your screen. Stop any ongoing sharing or recording session, then try another capture. Also check whether a Focus, such as Sleep, is active—including one synced from another device. Smart Clipboard respects these macOS policies. Allowing notifications during screen sharing is a system-wide choice that can reveal other apps’ notifications to viewers; it is not required for normal capture and is not the recommended first troubleshooting step.
 
 ## Reuse a previous capture
 
 Choose **Clip → History**, open a capture, select another format, and click **Convert with AI**. The original image is reused. **Saved formats** retrieves an existing result without another AI request. Opening history does not copy anything automatically; use **Copy**, or enable **Copy after manual conversion**. **Extract text on device** uses Apple's local text recognition and returns source-language plain text without an AI connection.
 
-**Development build 14** adds **Output language** and separate saved versions for each format and language. For example, a Spanish capture can have separate Spanish, English and French plain-text results. Repeating the same format and language replaces only that version; other language versions remain saved. **Saved formats** identifies the format and language. The same development build also supports [local SVG traces](#trace-a-picture-to-svg), saved by preset and detail.
+Use **Output language** to create separate saved versions for each format and language. For example, a Spanish capture can have separate Spanish, English and French plain-text results. Repeating the same format and language replaces only that version; other language versions remain saved. **Saved formats** identifies the format and language. You can also create [local SVG traces](#trace-a-picture-to-svg), saved by preset and detail.
 
 In **Settings → History**, choose the maximum number of saved clips and apply the limit. The default is 50; the maximum is 500. Oldest clips are removed first. Zero clears and disables history. You can delete one clip or clear all history. Deletion does not remove exported files or change what is already on the system clipboard.
 
@@ -157,7 +167,7 @@ History stores your selected/imported images and results locally. It does not wa
 
 The app captures a selected region or window only when you ask; it does not continuously watch your screen or other apps' clipboard contents. AI processing sends the image and your instructions to the connection you selected. A local oMLX server on `127.0.0.1` processes it on this Mac; a server on another computer receives it there. Cloud data handling follows that provider's account policies. Turning off optional response storage is not a promise of zero provider retention.
 
-**Pass through (image)** makes no AI request. The editor's **Extract text on device** uses Apple's local text recognition. API keys are stored in macOS Keychain; ChatGPT credentials remain with Codex.
+**Pass through (image)** and **Trace on device** make no AI request. Local tracing uses the helper included in the app and can run offline. The editor's **Extract text on device** uses Apple's local text recognition. API keys are stored in macOS Keychain; ChatGPT credentials remain with Codex.
 
 History stores originals and results in `~/Library/Application Support/Smart Clipboard/History/`. Files are restricted to your Mac user, but the app does not separately encrypt them. Set the history limit to zero to clear existing entries and stop saving new ones. Exported files and clipboard contents are independent of history. Notification messages never contain capture contents.
 
@@ -181,6 +191,7 @@ Older releases without an updater need one manual replacement with an updater-en
 | Repeated text or unfinished conversion | Check the oMLX version; 0.6.4 has the structured-output bug described above. |
 | Capture copied an image | Preferred format is Pass through; select Auto detect or another format for extraction. |
 | Pasting shows the previous item | Wait for Clip ✓. If Clip ! appears, read the error; failed conversion deliberately leaves the clipboard unchanged. |
+| Clip ✓ appears, but no ready banner or sound | The result is ready to paste. macOS may hide alerts during screen sharing, mirroring or recording, even with notifications enabled. Stop that session and retry; also check Focus. See [notification help](#completion-and-failure-notifications). |
 
 **Old development-build permission:** in System Settings → Privacy & Security → Screen & System Audio Recording, switch only Smart Clipboard off and on, accepting Quit & Reopen when offered. If the warning persists, the old permission entry may need removing and the current `/Applications/Smart Clipboard.app` adding again with the **+** button. If macOS will not remove the entry, seek support for a reset scoped to this app; do not reset every application's permissions. The app never performs that reset automatically. Saved settings and history are separate from this macOS approval.
 

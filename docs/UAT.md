@@ -63,9 +63,9 @@ G01–G12 must pass on the exact candidate before claiming the core experience i
 
 Untested configuration gates must be stated as limitations of the preview. Do not imply both connection types, login startup, multiple displays, or clean-machine installation are proven by testing one local configuration.
 
-## Local SVG tracing candidate
+## Local SVG tracing preview
 
-The development candidate adds **SVG method → Trace on device**, using a native VTracer helper bundled with the app. **Reconstruct with AI** remains the default. These gates describe required observations; their presence here is not evidence that they passed. Record each gate as NOT RUN until exercised, then record the exact candidate, actions and evidence under `clip-cqc.28`. Published preview build 11 does not include this feature; it is being tested in development build 14.
+Preview build 14 adds **SVG method → Trace on device**, using a native VTracer helper bundled with the app. **Reconstruct with AI** remains the default. These gates describe required observations; their presence here is not evidence that they passed. Record each gate as NOT RUN until exercised, then record the exact candidate, actions and evidence under `clip-cqc.28`. The feature is published in preview build 14. [Release verification](releases/v0.4.0-preview.md#verification-status) records the completed checks and the native capture checks not repeated on that build; publication does not mark all gates as passed.
 
 Use public or synthetic fixtures: a photograph with a recognisable object and visible markings, a flat logo with a cut-out or transparent area, and a line drawing. Retain the input and output for visual comparison. Include the public pirate-kitten example from GitHub issue #3 to check the eye patch, markings and silhouette. Do not substitute “valid SVG” for fidelity to the source.
 
