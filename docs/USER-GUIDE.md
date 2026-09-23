@@ -1,34 +1,71 @@
 # Using Smart Clipboard
 
-Smart Clipboard stays in the menu bar. Set your connection and preferred output once, then capture and paste into the app you are already using.
+**Set up once. Capture. Wait for Clip ✓. Paste.** The app stays in the menu bar until you ask to open it.
 
-This guide covers **[0.4 preview build 14](https://github.com/colombod/smart-clipboard/releases/tag/v0.4.0-preview.14)**, with local SVG tracing, five interface languages and optional capture translation. It also includes local oMLX, additional providers, About, notifications and update checks. See the [preview notes](releases/v0.4.0-preview.md) for current limitations.
+This illustrated guide covers **[0.4 preview build 15](https://github.com/colombod/smart-clipboard/releases/tag/v0.4.0-preview.15)**. Screenshots show current app views with sample data; select one to enlarge it.
 
-**Start with the job:** [trace a photo, logo or drawing](#trace-a-picture-to-svg), [extract text with local AI](#set-up-local-image-processing-with-omlx), or [translate captured text](#languages-and-translation). Local tracing needs no AI connection.
+Jump to [local AI](#set-up-local-image-processing-with-omlx), [picture tracing](#trace-a-picture-to-svg), [translation](#languages-and-translation) or [troubleshooting](#if-capture-does-not-work).
 
 ## Install and start
 
-Download the signed DMG from [GitHub Releases](https://github.com/colombod/smart-clipboard/releases), open it and drag **Smart Clipboard** into **Applications**. Eject the DMG and open the installed app. Look for **Clip** in the menu bar; no app window should open.
+1. [Download the signed DMG](https://github.com/colombod/smart-clipboard/releases/download/v0.4.0-preview.15/Smart-Clipboard-0.4.0-macOS-arm64.dmg), open it and drag **Smart Clipboard** into **Applications**.
+2. Eject the DMG, open the installed app and find **Clip** in the menu bar. There is no Dock icon or window to keep open.
+3. Open **Clip → Settings & Status** for setup. Enable **Launch at login** in General if you want it ready when your Mac starts.
 
-Open **Clip → Settings & Status** when you want to change a setting. Closing Settings leaves capture shortcuts working. **Clip → Quit Smart Clipboard** stops the app. Enable **Launch at login** in General if you want it to start with your Mac.
+Requires Apple Silicon and macOS 14+. Closing Settings leaves shortcuts working; **Clip → Quit Smart Clipboard** stops the app.
 
-Official downloads are for Apple Silicon and macOS 14 or later. A local oMLX server has its own hardware and macOS requirements.
+## Capture, wait, paste
+
+| Step | What to do |
+| --- | --- |
+| **Capture an area** | Press **⌃⌘R** and drag a rectangle. |
+| **Capture a window** | Press **⌃⌘W** and click the window. |
+| **Wait** | **Clip …** changes to **Clip ✓** when the result is copied. |
+| **Paste** | Press **⌘V** in your destination app. |
+
+**⌃⌘R** means hold **Control + Command** and press **R**; **⌃⌘W** uses **W**. These defaults start in build 15. Saved shortcuts take precedence, including bindings kept from older versions; view or record a replacement in **Settings → Shortcuts**. **Space** switches selection modes and **Escape** cancels. A failed or cancelled operation leaves your previous clipboard contents intact.
+
+Allow Screen Recording when macOS asks. You can also choose **Request screen access** in Shortcuts; reopen the app if macOS requests it. Capture does not open Settings or the editor.
+
+## Choose the output once
+
+[![General settings with Auto detect and Keep source language selected.](images/capture-settings.png)](images/capture-settings.png)
+
+*Settings → General controls every new capture. History has separate choices for reprocessing saved images.*
+
+| Preferred format | What you get |
+| --- | --- |
+| **Auto detect** | AI chooses a useful editable format from the image. |
+| **Pass through (image)** | The original image, without extraction or AI. |
+| **Plain text / Markdown** | Editable words, notes, headings or tables. |
+| **JSON / YAML / HTML** | Structured data or markup source. |
+| **SVG** | Local shape tracing or AI reconstruction. |
+| **Description** | A written description of the image. |
+
+**Default direction** adds instructions such as “Preserve table columns.” AI results, HTML and SVG are copied as text; the app does not render or execute generated markup. Review AI output before using it.
 
 ## Set up local image processing with oMLX
 
-1. Install and start [oMLX](https://github.com/jundot/omlx), then download an image-capable model using its model downloader. See [Choose a local model](#choose-a-local-model) below for the exact IDs, download sizes and current test status. A text-only model cannot read screenshots.
-2. Open Smart Clipboard **Settings → Connection** and select **Local / oMLX**.
-3. Enter the server address shown by oMLX, ending in `/v1`. For example, a server on this Mac using port 8999 is `http://127.0.0.1:8999/v1`. The port must match your server; 8999 is not a universal default.
-4. Click **Refresh models**, then choose the exact listed vision model. Our oMLX server lists the checkpoints as `Qwen3-VL-8B-Instruct-4bit` and `Qwen3-VL-32B-Instruct-4bit`; use the ID returned by your server rather than assuming it includes the `mlx-community/` download prefix.
-5. If your server requires a key, enter it and click **Save key**. An unauthenticated server on this Mac needs no key. A server on another computer requires a key; use HTTPS outside a private local network.
-6. Click **Test image processing**. This sends a generated sample image, not your screen or saved captures. A successful model listing alone does not prove image support.
-7. In **General**, choose **Auto detect** or an explicit preferred output, then close Settings.
+[![Local oMLX connection form with a localhost server address and Qwen3-VL vision model.](images/local-connection.png)](images/local-connection.png)
 
-**Server compatibility:** oMLX 0.6.4 has a known bug affecting structured output from this vision model. Smart Clipboard rejects incomplete responses instead of copying them. The official [0.7.0.dev2 preview](https://github.com/jundot/omlx/releases/tag/v0.7.0.dev2) includes the upstream fix and was tested from its unmodified package. It remains a prerelease. Consult the [preview notes](releases/v0.4.0-preview.md) and [local test evidence](testing/OMLX.md) for the exact configuration; newer oMLX previews are not automatically covered. Merely installing a larger model does not fix this server bug.
+*Select Local / oMLX, use your server’s address, then choose an image-capable model.*
 
-oMLX must remain running while you use AI extraction. Smart Clipboard connects to it; it does not start the server, download models or switch to a cloud service if local processing fails. With the server on `127.0.0.1`, captures are sent to this Mac. A remote server receives the selected capture.
+1. Install and start [oMLX](https://github.com/jundot/omlx). Download **mlx-community/Qwen3-VL-8B-Instruct-4bit** as a starting point.
+2. In **Settings → Connection**, select **Local / oMLX**. Enter your server’s address ending in `/v1`; the pictured `http://127.0.0.1:8999/v1` is an example, not a universal port.
+3. Click **Refresh models** and choose the exact listed vision model. The server may omit the `mlx-community/` prefix.
+4. If your server needs a key, enter it and choose **Save key**. A server on another computer requires a key; use HTTPS outside a private local network.
+5. Click **Test image processing**. It uses a generated sample, not your screen. Then choose your preferred output in General and close Settings.
+
+Keep oMLX running for AI extraction. Smart Clipboard does not download models, start the server or fall back to a cloud provider. Local **Trace on device** and **Pass through** work without oMLX.
 
 ### Choose a local model
+
+Start with **Qwen3-VL-8B-Instruct-4bit** for text, tables and translation. The larger **32B** model did not solve the Description/SVG errors in our tests. For tracing a picture, use **Trace on device**—no model needed.
+
+The tested server is official **[oMLX 0.7.0.dev2](https://github.com/jundot/omlx/releases/tag/v0.7.0.dev2)**. Version 0.6.4 has a structured-output bug with this vision model; a larger model does not fix it. Newer server versions have not been covered by these tests.
+
+<details>
+<summary>Model sizes, memory guidance and test results</summary>
 
 The following are 4-bit MLX Community conversions of Qwen image-capable models. Copy the full download ID into oMLX's downloader:
 
@@ -43,158 +80,122 @@ The measured 32B download matches [publisher revision `6e5644d`](https://hugging
 
 For observed outputs and the distinction between automated checks and visual quality, see [the local test evidence](testing/OMLX.md). Description and SVG remain experimental in this preview and have not passed all-format quality acceptance.
 
+</details>
+
 ## Choose another connection
 
-For **OpenAI**, **Anthropic**, **Google Gemini** or **Perplexity**:
+For **OpenAI**, **Anthropic**, **Google Gemini** or **Perplexity**, select the provider in Connection, enter its API key, choose **Save key**, select an image-capable model and run **Test image processing**. API access and billing are separate from consumer chat subscriptions. Each provider retains its own settings and key.
 
-1. Choose the provider in **Settings → Connection**.
-2. Enter that provider's API key in **New API key**, then click **Save key**. Approve macOS Keychain access if requested.
-3. Click **Refresh models**, use **Choose a listed model**, or enter an image-capable model available to your account. A listed model may still lack the required image or structured-output capability.
-4. Click **Test image processing** and wait for the success message before capturing.
+For **ChatGPT via Codex**, follow **Install / update Codex CLI**, then **Sign in with ChatGPT**. Leave **Codex executable** blank for automatic discovery and run the image test after sign-in. An eligible Codex account and compatible official CLI are required; subscription limits apply.
 
-API access and billing are separate from consumer chat subscriptions. Each provider keeps its own saved key and settings. Changing a provider or model does not change your preferred output. Cloud routes have request/response tests, but have not all been verified against live accounts in this preview; see [connection test status](PROVIDERS.md).
-
-For **ChatGPT via Codex**, use the **Install / update Codex CLI** link in Connection, then **Sign in with ChatGPT** and complete the official sign-in flow. Leave **Codex executable** blank for automatic discovery unless you installed it in a custom location. The model is optional. Run **Test image processing** after signing in. This requires an account with Codex access and a compatible official CLI; subscription usage limits apply. Credentials stay with Codex.
-
-If an existing saved key needs approval after an update, click **Authorize saved key** explicitly. Background capture never opens a Keychain dialog for you. Never put API keys into issue reports or screenshots shared for support.
-
-## Capture, wait, paste
-
-The default shortcuts are **⌥⇧⌘3** for a rectangle and **⌥⇧⌘4** for a window. Your saved custom shortcuts take precedence; view or change them in **Settings → Shortcuts**.
-
-1. Keep the destination app open.
-2. Press your capture shortcut. Drag a rectangle, or click the window you want. **Space** switches selection modes; **Escape** cancels.
-3. Wait for **Clip ✓** in the menu bar.
-4. Paste with **⌘V** in your destination app.
-
-**Clip …** means capture or conversion is in progress. **Clip !** means something needs attention: open the menu to read the error. Failed or cancelled conversion preserves the previous clipboard contents. Settings and the editor do not open automatically.
-
-The first capture may require Screen Recording approval from macOS. In **Settings → Shortcuts**, choose **Request screen access**, approve Smart Clipboard in System Settings, and reopen the app if macOS requests it. A software update can occasionally require permission approval again.
-
-## Choose the output once
-
-In **Settings → General → Preferred format**, choose:
-
-| Format | What is copied |
-| --- | --- |
-| Auto detect | An editable format chosen from the captured content, using your selected AI connection. |
-| Pass through (image) | The selected image, with no extraction or AI request. |
-| Plain text | Extracted text without added document markup. |
-| Markdown | Editable document or table markup. |
-| JSON / YAML | Structured data reconstructed from the source. |
-| HTML | Editable HTML source. |
-| SVG | Vector source made by local tracing or AI reconstruction; choose the method below. |
-| Description | A written description of the image. |
-
-All AI outputs, including HTML and SVG, are copied as text. The app does not render or execute generated markup. **Default direction** adds an instruction to subsequent captures, for example “Preserve table columns.” AI output can contain mistakes; our small local model has known Description and SVG quality limitations documented in the [preview notes](releases/v0.4.0-preview.md).
+If a saved key needs approval after an update, choose **Authorize saved key** explicitly. Background captures never open a Keychain dialog. Cloud routes are not all live-verified in this preview; see [connection status](PROVIDERS.md).
 
 ## Trace a picture to SVG
 
-Use **Trace on device** for a scalable version of a visible picture: a pet photo, a logo or a line drawing. Use **Reconstruct with AI** when you want a model to interpret and rebuild a simple diagram or illustration. Both produce SVG source that you can save for a vector editor.
+[![SVG workflow configured for Trace on device with the Photo preset and Balanced detail.](images/svg-tracing.png)](images/svg-tracing.png)
 
-SVG has two methods:
-
-| Method | When to use it | What it needs |
-| --- | --- | --- |
-| **Reconstruct with AI** | Ask your model to rebuild a diagram or illustration as vector source. It can interpret instructions, but may change or invent details. This remains the default, including after upgrading. | Your configured AI connection. |
-| **Trace on device** | Follow the visible shapes and colours of a photo, logo or line drawing. The result is an approximation made of vector shapes. | The helper included with Smart Clipboard. No AI connection, API key, model download, server or additional installation. |
+*Choose Trace on device explicitly. Reconstruct with AI remains the default SVG method after an upgrade.*
 
 ### Trace photos, logos and drawings on your Mac
 
-To make local tracing your everyday capture result:
+1. In **Settings → General**, set **Preferred format → SVG** and **SVG method → Trace on device**.
+2. Choose **Photo**, **Logo** or **Line drawing** to match the image.
+3. Start with **Balanced** detail. **Detailed** keeps more shapes and colours but makes larger files.
+4. Close Settings, capture, wait for **Clip ✓**, then paste.
 
-1. Open **Settings → General** and set **Preferred format** to **SVG**.
-2. Set **SVG method** to **Trace on device**.
-3. Choose a **Trace preset**: **Photo** for pictures with many colours, **Logo** for logos and flat artwork, or **Line drawing** for drawings with clear lines.
-4. Choose **Balanced** detail to start. **Detailed** preserves more shapes and colours, with larger files.
-5. Close Settings. Use your normal rectangle or window shortcut, wait for **Clip ✓** or the ready notification, then paste.
+Tracing works offline with the included VTracer helper—no API key, model, server or extra installation. It follows visible shapes, keeps the background and turns words into outlines. It does not translate, remove backgrounds or recover chart data. Directions do not apply, and a failed trace never switches to AI.
 
-These choices are saved; capture does not open a method or preset chooser. Tracing works offline, and a failed trace never switches to an AI connection automatically. **Clip …** shows that processing is in progress. Ready notifications follow your notification settings and are sent only after copying. Failure leaves the previous clipboard contents in place and reports through the menu and configured failure notification. Cancelling stays quiet and also preserves the clipboard.
-
-The clipboard contains **SVG source text**, rather than an image attachment. To use the result as artwork, open the result from History, choose **Save…** and save an `.svg` file, then open or import it in your vector editor. Pasting into a text editor shows the SVG code; whether another app accepts pasted SVG source depends on that app. Large SVGs are kept out of Smart Clipboard’s text editor so it stays responsive; you can still copy or save them.
-
-Tracing stays on this Mac and uses the bundled [VTracer](https://github.com/visioncortex/vtracer) helper. It keeps the background and makes visible words into vector outlines; the words are not editable text. **Default direction** and **Output language** do not change a local trace. Choose AI reconstruction or text extraction when you need language processing. Automatic background removal and recovery of accurate chart data are not included. A traced chart is a picture made of shapes, not a data table or a guarantee of accurate values.
+**To use it in a vector editor:** open the capture in **History**, choose **Save…**, then open or import the `.svg` file. Pasting into a text editor shows SVG source code. Large SVGs show a compact summary in Smart Clipboard while keeping the complete result available to Copy or Save.
 
 ### Trace an earlier screenshot
 
-For an earlier screenshot, open **Clip → History**, select the capture, choose **SVG** and **Trace on device**, adjust the preset and detail, then choose **Trace to SVG**. Use **Copy** when you want the result on your clipboard, or enable **Copy after manual conversion**. Simply opening History never changes the clipboard. **Saved formats** identifies local traces by method, preset and detail, alongside your AI versions; reopening one does not process the image again. Changing these choices in History applies to that manual conversion. Your automatic capture preferences remain in **Settings → General**.
+Open **Clip → History → Open**, choose **SVG → Trace on device**, set the preset/detail and choose **Trace to SVG**. Use **Copy** or **Save…**. Each method, preset and detail combination keeps its own saved result. These manual choices do not change your automatic capture preferences.
 
 ### Reconstruct with your AI connection
 
-1. In **Settings → Connection**, choose an image-capable provider/model and run **Test image processing**. Local oMLX works here too when its server is running.
-2. In **Settings → General**, choose **SVG → Reconstruct with AI**. Add a **Default direction** or choose a translation language if needed.
-3. Close Settings and use your normal capture shortcut. Wait for the ready status, then paste the SVG source or open History and **Save…** to import it into a vector editor.
-
-For a saved image, open it in History, select **SVG → Reconstruct with AI**, add directions if needed, then choose **Convert with AI**. The model may simplify, change or invent details; check its result against the original.
+Choose **SVG → Reconstruct with AI** to have your configured model interpret and rebuild a diagram or illustration. It can follow directions and language preferences, but may change or invent details. Test your AI connection first and compare the result with the original.
 
 ## Languages and translation
 
-The interface follows your Mac’s preferred supported language: English, Italian, Spanish, French or German, with English as the fallback. This includes menus, settings, notifications and accessibility labels. Restart Smart Clipboard after changing its language in macOS. Provider names, your captures and model identifiers are kept as they are.
+In **General → Languages → Capture output**, choose:
 
-Captured content has its own language setting. In **Settings → General → Languages → Capture output**, choose:
-
-| Choice | What happens on the next AI capture |
+| Choice | Result |
 | --- | --- |
-| **Keep source language** (default) | Text stays in the language or languages detected in the image, even when your Mac uses another language. |
-| **System language** | Human-readable content is translated into your Mac’s preferred language. |
-| **A specific language** | Human-readable content is translated into that language, independently of your Mac and the app interface. |
+| **Keep source language** | Preserve the language detected in the image. This is the default. |
+| **System language** | Translate AI captures into your Mac’s preferred language. |
+| **A specific language** | Translate independently of the Mac’s language. |
 
-An explicit language choice takes priority over conflicting translation requests in **Default direction**. When upgrading with existing directions, **Use saved directions** keeps their previous behavior until you choose a language. Older saved results with directions retain that choice too. Select **Keep source language** to stop translation, or select a target to use the new controls. The language and other capture preferences are fixed when an operation starts; changing Settings affects the next operation.
+An explicit choice overrides translation directions. Older settings may show **Use saved directions** until you choose a language. Changes apply to the next capture. Model quality varies; check translations and extracted values.
 
-Translation uses your selected AI connection, including local oMLX, and its quality depends on the model and source image. Code, identifiers, numbers and structured syntax are requested to stay intact. **Pass through** always copies the original image without AI. **Extract text on device** reads the source language and does not translate. For descriptions without readable text, the source-language mode uses English; choose a target language if you want a different one.
-
-## Completion and failure notifications
-
-Open **Settings → General → Capture notifications** and click **Enable notifications**. Allow Smart Clipboard's macOS notification request. This is an explicit setup step; launching the app or taking a capture never triggers that permission prompt automatically.
-
-Choose **When a capture is ready to paste**, **When capture or conversion fails**, or both. **Play a notification sound** is optional and starts off. A successful notification is sent only after the result has been copied. Pass-through images also receive a ready notification. Cancelling selection or processing stays quiet; a manual conversion without automatic copying does not claim the result is ready to paste.
-
-The banner shows only a status and output format, never your screenshot, extracted text or detailed provider error. Click it to open Smart Clipboard explicitly. Posting it does not open the app or take focus. **Turn off notifications** disables them in the app; **Open notification settings** lets you choose macOS banner/alert style and sound permissions. Focus modes may hide or silence alerts. The Clip menu always keeps its status indicator.
-
-If **Clip ✓** appears but you see no notification or hear no sound, macOS may be suppressing alerts while your display is being shared, mirrored or recorded—even when notifications are enabled and no Focus is active. **Clip ✓** still means the result is ready to paste. Taking a screenshot is different from an ongoing sharing or recording session: Smart Clipboard’s Screen Recording permission does not mean it continuously records your screen. Stop any ongoing sharing or recording session, then try another capture. Also check whether a Focus, such as Sleep, is active—including one synced from another device. Smart Clipboard respects these macOS policies. Allowing notifications during screen sharing is a system-wide choice that can reveal other apps’ notifications to viewers; it is not required for normal capture and is not the recommended first troubleshooting step.
+The interface separately follows macOS in English, Italian, Spanish, French or German, falling back to English. Restart the app after changing its interface language. **Pass through**, local tracing and **Extract text on device** do not translate. Source-language descriptions use English when no readable text identifies a language.
 
 ## Reuse a previous capture
 
-Choose **Clip → History**, open a capture, select another format, and click **Convert with AI**. The original image is reused. **Saved formats** retrieves an existing result without another AI request. Opening history does not copy anything automatically; use **Copy**, or enable **Copy after manual conversion**. **Extract text on device** uses Apple's local text recognition and returns source-language plain text without an AI connection.
+[![History list with sample captures and separately saved format and language versions.](images/history.png)](images/history.png)
 
-Use **Output language** to create separate saved versions for each format and language. For example, a Spanish capture can have separate Spanish, English and French plain-text results. Repeating the same format and language replaces only that version; other language versions remain saved. **Saved formats** identifies the format and language. You can also create [local SVG traces](#trace-a-picture-to-svg), saved by preset and detail.
+*Your original and its saved versions stay together. Opening History does not change the clipboard.*
 
-In **Settings → History**, choose the maximum number of saved clips and apply the limit. The default is 50; the maximum is 500. Oldest clips are removed first. Zero clears and disables history. You can delete one clip or clear all history. Deletion does not remove exported files or change what is already on the system clipboard.
+Choose **Open**, another format or **Output language**, then **Convert with AI**. For offline OCR, choose **Extract text on device**; for vectors, choose **Trace to SVG**. **Saved formats** loads a previous result without processing again.
 
-History stores your selected/imported images and results locally. It does not watch other apps' clipboard activity.
+[![A saved sample note beside its editable Markdown result, with language, Copy and Save controls.](images/result.png)](images/result.png)
+
+*This review window opens only when you ask. Normal captures copy directly in the background.*
+
+Choose **Copy** when you want that result on the clipboard, or enable **Copy after manual conversion**. Repeating the same format/language replaces only that version; other versions remain.
+
+In **Settings → History**, set the limit (50 by default, up to 500), delete an entry or clear all. Zero clears and disables history. Deleting history does not remove exported files or change the clipboard.
+
+## Completion and failure notifications
+
+In **General → Capture notifications**, choose **Enable notifications** and allow the macOS prompt. Select success, failure or both; sound is optional. Notifications contain only status and format. They open Smart Clipboard only if clicked.
+
+| Status | Meaning |
+| --- | --- |
+| **Clip …** | Capture or conversion is running. |
+| **Clip ✓** | The result is on your clipboard. |
+| **Clip !** | Open the menu to read the problem. |
+
+**No banner, but Clip ✓?** You can paste. Focus or screen sharing/recording may hide or silence alerts even when enabled. Smart Clipboard respects those settings. See [troubleshooting](#if-capture-does-not-work).
 
 ## Privacy and storage
 
-The app captures a selected region or window only when you ask; it does not continuously watch your screen or other apps' clipboard contents. AI processing sends the image and your instructions to the connection you selected. A local oMLX server on `127.0.0.1` processes it on this Mac; a server on another computer receives it there. Cloud data handling follows that provider's account policies. Turning off optional response storage is not a promise of zero provider retention.
+The app captures only the region/window you request; it does not continuously watch the screen or clipboard. AI captures go to your selected provider. oMLX on `127.0.0.1` stays on this Mac; a remote server receives the capture there. Cloud retention follows the provider’s policies.
 
-**Pass through (image)** and **Trace on device** make no AI request. Local tracing uses the helper included in the app and can run offline. The editor's **Extract text on device** uses Apple's local text recognition. API keys are stored in macOS Keychain; ChatGPT credentials remain with Codex.
+Local tracing, pass-through and Apple OCR need no AI provider. Keys are stored in macOS Keychain; ChatGPT credentials stay with Codex.
 
-History stores originals and results in `~/Library/Application Support/Smart Clipboard/History/`. Files are restricted to your Mac user, but the app does not separately encrypt them. Set the history limit to zero to clear existing entries and stop saving new ones. Exported files and clipboard contents are independent of history. Notification messages never contain capture contents.
+History lives in `~/Library/Application Support/Smart Clipboard/History/`, restricted to your Mac user but not separately encrypted. Exported files and clipboard contents are independent of history.
 
 ## Updates
 
-Updater-enabled releases provide **Check for Updates…** in the Clip menu and About page. Enable daily background checks in About if desired. An available update is indicated in the menu without opening a window. Select it to review and install; capture or conversion must finish first.
+Use **Clip → Check for Updates…** or the About page. Optional daily checks add a menu notice; they do not open an update window automatically. Preferences, history and the selected connection survive updates.
 
-Stable releases are the default. In About, set **Releases → Stable and preview releases** only if you want development previews. A preview can include known limitations listed in its release notes. Updates keep your preferences and saved history. They do not change your selected AI connection.
-
-Older releases without an updater need one manual replacement with an updater-enabled release. Quit the old app before dragging the new one into Applications. Keep using official signed downloads.
+Stable releases are the default. Choose **About → Releases → Stable and preview releases** to receive previews like build 15. Older apps without an updater need one manual replacement from the official DMG.
 
 ## If capture does not work
 
-| Symptom | Check |
+| Symptom | What to check |
 | --- | --- |
-| No Clip menu | Open the installed app. A crowded menu bar may hide items. |
-| Shortcut does nothing | Open Settings → Shortcuts and check permission and each shortcut's registration status. Record another shortcut or use Find available shortcuts if there is a conflict. |
-| Screen access says “needed” even though its macOS switch is on | Quit and reopen Smart Clipboard first. After replacing an old ad-hoc development build with a signed release, macOS can retain approval for the old signature. Refresh only Smart Clipboard's permission; see the recovery guidance below. |
-| Local server unavailable | Start oMLX and confirm the address and port in Connection. |
-| Model unavailable | Refresh models and select the exact installed vision model. |
-| Repeated text or unfinished conversion | Check the oMLX version; 0.6.4 has the structured-output bug described above. |
-| Capture copied an image | Preferred format is Pass through; select Auto detect or another format for extraction. |
-| Pasting shows the previous item | Wait for Clip ✓. If Clip ! appears, read the error; failed conversion deliberately leaves the clipboard unchanged. |
-| Clip ✓ appears, but no ready banner or sound | The result is ready to paste. macOS may hide alerts during screen sharing, mirroring or recording, even with notifications enabled. Stop that session and retry; also check Focus. See [notification help](#completion-and-failure-notifications). |
+| No Clip menu | Open the installed app; a crowded menu bar can hide items. |
+| Shortcut does nothing | Check **Settings → Shortcuts** for permission or registration conflicts. |
+| Screen access still says “needed” | Quit and reopen first. For an old development build, see the recovery steps below. |
+| Local server or model unavailable | Start oMLX, confirm the port, refresh models and select a vision model. |
+| Repeated text or unfinished conversion | Check the oMLX version; 0.6.4 has the bug described above. |
+| An image is pasted instead of text | Change **Preferred format** from Pass through to Auto detect or a text format. |
+| The previous clipboard item is pasted | Wait for **Clip ✓**. Failure leaves the old clipboard intact. |
+| No ready banner or sound | Check Focus and screen sharing/recording. **Clip ✓** still means ready. |
 
-**Old development-build permission:** in System Settings → Privacy & Security → Screen & System Audio Recording, switch only Smart Clipboard off and on, accepting Quit & Reopen when offered. If the warning persists, the old permission entry may need removing and the current `/Applications/Smart Clipboard.app` adding again with the **+** button. If macOS will not remove the entry, seek support for a reset scoped to this app; do not reset every application's permissions. The app never performs that reset automatically. Saved settings and history are separate from this macOS approval.
+<details>
+<summary>Recover Screen Recording permission after an old development build</summary>
 
-For a problem report, include the app version/build from About, macOS version, provider/server version and model, the action you took, and the menu error. Do not include API keys or private screenshots. [Report a problem](https://github.com/colombod/smart-clipboard/issues/new).
+In **System Settings → Privacy & Security → Screen & System Audio Recording**, switch only Smart Clipboard off and on, accepting Quit & Reopen when offered. If needed, remove the old entry and add `/Applications/Smart Clipboard.app` again with **+**. Seek support for an app-specific reset if macOS will not remove it; do not reset other apps’ permissions. Saved settings and history are unaffected.
 
-Accessibility support is still being validated. See the [current accessibility assessment](ACCESSIBILITY.md) for known limits and tested behavior.
+</details>
+
+<details>
+<summary>Why notifications can disappear during screen sharing</summary>
+
+macOS can suppress banners and sounds while a display is shared, mirrored or recorded, even without Focus. Stop that session and retry. Allowing notifications while sharing is a system-wide privacy choice, not required for ordinary capture. Smart Clipboard’s Screen Recording permission alone does not mean it continuously records your screen.
+
+</details>
+
+[Report a problem](https://github.com/colombod/smart-clipboard/issues/new) with your build, macOS version, provider/model and the menu error. Leave out keys and private screenshots. [Accessibility status](ACCESSIBILITY.md) and [preview limitations](releases/v0.4.0-preview.md) remain available for known gaps.

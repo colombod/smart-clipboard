@@ -183,6 +183,21 @@ struct Shortcut: Codable, Equatable {
     var key: UInt32
     var modifiers: UInt32
     var label: String
-    static let region = Shortcut(key: 20, modifiers: UInt32(cmdKey | shiftKey | optionKey), label: "⌥⇧⌘3")
-    static let window = Shortcut(key: 21, modifiers: UInt32(cmdKey | shiftKey | optionKey), label: "⌥⇧⌘4")
+    static var region: Shortcut { captureDefault(window: false) }
+    static var window: Shortcut { captureDefault(window: true) }
+
+    static func captureDefault(window: Bool, modifiers: UInt32 = UInt32(cmdKey | controlKey),
+                               resolve: (String, UInt32) -> UInt32? = ShortcutKeyResolver.currentKey) -> Shortcut {
+        let letter = window ? "W" : "R"
+        let resolved = resolve(letter, modifiers)
+        let key = resolved ?? UInt32(window ? kVK_ANSI_W : kVK_ANSI_R)
+        var label = ""
+        for (flag, symbol) in [(controlKey, "⌃"), (optionKey, "⌥"), (shiftKey, "⇧"), (cmdKey, "⌘")] {
+            if modifiers & UInt32(flag) != 0 { label += symbol }
+        }
+        // If macOS supplies no usable layout, show the physical fallback honestly
+        // rather than label an unknown key as R/W. The recorder remains available.
+        label += resolved == nil ? L10n.text("Key \(key)") : letter
+        return Shortcut(key: key, modifiers: modifiers, label: label)
+    }
 }

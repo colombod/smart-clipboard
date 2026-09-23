@@ -2,6 +2,51 @@ import AppKit
 import Carbon
 import ClipboardCore
 
+/// Resolves only new defaults. Saved shortcuts remain physical key bindings.
+enum ShortcutKeyResolver {
+    static func key(for letter: String, modifiers: UInt32,
+                    translate: (UInt16, UInt32) -> String?) -> UInt32? {
+        guard letter.count == 1, letter.unicodeScalars.allSatisfy({ (65...90).contains($0.value) || (97...122).contains($0.value) }) else { return nil }
+        // Control produces control characters; Option produces symbols. Neither
+        // changes the letter named by a shortcut. Command must remain because
+        // layouts such as Dvorak-QWERTY-Command deliberately switch their map.
+        let lookupModifiers = modifiers & UInt32(cmdKey)
+        for code: UInt16 in 0...127 {
+            if translate(code, lookupModifiers)?.lowercased() == letter.lowercased() { return UInt32(code) }
+        }
+        return nil
+    }
+
+    static func layoutData(from source: TISInputSource) -> Data? {
+        guard let value = TISGetInputSourceProperty(source, kTISPropertyUnicodeKeyLayoutData) else { return nil }
+        return Unmanaged<CFData>.fromOpaque(value).takeUnretainedValue() as Data
+    }
+
+    static func currentKey(for letter: String, modifiers: UInt32) -> UInt32? {
+        guard let source = TISCopyCurrentASCIICapableKeyboardLayoutInputSource()?.takeRetainedValue(),
+              let data = layoutData(from: source) else { return nil }
+        return key(for: letter, modifiers: modifiers, layoutData: data, keyboardType: UInt32(LMGetKbdType()))
+    }
+
+    /// Layout bytes come from the operating system, not an imported/user file.
+    static func key(for letter: String, modifiers: UInt32, layoutData: Data, keyboardType: UInt32) -> UInt32? {
+        guard layoutData.count >= MemoryLayout<UCKeyboardLayout>.size else { return nil }
+        return layoutData.withUnsafeBytes { bytes in
+            guard let layout = bytes.baseAddress?.assumingMemoryBound(to: UCKeyboardLayout.self) else { return nil }
+            return key(for: letter, modifiers: modifiers) { code, flags in
+                var deadKeyState: UInt32 = 0
+                var length = 0
+                var characters = [UniChar](repeating: 0, count: 8)
+                let status = UCKeyTranslate(layout, code, UInt16(kUCKeyActionDown), (flags >> 8) & 0xff,
+                                            keyboardType, OptionBits(kUCKeyTranslateNoDeadKeysMask),
+                                            &deadKeyState, characters.count, &length, &characters)
+                guard status == noErr, length > 0 else { return nil }
+                return String(utf16CodeUnits: characters, count: length)
+            }
+        }
+    }
+}
+
 enum ShortcutRecorderInput {
     enum Action { case cancel, navigate, assistiveNavigation, record }
 

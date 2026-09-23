@@ -1,0 +1,46 @@
+{
+  "images" : [
+    {
+      "file" : "capture-settings.png",
+      "height" : 575,
+      "sample" : "Auto detect; Keep source language; top portion of General settings.",
+      "view" : "GeneralSettingsView",
+      "width" : 800
+    },
+    {
+      "file" : "local-connection.png",
+      "height" : 685,
+      "sample" : "Example localhost oMLX endpoint and 8B model; connection is explicitly unverified.",
+      "view" : "ConnectionSettingsView",
+      "width" : 800
+    },
+    {
+      "file" : "svg-tracing.png",
+      "height" : 670,
+      "sample" : "SVG; Trace on device; Photo; Balanced; top portion of General settings.",
+      "view" : "GeneralSettingsView",
+      "width" : 800
+    },
+    {
+      "file" : "history.png",
+      "height" : 330,
+      "sample" : "Two fictional notes, including source text, Markdown and French saved variants; fixed fictional dates.",
+      "view" : "HistoryView",
+      "width" : 860
+    },
+    {
+      "file" : "result.png",
+      "height" : 740,
+      "sample" : "Fictional Project note original and saved Markdown; manually authored sample output, no AI inference.",
+      "view" : "CaptureView",
+      "width" : 1000
+    }
+  ],
+  "isolation" : "In-memory defaults, temporary history, private pasteboard, fake hotkey backend and capture client, no presented windows, no global shortcuts, no screen capture, no credentials, no network or AI calls. Editor readiness is simulated.",
+  "provenance" : "Offscreen renders of actual repository SwiftUI/AppKit views. Sample settings and fictional notes only. These are documentation illustrations, not screenshots of a user session or native UAT evidence.",
+  "rendering" : "English, light appearance, unattached NSHostingView, native view-sized PNG capture. No fabricated window chrome and no bitmap cropping or editing. AppKit may allocate an invisible internal TUINSWindow for controls; all rendered hosts remain windowless and no window is presented.",
+  "reproduce" : "SMART_CLIPBOARD_DOC_SCREENSHOTS=\"$PWD/docs/images\" swift test --filter DocumentationScreenshotTests",
+  "schema" : 1,
+  "sourceBuild" : "15",
+  "sourceVersion" : "0.4.0"
+}
