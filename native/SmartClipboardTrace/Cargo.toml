@@ -1,0 +1,21 @@
+[package]
+name = "smart-clipboard-trace"
+version = "1.0.0"
+edition = "2021"
+publish = false
+license = "MIT"
+
+[[bin]]
+name = "SmartClipboardTrace"
+path = "src/main.rs"
+
+[dependencies]
+vtracer = "=0.6.5"
+image = { version = "=0.23.14", default-features = false, features = ["png"] }
+libc = "0.2"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = "symbols"
+panic = "abort"

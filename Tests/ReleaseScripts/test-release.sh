@@ -6,6 +6,7 @@ REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 TEST_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/smart-clipboard-release-tests.XXXXXX")"
 trap 'rm -rf "$TEST_ROOT"' EXIT
 mkdir -p "$TEST_ROOT/bin"
+ln -s "$(command -v uv)" "$TEST_ROOT/bin/uv"
 printf 'public certificate fixture\n' > "$TEST_ROOT/certificate.der"
 printf 'other public certificate fixture\n' > "$TEST_ROOT/other-certificate.der"
 FIXTURE_SHA="$(shasum -a 1 "$TEST_ROOT/certificate.der" | awk '{print toupper($1)}')"
@@ -28,6 +29,7 @@ case "$tool" in
             mkdir -p "$CASE_ROOT/bin-output/SmartClipboard_ClipboardCore.bundle/en.lproj"
             printf '"Settings" = "Settings";\n' > "$CASE_ROOT/bin-output/SmartClipboard_ClipboardCore.bundle/en.lproj/Localizable.strings"
             printf '#!/bin/sh\nexit 0\n' > "$CASE_ROOT/bin-output/SmartClipboard"
+            if [[ "${MOCK_HOME_PATH:-false}" == true ]]; then printf '/Users/private-build-fixture/source.o\n' >> "$CASE_ROOT/bin-output/SmartClipboard"; fi
             chmod +x "$CASE_ROOT/bin-output/SmartClipboard"
             framework="$CASE_ROOT/bin-output/Sparkle.framework"
             mkdir -p "$framework/Versions/B/Resources" "$framework/Versions/B/XPCServices/Installer.xpc" "$framework/Versions/B/XPCServices/Downloader.xpc" "$framework/Versions/B/Updater.app"
@@ -40,12 +42,14 @@ case "$tool" in
     iconutil) printf 'icon fixture' > "${@: -1}" ;;
     otool) printf 'Load command 1\n          cmd LC_RPATH\n      cmdsize 48\n         path @executable_path/../Frameworks (offset 12)\n' ;;
     install_name_tool) : ;;
+    strip) : ;;
     codesign)
         if [[ "$1" == --verify ]]; then [[ "${MOCK_VERIFY_FAIL:-false}" != true ]]; exit; fi
         if [[ "$1" == --display ]]; then
             if [[ "${2:-}" == --extract-certificates=* ]]; then
                 fixture="$TEST_ROOT/certificate.der"
                 if [[ "${MOCK_CERT_MISMATCH:-false}" == true ]]; then fixture="$TEST_ROOT/other-certificate.der"; fi
+                if [[ "${MOCK_HELPER_CERT_MISMATCH:-false}" == true && "${@: -1}" == */Helpers/SmartClipboardTrace ]]; then fixture="$TEST_ROOT/other-certificate.der"; fi
                 prefix="${2#--extract-certificates=}"
                 cp "$fixture" "${prefix}0"
             elif [[ "${2:-}" == --extract-certificates ]]; then
@@ -97,7 +101,7 @@ case "$tool" in
 esac
 FAKE
 chmod +x "$TEST_ROOT/bin/fake"
-for tool in security swift iconutil codesign hdiutil spctl xcrun otool install_name_tool; do ln -s fake "$TEST_ROOT/bin/$tool"; done
+for tool in security swift iconutil codesign hdiutil spctl xcrun otool install_name_tool strip; do ln -s fake "$TEST_ROOT/bin/$tool"; done
 export PATH="$TEST_ROOT/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 export SIGNING_IDENTITY="$FIXTURE_SHA" NOTARY_PROFILE=fixture-profile NOTARY_TIMEOUT=1s
 
@@ -107,6 +111,19 @@ new_case() {
     cp "$REPO/scripts/build-app.sh" "$REPO/scripts/embed-sparkle.sh" "$REPO/scripts/package-release.sh" "$REPO/scripts/notarize-release.sh" "$REPO/scripts/compare-bundles.py" "$CASE_ROOT/scripts/"
     cp "$REPO/Resources/Info.plist" "$CASE_ROOT/Resources/"
     cp "$REPO/Resources/ThirdPartyNotices.txt" "$CASE_ROOT/Resources/"
+    mkdir -p "$CASE_ROOT/native/SmartClipboardTrace"
+    printf 'Trace dependency notices fixture\n' > "$CASE_ROOT/native/SmartClipboardTrace/THIRD_PARTY_NOTICES.txt"
+    printf 'Trace dependency lock fixture\n' > "$CASE_ROOT/native/SmartClipboardTrace/Cargo.lock"
+    cat > "$CASE_ROOT/scripts/build-tracer.sh" <<'TRACER'
+#!/bin/bash
+set -euo pipefail
+printf 'trace-build\n' >> "$CASE_ROOT/commands.log"
+mkdir -p "$CASE_ROOT/trace-output"
+printf '#!/bin/sh\nprintf '\''{"engine":"vtracer","version":"0.6.5"}\\n'\''\n' > "$CASE_ROOT/trace-output/SmartClipboardTrace"
+chmod +x "$CASE_ROOT/trace-output/SmartClipboardTrace"
+printf '%s\n' "$CASE_ROOT/trace-output/SmartClipboardTrace"
+TRACER
+    chmod +x "$CASE_ROOT/scripts/build-tracer.sh"
     cp -R "$REPO/Resources/en.lproj" "$CASE_ROOT/Resources/"
     cp "$REPO/docs/INSTALL.txt" "$CASE_ROOT/docs/"
     : > "$CASE_ROOT/commands.log"
@@ -133,19 +150,26 @@ if /usr/libexec/PlistBuddy -c 'Print :NSAppTransportSecurity:NSAllowsArbitraryLo
     echo 'Packaged app must not disable transport security globally.' >&2
     exit 1
 fi
-assert_count "$CASE_ROOT/commands.log" '^swift build -c release --disable-sandbox$' 1
+assert_count "$CASE_ROOT/commands.log" '^swift build -c release --disable-sandbox ' 1
 assert_count "$CASE_ROOT/submissions.log" '^app$' 1
 assert_count "$CASE_ROOT/submissions.log" '^dmg$' 1
 assert_count "$CASE_ROOT/commands.log" '^spctl ' 2
 assert_count "$CASE_ROOT/commands.log" '^codesign --force .*--preserve-metadata=entitlements .*Downloader.xpc$' 1
 assert_count "$CASE_ROOT/commands.log" '^codesign --force .*--deep' 0
 [[ -L "$CASE_ROOT/dist/Smart Clipboard.app/Contents/Frameworks/Sparkle.framework/Versions/Current" ]]
-python3 - "$CASE_ROOT/commands.log" <<'PY'
-import pathlib, sys
+uv run --no-project python - "$CASE_ROOT/commands.log" <<'PY'
+import pathlib, shlex, sys
 lines = pathlib.Path(sys.argv[1]).read_text().splitlines()
 signed = [line for line in lines if line.startswith('codesign --force')]
-expected = ['Installer.xpc', 'Downloader.xpc', 'Autoupdate', 'Updater.app', 'Sparkle.framework', 'Clipboard.app']
+expected = ['Installer.xpc', 'Downloader.xpc', 'Autoupdate', 'Updater.app', 'Sparkle.framework', 'SmartClipboardTrace', 'Clipboard.app']
 assert all(signed[i].endswith(suffix) for i, suffix in enumerate(expected)), signed
+build = shlex.split(next(line for line in lines if line.startswith('swift build -c release --disable-sandbox ')))
+assert build.count('-file-prefix-map') == 2 and build.count('-debug-prefix-map') == 2
+assert len([arg for arg in build if arg.startswith('-ffile-prefix-map=')]) == 2
+assert len([arg for arg in build if arg.startswith('-fdebug-prefix-map=')]) == 2
+strip = next(i for i, line in enumerate(lines) if line.startswith('strip -S '))
+sign = next(i for i, line in enumerate(lines) if line.startswith('codesign --force'))
+assert strip < sign
 PY
 (cd "$CASE_ROOT/dist" && shasum -a 256 -c SHA256SUMS.txt >/dev/null)
 [[ "$(cat "$CASE_ROOT/dist/notarization-release/dmg-input.sha256")" != "$(cat "$CASE_ROOT/dist/notarization-release/dmg-final.sha256")" ]]
@@ -164,7 +188,7 @@ unset MOCK_PENDING_STAGE
 run_release --resume
 assert_count "$CASE_ROOT/submissions.log" '^app$' 1
 assert_count "$CASE_ROOT/submissions.log" '^dmg$' 1
-assert_count "$CASE_ROOT/commands.log" '^swift build -c release --disable-sandbox$' 1
+assert_count "$CASE_ROOT/commands.log" '^swift build -c release --disable-sandbox ' 1
 echo 'PASS app timeout resumes without rebuilding or resubmitting'
 
 new_case dmg-pending
@@ -218,6 +242,32 @@ must_fail run_release --resume
 assert_count "$CASE_ROOT/submissions.log" '^app$' 1
 echo 'PASS changed executable cannot resume an existing submission'
 
+new_case helper-certificate
+export MOCK_HELPER_CERT_MISMATCH=true
+must_fail run_release
+[[ ! -e "$CASE_ROOT/submissions.log" ]]
+unset MOCK_HELPER_CERT_MISMATCH
+echo 'PASS mismatched native helper certificate prevents submission'
+
+new_case private-build-path
+export MOCK_HOME_PATH=true
+must_fail run_release
+unset MOCK_HOME_PATH
+[[ ! -e "$CASE_ROOT/submissions.log" ]]
+assert_count "$CASE_ROOT/commands.log" '^codesign --force ' 0
+[[ "$(cat "$CASE_ROOT/output.log")" == *'Build privacy check failed'* ]]
+echo 'PASS embedded private build paths prevent signing and submission'
+
+new_case changed-helper-resume
+export MOCK_PENDING_STAGE=app
+must_fail run_release
+unset MOCK_PENDING_STAGE
+printf 'changed\n' >> "$CASE_ROOT/dist/Smart Clipboard.app/Contents/Helpers/SmartClipboardTrace"
+must_fail run_release --resume
+assert_count "$CASE_ROOT/submissions.log" '^app$' 1
+assert_count "$CASE_ROOT/commands.log" '^trace-build$' 1
+echo 'PASS changed native helper cannot resume an existing submission'
+
 new_case gatekeeper-failure
 export MOCK_ASSESS_FAIL=true
 must_fail run_release
@@ -229,10 +279,10 @@ echo 'PASS Gatekeeper rejection prevents completion/checksums'
 new_case preview
 SIGNING_IDENTITY='' "$CASE_ROOT/scripts/package-release.sh" > "$CASE_ROOT/output.log" 2>&1
 [[ -f "$CASE_ROOT/dist/SHA256SUMS.txt" ]]
-assert_count "$CASE_ROOT/commands.log" '^codesign --force --sign - ' 1
+assert_count "$CASE_ROOT/commands.log" '^codesign --force --sign - ' 2
 assert_count "$CASE_ROOT/commands.log" '^xcrun ' 0
 "$CASE_ROOT/scripts/package-release.sh" --existing-build > "$CASE_ROOT/output.log" 2>&1
-assert_count "$CASE_ROOT/commands.log" '^swift build -c release --disable-sandbox$' 1
+assert_count "$CASE_ROOT/commands.log" '^swift build -c release --disable-sandbox ' 1
 export MOCK_VERIFY_FAIL=true
 must_fail "$CASE_ROOT/scripts/package-release.sh" --existing-build > "$CASE_ROOT/output.log" 2>&1
 unset MOCK_VERIFY_FAIL

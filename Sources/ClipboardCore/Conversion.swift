@@ -101,6 +101,7 @@ public enum ConversionProtocol {
             do { guard try Yams.compose(yaml: result.content) != nil else { throw ClipError.message(L10n.text("Empty YAML")) } }
             catch { throw ClipError.message(L10n.text("The extracted YAML is invalid. Try converting again with more specific instructions.")) }
         }
+        if result.format == .svg { try SVGValidator.validate(result.content) }
         return result
     }
 

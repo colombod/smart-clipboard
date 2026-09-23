@@ -10,12 +10,23 @@ enum CaptureFeedback: Equatable {
     case failed
 }
 
+private enum ConversionRoute: Equatable {
+    case ai, appleVision, trace(TraceSettings)
+    var requiresAI: Bool { self == .ai }
+    var method: ConversionMethod {
+        switch self { case .ai: return .ai; case .appleVision: return .appleVision; case .trace: return .vtracer }
+    }
+    var settings: TraceSettings? { if case .trace(let settings) = self { return settings }; return nil }
+}
+
 @MainActor final class AppModel: ObservableObject {
     @Published var png: Data?
     @Published var output = ""
     @Published var resultFormat: OutputFormat = .text
     @Published var format: OutputFormat = .auto
     @Published var outputLanguage: OutputLanguage = .source
+    @Published var svgMethod: SVGMethod = .ai
+    @Published var traceSettings = TraceSettings()
     @Published private(set) var resultOutputLanguage: String?
     @Published var instruction = ""
     @Published var busy = false
@@ -34,6 +45,10 @@ enum CaptureFeedback: Equatable {
     @Published var defaultFormat: OutputFormat { didSet { defaults.set(defaultFormat.rawValue, forKey: "defaultFormat") } }
     @Published var defaultInstruction: String { didSet { defaults.set(defaultInstruction, forKey: "defaultInstruction") } }
     @Published var defaultOutputLanguage: OutputLanguage { didSet { defaults.set(defaultOutputLanguage.rawValue, forKey: "defaultOutputLanguage") } }
+    @Published var defaultSVGMethod: SVGMethod { didSet { defaults.set(defaultSVGMethod.rawValue, forKey: "defaultSVGMethod") } }
+    @Published var defaultTraceSettings: TraceSettings { didSet { defaults.set(try? JSONEncoder().encode(defaultTraceSettings), forKey: "defaultTraceSettings") } }
+    var usesTracing: Bool { format == .svg && svgMethod == .trace }
+    var defaultUsesTracing: Bool { defaultFormat == .svg && defaultSVGMethod == .trace }
     @Published var copyAutomatically: Bool { didSet { defaults.set(copyAutomatically, forKey: "copyAutomatically") } }
     @Published var regionShortcut: Shortcut
     @Published var windowShortcut: Shortcut
@@ -44,8 +59,17 @@ enum CaptureFeedback: Equatable {
     private var resultInstruction = ""
     private var resultProvenance: ConversionProvenance?
     private var uneditedOutput = ""
+    private var resultMethod: ConversionMethod = .ai
+    private var resultTraceSettings: TraceSettings?
+    private var persistedOutput: String?
+    private var persistedVariantID: String?
+    private var validatedSVG: String?
     var resultOrigin: String? {
         guard let provenance = resultProvenance else { return nil }
+        if provenance.providerID == "vtracer" {
+            let origin = L10n.text("Local tracing") + " · VTracer " + (provenance.effectiveModel ?? provenance.requestedModel)
+            return provenance.userEdited ? L10n.text("\(origin) · Edited") : origin
+        }
         let provider = AIProvider(rawValue: provenance.providerID)?.title ?? L10n.text("On-device text extraction")
         let model = provenance.effectiveModel ?? (provenance.requestedModel.isEmpty ? L10n.text("Default model") : provenance.requestedModel)
         let origin = provenance.providerID == "apple-vision" ? provider : "\(provider) · \(model)"
@@ -62,6 +86,7 @@ enum CaptureFeedback: Equatable {
     private let presentsWindows: Bool
     private let conversionOverride: ((Data, OutputFormat, String, Bool) async throws -> ConversionResult)?
     private let providerConversionOverride: ((Data, ConnectionProfile, OutputFormat, String) async throws -> ProviderConversion)?
+    private let traceOverride: ((Data, TraceSettings) async throws -> VectorTraceResult)?
     private let captureClient: CaptureClient
     private let registersHotkeys: Bool
     private let systemLanguage: () -> String
@@ -105,11 +130,12 @@ enum CaptureFeedback: Equatable {
     private var panel: NSWindow?
     private var settings: NSWindow?
 
-    init(defaults: UserDefaults = .standard, historyDirectory: URL? = nil, registerHotkeys: Bool = true, hotkeyManager: HotKeyManager? = nil, captureClient: CaptureClient? = nil, pasteboard: NSPasteboard? = nil, presentsWindows: Bool = true, conversionOverride: ((Data, OutputFormat, String, Bool) async throws -> ConversionResult)? = nil, providerConversionOverride: ((Data, ConnectionProfile, OutputFormat, String) async throws -> ProviderConversion)? = nil, systemLanguage: @escaping () -> String = { OutputLanguage.systemLanguageIdentifier }) {
+    init(defaults: UserDefaults = .standard, historyDirectory: URL? = nil, registerHotkeys: Bool = true, hotkeyManager: HotKeyManager? = nil, captureClient: CaptureClient? = nil, pasteboard: NSPasteboard? = nil, presentsWindows: Bool = true, conversionOverride: ((Data, OutputFormat, String, Bool) async throws -> ConversionResult)? = nil, providerConversionOverride: ((Data, ConnectionProfile, OutputFormat, String) async throws -> ProviderConversion)? = nil, traceOverride: ((Data, TraceSettings) async throws -> VectorTraceResult)? = nil, systemLanguage: @escaping () -> String = { OutputLanguage.systemLanguageIdentifier }) {
         self.pasteboard = pasteboard ?? .general
         self.presentsWindows = presentsWindows
         self.conversionOverride = conversionOverride
         self.providerConversionOverride = providerConversionOverride
+        self.traceOverride = traceOverride
         self.captureClient = captureClient ?? CaptureClient()
         self.hotkeys = hotkeyManager ?? HotKeyManager()
         self.registersHotkeys = registerHotkeys
@@ -118,6 +144,8 @@ enum CaptureFeedback: Equatable {
         self.connections = ConnectionStore(defaults: defaults)
         historyLimit = defaults.object(forKey: "historyLimit") == nil ? HistoryStore.defaultLimit : min(max(0, defaults.integer(forKey: "historyLimit")), HistoryStore.maximumLimit)
         defaultFormat = OutputFormat(rawValue: defaults.string(forKey: "defaultFormat") ?? "") ?? .auto
+        defaultSVGMethod = SVGMethod(rawValue: defaults.string(forKey: "defaultSVGMethod") ?? "") ?? .ai
+        defaultTraceSettings = defaults.data(forKey: "defaultTraceSettings").flatMap { try? JSONDecoder().decode(TraceSettings.self, from: $0) } ?? TraceSettings()
         let savedDirection = defaults.string(forKey: "defaultInstruction") ?? ""
         defaultInstruction = savedDirection
         if let savedLanguage = defaults.string(forKey: "defaultOutputLanguage") {
@@ -131,6 +159,8 @@ enum CaptureFeedback: Equatable {
         copyAutomatically = defaults.bool(forKey: "copyAutomatically")
         regionShortcut = Self.loadShortcut("regionShortcut", defaults: defaults) ?? .region
         windowShortcut = Self.loadShortcut("windowShortcut", defaults: defaults) ?? .window
+        svgMethod = defaultSVGMethod
+        traceSettings = defaultTraceSettings
         hotkeys.handler = { [weak self] id in
             guard let self else { return }
             let time = Date().formatted(date: .omitted, time: .standard)
@@ -206,8 +236,10 @@ enum CaptureFeedback: Equatable {
     func capture(window: Bool = false) {
         guard !capturing, !busy else { return }
         let preferred = defaultFormat, direction = defaultInstruction
-        let language = defaultOutputLanguage, resolvedLanguage = defaultOutputLanguage.resolvedIdentifier(systemLanguage: systemLanguage())
-        guard let profile = selectedProfile(requiresAI: preferred != .image) else { return }
+        let route: ConversionRoute = defaultUsesTracing ? .trace(defaultTraceSettings) : .ai
+        let language = route.settings == nil ? defaultOutputLanguage : .source
+        let resolvedLanguage = language.resolvedIdentifier(systemLanguage: systemLanguage())
+        guard let profile = selectedProfile(requiresAI: preferred != .image && route.requiresAI) else { return }
         refreshReadiness()
         capturing = true; error = nil; notice = ""
         persistCurrentOutput()
@@ -221,7 +253,7 @@ enum CaptureFeedback: Equatable {
                 }) else { setOperationNotice(.captureCancelled); return }
                 try Task.checkCancellation()
                 capturing = false
-                try await finishCapture(data, source: window ? L10n.text("Window capture") : L10n.text("Region capture"), preferred: preferred, direction: direction, profile: profile, language: language, resolvedLanguage: resolvedLanguage)
+                try await finishCapture(data, source: window ? L10n.text("Window capture") : L10n.text("Region capture"), preferred: preferred, direction: direction, profile: profile, language: language, resolvedLanguage: resolvedLanguage, route: route)
             } catch is CancellationError { setOperationNotice(.captureCancelled) }
             catch {
                 if Task.isCancelled { setOperationNotice(.captureCancelled) }
@@ -232,8 +264,10 @@ enum CaptureFeedback: Equatable {
     func importImage() {
         guard !busy, !capturing, !choosingFile else { return }
         let preferred = defaultFormat, direction = defaultInstruction
-        let language = defaultOutputLanguage, resolvedLanguage = defaultOutputLanguage.resolvedIdentifier(systemLanguage: systemLanguage())
-        guard let profile = selectedProfile(requiresAI: preferred != .image) else { return }
+        let route: ConversionRoute = defaultUsesTracing ? .trace(defaultTraceSettings) : .ai
+        let language = route.settings == nil ? defaultOutputLanguage : .source
+        let resolvedLanguage = language.resolvedIdentifier(systemLanguage: systemLanguage())
+        guard let profile = selectedProfile(requiresAI: preferred != .image && route.requiresAI) else { return }
         let picker = NSOpenPanel(); picker.allowedContentTypes = [.png, .jpeg, .tiff, .heic]; picker.canChooseDirectories = false
         choosingFile = true
         defer { choosingFile = false }
@@ -241,21 +275,22 @@ enum CaptureFeedback: Equatable {
         do {
             let data = try Data(contentsOf: url)
             guard let bitmap = NSBitmapImageRep(data: data), let normalized = bitmap.representation(using: .png, properties: [:]) else { throw ClipError.message(L10n.text("Could not read this image.")) }
-            startImportedImage(normalized, source: url.lastPathComponent, profile: profile, preferred: preferred, direction: direction, language: language, resolvedLanguage: resolvedLanguage)
+            startImportedImage(normalized, source: url.lastPathComponent, profile: profile, preferred: preferred, direction: direction, language: language, resolvedLanguage: resolvedLanguage, route: route)
         } catch { reportOperationFailure(error.localizedDescription) }
     }
     func processImportedImage(_ data: Data, source: String, profile: ConnectionProfile? = nil, preferred: OutputFormat? = nil, direction: String? = nil, language: OutputLanguage? = nil) {
         guard !busy, !capturing else { return }
         let preferred = preferred ?? defaultFormat, direction = direction ?? defaultInstruction
-        guard let profile = profile ?? selectedProfile(requiresAI: preferred != .image) else { return }
-        let language = language ?? defaultOutputLanguage
-        startImportedImage(data, source: source, profile: profile, preferred: preferred, direction: direction, language: language, resolvedLanguage: language.resolvedIdentifier(systemLanguage: systemLanguage()))
+        let route: ConversionRoute = preferred == .svg && defaultSVGMethod == .trace ? .trace(defaultTraceSettings) : .ai
+        guard let profile = profile ?? selectedProfile(requiresAI: preferred != .image && route.requiresAI) else { return }
+        let language = route.settings == nil ? (language ?? defaultOutputLanguage) : .source
+        startImportedImage(data, source: source, profile: profile, preferred: preferred, direction: direction, language: language, resolvedLanguage: language.resolvedIdentifier(systemLanguage: systemLanguage()), route: route)
     }
-    private func startImportedImage(_ data: Data, source: String, profile: ConnectionProfile, preferred: OutputFormat, direction: String, language: OutputLanguage, resolvedLanguage: String?) {
+    private func startImportedImage(_ data: Data, source: String, profile: ConnectionProfile, preferred: OutputFormat, direction: String, language: OutputLanguage, resolvedLanguage: String?, route: ConversionRoute) {
         busy = true
         task = Task {
             defer { busy = false; task = nil }
-            do { try await finishCapture(data, source: source, preferred: preferred, direction: direction, profile: profile, language: language, resolvedLanguage: resolvedLanguage) }
+            do { try await finishCapture(data, source: source, preferred: preferred, direction: direction, profile: profile, language: language, resolvedLanguage: resolvedLanguage, route: route) }
             catch is CancellationError { setOperationNotice(.conversionCancelled) }
             catch {
                 if Task.isCancelled { setOperationNotice(.conversionCancelled) }
@@ -263,39 +298,50 @@ enum CaptureFeedback: Equatable {
             }
         }
     }
-    private func finishCapture(_ data: Data, source: String, preferred: OutputFormat, direction: String, profile: ConnectionProfile, language: OutputLanguage, resolvedLanguage: String?) async throws {
+    private func finishCapture(_ data: Data, source: String, preferred: OutputFormat, direction: String, profile: ConnectionProfile, language: OutputLanguage, resolvedLanguage: String?, route: ConversionRoute) async throws {
         try Task.checkCancellation()
         acceptCapture(data, source: source)
         format = preferred; instruction = direction; outputLanguage = language
+        svgMethod = route.settings == nil ? .ai : .trace
+        if let settings = route.settings { traceSettings = settings }
         if preferred == .image { copyImage(); return }
         busy = true
-        try await convertCurrent(local: false, shouldCopy: true, profile: profile, requested: preferred, extra: direction, resolvedLanguage: resolvedLanguage)
+        try await convertCurrent(route: route, shouldCopy: true, profile: profile, requested: preferred, extra: direction, resolvedLanguage: resolvedLanguage)
         // Success stays in the menu bar so the user can paste into the app they were using.
     }
     func convert(local: Bool = false) {
         guard png != nil, !busy, !capturing else { return }
         if format == .image && !local { copyImage(); return }
         let shouldCopy = copyAutomatically
-        guard let profile = selectedProfile(requiresAI: !local) else { return }
+        let route: ConversionRoute = local ? .appleVision : (usesTracing ? .trace(traceSettings) : .ai)
+        guard let profile = selectedProfile(requiresAI: route.requiresAI) else { return }
         let requested = format, extra = instruction
-        let resolvedLanguage = local ? nil : outputLanguage.resolvedIdentifier(systemLanguage: systemLanguage())
+        let resolvedLanguage = route.requiresAI ? outputLanguage.resolvedIdentifier(systemLanguage: systemLanguage()) : nil
         error = nil; busy = true
         task = Task {
             defer { busy = false; task = nil }
-            do { try await convertCurrent(local: local, shouldCopy: shouldCopy, profile: profile, requested: requested, extra: extra, resolvedLanguage: resolvedLanguage) }
+            do { try await convertCurrent(route: route, shouldCopy: shouldCopy, profile: profile, requested: requested, extra: extra, resolvedLanguage: resolvedLanguage) }
             catch is CancellationError { setOperationNotice(.conversionCancelled) }
             catch { if Task.isCancelled { setOperationNotice(.conversionCancelled) } else { reportOperationFailure(error.localizedDescription) } }
         }
     }
-    private func convertCurrent(local: Bool, shouldCopy: Bool, profile: ConnectionProfile, requested: OutputFormat, extra: String, resolvedLanguage: String?) async throws {
+    private func convertCurrent(route: ConversionRoute, shouldCopy: Bool, profile: ConnectionProfile, requested: OutputFormat, extra: String, resolvedLanguage: String?) async throws {
         guard let png else { return }
         persistCurrentOutput()
         // Keep a history-save warning visible even when conversion itself succeeds.
-        notice = ""; output = ""
+        notice = ""; output = ""; persistedOutput = nil; persistedVariantID = nil
         let result: ConversionResult
+        let local = route == .appleVision
         let providerInstruction = local ? extra : OutputLanguage.instruction(userInstruction: extra, resolvedIdentifier: resolvedLanguage)
         var effectiveModel: String?
-        if let conversionOverride { result = try await conversionOverride(png, requested, providerInstruction, local) }
+        if let settings = route.settings {
+            let traced: VectorTraceResult
+            if let traceOverride { traced = try await traceOverride(png, settings) }
+            else { traced = try await VectorTraceService().trace(png: png, settings: settings) }
+            result = ConversionResult(format: .svg, content: traced.svg)
+            effectiveModel = traced.engineVersion
+        }
+        else if let conversionOverride { result = try await conversionOverride(png, requested, providerInstruction, local) }
         else if local { result = ConversionResult(format: .text, content: try await CaptureService.recognize(png)) }
         else {
             let converted: ProviderConversion
@@ -304,9 +350,12 @@ enum CaptureFeedback: Equatable {
             result = converted.result; effectiveModel = converted.model
         }
         try Task.checkCancellation()
-        resultFormat = result.format; output = result.content; resultInstruction = extra; resultOutputLanguage = resolvedLanguage
+        if result.format == .svg { try validateSVG(result.content) }
+        resultMethod = route.method; resultTraceSettings = route.settings
+        resultFormat = result.format; output = result.content; resultInstruction = route.settings == nil ? extra : ""; resultOutputLanguage = resolvedLanguage
         uneditedOutput = output
-        resultProvenance = local ? ConversionProvenance(providerID: "apple-vision") : ConversionProvenance(providerID: profile.provider.rawValue, profileID: profile.id, requestedModel: profile.model, effectiveModel: effectiveModel)
+        if route.settings != nil { resultProvenance = ConversionProvenance(providerID: "vtracer", effectiveModel: effectiveModel) }
+        else { resultProvenance = local ? ConversionProvenance(providerID: "apple-vision") : ConversionProvenance(providerID: profile.provider.rawValue, profileID: profile.id, requestedModel: profile.model, effectiveModel: effectiveModel) }
         persistCurrentOutput()
         if shouldCopy { copyOutput() }
     }
@@ -325,12 +374,19 @@ enum CaptureFeedback: Equatable {
         operationFeedback?(.failed)
     }
     func clear() { guard !busy, !capturing else { return }; persistCurrentOutput(); resetCurrent() }
-    private func resetCurrent() { activeHistoryID = nil; png = nil; output = ""; instruction = ""; notice = ""; resultProvenance = nil; uneditedOutput = ""; resultOutputLanguage = nil; outputLanguage = defaultOutputLanguage }
+    private func resetCurrent() {
+        activeHistoryID = nil; png = nil; output = ""; instruction = ""; notice = ""; resultProvenance = nil; uneditedOutput = ""
+        resultOutputLanguage = nil; outputLanguage = defaultOutputLanguage
+        resultMethod = .ai; resultTraceSettings = nil; persistedOutput = nil; persistedVariantID = nil; validatedSVG = nil
+        svgMethod = defaultSVGMethod; traceSettings = defaultTraceSettings
+    }
     func acceptCapture(_ data: Data, source: String) {
         persistCurrentOutput()
         png = data; output = ""; instruction = ""; format = defaultFormat; error = nil; notice = ""; activeHistoryID = nil
         resultProvenance = nil; uneditedOutput = ""
         resultOutputLanguage = nil; outputLanguage = defaultOutputLanguage
+        resultMethod = .ai; resultTraceSettings = nil; persistedOutput = nil; persistedVariantID = nil; validatedSVG = nil
+        svgMethod = defaultSVGMethod; traceSettings = defaultTraceSettings
         do {
             guard let historyStore else { throw ClipError.message(L10n.text("History storage is unavailable. Check the local history folder before saving more clips.")) }
             activeHistoryID = try historyStore.add(png: data, source: source)?.id
@@ -345,10 +401,20 @@ enum CaptureFeedback: Equatable {
     }
     func persistCurrentOutput() {
         guard let id = activeHistoryID, !output.isEmpty else { return }
-        let existing = history.first(where: { $0.id == id })?.conversions.last(where: { $0.format == resultFormat && $0.outputLanguage == resultOutputLanguage })
+        if resultFormat == .svg {
+            do { try validateSVG(output) }
+            catch { self.error = error.localizedDescription; return }
+        }
         if output != uneditedOutput { resultProvenance?.userEdited = true }
-        guard existing?.content != output || existing?.instruction != resultInstruction || existing?.provenance != resultProvenance else { return }
-        do { try historyStore?.save(SavedConversion(format: resultFormat, content: output, instruction: resultInstruction, provenance: resultProvenance, outputLanguage: resultOutputLanguage), for: id) }
+        let saved = SavedConversion(format: resultFormat, content: output, instruction: resultInstruction, provenance: resultProvenance, outputLanguage: resultOutputLanguage, method: resultMethod, traceSettings: resultTraceSettings)
+        let existing = history.first(where: { $0.id == id })?.conversions.last(where: { $0.id == saved.id })
+        let unchangedContent = existing?.content == output || (persistedVariantID == saved.id && persistedOutput == output)
+        guard !unchangedContent || existing?.instruction != resultInstruction || existing?.provenance != resultProvenance else { return }
+        do {
+            guard let historyStore else { throw ClipError.message(L10n.text("History storage is unavailable.")) }
+            try historyStore.save(saved, for: id)
+            persistedOutput = output; persistedVariantID = saved.id
+        }
         catch { self.error = L10n.text("Could not save the result in history: \(error.localizedDescription)") }
         refreshHistory()
     }
@@ -362,7 +428,14 @@ enum CaptureFeedback: Equatable {
             activeHistoryID = current.id; png = data; output = ""; instruction = ""; format = defaultFormat; error = nil
             resultProvenance = nil; uneditedOutput = ""
             resultOutputLanguage = nil; outputLanguage = defaultOutputLanguage
-            if let result = current.conversions.last { loadSavedConversion(result) }
+            resultMethod = .ai; resultTraceSettings = nil; persistedOutput = nil; persistedVariantID = nil
+            svgMethod = defaultSVGMethod; traceSettings = defaultTraceSettings
+            if let result = current.conversions.last {
+                // A broken result must not hide an intact original or prevent
+                // choosing another saved version and trying the conversion again.
+                do { try loadSavedConversion(result) }
+                catch { self.error = error.localizedDescription }
+            }
             notice = L10n.text("Opened saved capture. Choose a format and language to convert the original again.")
             if showWindow { showPanel() }
         } catch { self.error = error.localizedDescription }
@@ -371,13 +444,22 @@ enum CaptureFeedback: Equatable {
     func useSavedConversion(_ result: SavedConversion) {
         guard !busy else { return }
         persistCurrentOutput()
-        loadSavedConversion(result)
-        notice = L10n.text("Loaded saved \(result.format.title).")
+        do {
+            try loadSavedConversion(result)
+            notice = L10n.text("Loaded saved \(result.format.title).")
+        } catch { self.error = error.localizedDescription }
     }
-    private func loadSavedConversion(_ result: SavedConversion) {
-        resultFormat = result.format; output = result.content; instruction = result.instruction; resultInstruction = result.instruction; format = result.format
-        resultProvenance = result.provenance; uneditedOutput = result.content
+    private func loadSavedConversion(_ result: SavedConversion) throws {
+        guard let id = activeHistoryID, let historyStore else { return }
+        let content = try historyStore.content(for: result, in: id)
+        if result.format == .svg { try validateSVG(content) }
+        resultFormat = result.format; output = content; instruction = result.instruction; resultInstruction = result.instruction; format = result.format
+        resultProvenance = result.provenance; uneditedOutput = content
         resultOutputLanguage = result.outputLanguage; outputLanguage = .fromResolvedIdentifier(result.outputLanguage)
+        resultMethod = result.method; resultTraceSettings = result.traceSettings
+        svgMethod = result.method == .vtracer ? .trace : .ai
+        traceSettings = result.traceSettings ?? defaultTraceSettings
+        persistedOutput = content; persistedVariantID = result.id
     }
     func historyImageURL(_ entry: HistoryEntry) -> URL? { historyStore?.imageURL(for: entry.id) }
     func setHistoryLimit(_ value: Int) {
@@ -432,8 +514,12 @@ enum CaptureFeedback: Equatable {
         operationFeedback?(.copied(.image))
     }
     func copyOutput() {
-        persistCurrentOutput()
         guard !output.isEmpty else { return }
+        if resultFormat == .svg {
+            do { try validateSVG(output) }
+            catch { reportOperationFailure(error.localizedDescription); return }
+        }
+        persistCurrentOutput()
         // Keep generated markup inert; don't put unreviewed HTML on the rich-text pasteboard.
         guard ClipboardWriter.writeText(output, to: pasteboard) else {
             reportOperationFailure(L10n.text("Could not copy the result. Try Copy again.")); return
@@ -443,6 +529,10 @@ enum CaptureFeedback: Equatable {
     }
     func save(image: Bool = false) {
         guard !choosingFile else { return }
+        if !image, resultFormat == .svg {
+            do { try validateSVG(output) }
+            catch { reportOperationFailure(error.localizedDescription); return }
+        }
         persistCurrentOutput()
         guard image ? png != nil : !output.isEmpty else { return }
         let ext = image ? "png" : resultFormat.fileExtension
@@ -455,6 +545,11 @@ enum CaptureFeedback: Equatable {
             if image { try png?.write(to: url, options: .atomic) } else { try output.write(to: url, atomically: true, encoding: .utf8) }
             notice = L10n.text("Saved \(url.lastPathComponent).")
         } catch { self.error = error.localizedDescription }
+    }
+    private func validateSVG(_ content: String) throws {
+        guard validatedSVG != content else { return }
+        try SVGValidator.validate(content)
+        validatedSVG = content
     }
     func setLaunchAtLogin(_ enabled: Bool) throws {
         #if ACCESSIBILITY_AUDIT

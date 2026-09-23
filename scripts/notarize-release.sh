@@ -63,6 +63,19 @@ verify_app() {
         verify_identity "$framework/Versions/B/$helper"
     done
     verify_identity "$framework"
+    [[ -x "$APP/Contents/Helpers/SmartClipboardTrace" ]] || fail "Native tracing helper is missing."
+    verify_identity "$APP/Contents/Helpers/SmartClipboardTrace"
+    metadata="$(codesign --display --verbose=4 "$APP/Contents/Helpers/SmartClipboardTrace" 2>&1)"
+    [[ "$metadata" == *"(runtime)"* && "$metadata" == *"Timestamp="* ]] || fail "Native tracing helper lacks hardened runtime or secure timestamp."
+    uv run --no-project python - "$APP" "$PWD/dist/build-source.json" <<'PY'
+import hashlib, json, pathlib, sys
+app = pathlib.Path(sys.argv[1])
+provenance = json.loads(pathlib.Path(sys.argv[2]).read_text())
+for key, relative in [('tracerSHA256', 'Contents/Helpers/SmartClipboardTrace'),
+                      ('tracerLockSHA256', 'Contents/Resources/TraceCargo.lock')]:
+    if provenance.get(key) != hashlib.sha256((app / relative).read_bytes()).hexdigest():
+        raise SystemExit('Native tracing helper differs from build provenance.')
+PY
     metadata="$(codesign --display --verbose=4 "$APP" 2>&1)"
     [[ "$metadata" == *"Identifier=com.smartclipboard.app"* ]] || fail "Unexpected app bundle identifier."
     [[ "$metadata" == *"TeamIdentifier=$TEAM_ID"* ]] || fail "Unexpected app signing team."
@@ -163,7 +176,7 @@ fi
 
 # Verify the final downloadable payload, including the ticket inside the ZIP.
 ditto -x -k "$ZIP" "$SCRATCH/unzipped"
-python3 scripts/compare-bundles.py "$APP" "$SCRATCH/unzipped/Smart Clipboard.app"
+uv run --no-project python scripts/compare-bundles.py "$APP" "$SCRATCH/unzipped/Smart Clipboard.app"
 verify_identity "$SCRATCH/unzipped/Smart Clipboard.app"
 xcrun stapler validate "$SCRATCH/unzipped/Smart Clipboard.app"
 verify_unchanged_app
