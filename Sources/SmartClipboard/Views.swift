@@ -28,24 +28,24 @@ struct CaptureView: View {
             VStack(alignment: .leading, spacing: 20) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 5) {
-                        Text(model.png == nil ? "A little clip. A lot of possibility." : "Make your clip useful.").font(.system(size: 25, weight: .semibold, design: .rounded))
-                        Text(model.png == nil ? "Capture anything. Keep it in the format you need." : "Choose a format, add a direction, and make it yours.").foregroundStyle(.secondary)
+                        Text(model.png == nil ? L10n.text("A little clip. A lot of possibility.") : L10n.text("Make your clip useful.")).font(.system(size: 25, weight: .semibold, design: .rounded))
+                        Text(model.png == nil ? L10n.text("Capture anything. Keep it in the format you need.") : L10n.text("Choose a format, add a direction, and make it yours.")).foregroundStyle(.secondary)
                     }
                     Spacer()
                     if model.png != nil {
-                        Button { model.clear() } label: { Image(systemName: "xmark") }.help("Close clip; keep saved history").disabled(model.busy)
-                            .accessibilityLabel("Close current clip")
-                            .accessibilityHint("Keeps the saved capture in history.")
+                        Button { model.clear() } label: { Image(systemName: "xmark") }.help(L10n.text("Close clip; keep saved history")).disabled(model.busy)
+                            .accessibilityLabel(L10n.text("Close current clip"))
+                            .accessibilityHint(L10n.text("Keeps the saved capture in history."))
                     }
                 }
                 if !model.captureReady {
                     HStack {
-                        Label(model.screenAccess ? "Capture shortcuts need attention" : "Screen Recording permission needed", systemImage: "exclamationmark.triangle.fill")
+                        Label(model.screenAccess ? L10n.text("Capture shortcuts need attention") : L10n.text("Screen Recording permission needed"), systemImage: "exclamationmark.triangle.fill")
                         Spacer()
                         if model.screenAccess {
-                            Button("Review shortcuts") { model.showSettings(tab: "shortcuts") }
+                            Button(L10n.text("Review shortcuts")) { model.showSettings(tab: "shortcuts") }
                         } else {
-                            Button("Open System Settings") { model.openScreenAccessSettings() }
+                            Button(L10n.text("Open System Settings")) { model.openScreenAccessSettings() }
                         }
                     }.font(.callout).padding(10).background(Color.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 8))
                 }
@@ -58,12 +58,12 @@ struct CaptureView: View {
                         Text(error).font(.callout).textSelection(.enabled)
                         Spacer()
                         Button { model.error = nil } label: { Image(systemName: "xmark") }.buttonStyle(.plain)
-                            .accessibilityLabel("Dismiss error")
+                            .accessibilityLabel(L10n.text("Dismiss error"))
                     }.padding(12).background(Color.orange.opacity(0.09), in: RoundedRectangle(cornerRadius: 10))
                 }
                 HStack(spacing: 6) {
                     Image(systemName: model.notice.isEmpty ? "lock.shield" : "checkmark.circle.fill")
-                    Text(model.notice.isEmpty ? (model.defaultFormat != .image ? "Automatic capture uses your AI connection, then copies the result." : "Pass through copies your screenshot directly without extraction.") : model.notice)
+                    Text(model.notice.isEmpty ? (model.defaultFormat != .image ? L10n.text("Automatic capture uses your AI connection, then copies the result.") : L10n.text("Pass through copies your screenshot directly without extraction.")) : model.notice)
                     Spacer()
                 }.font(.caption).foregroundStyle(model.notice.isEmpty ? Color.secondary : accent)
             }.padding(28).frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -81,24 +81,24 @@ struct CaptureView: View {
             }.padding(.top, 10)
             Button { model.showSettings(tab: "general") } label: {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("CAPTURE → CLIPBOARD").font(.system(size: 11, weight: .semibold)).tracking(0.6)
+                    Text(L10n.text("CAPTURE → CLIPBOARD")).font(.system(size: 11, weight: .semibold)).tracking(0.6)
                     Text(model.defaultFormat.title).font(.caption)
                 }.foregroundStyle(accent)
-            }.buttonStyle(.plain).help("Configure your preferred format and capture workflow")
-                .accessibilityLabel("Capture preferences").accessibilityValue(model.defaultFormat.title)
+            }.buttonStyle(.plain).help(L10n.text("Configure your preferred format and capture workflow"))
+                .accessibilityLabel(L10n.text("Capture preferences")).accessibilityValue(model.defaultFormat.title)
             VStack(spacing: 8) {
                 Button { model.capture() } label: {
-                    Label("Capture region", systemImage: "viewfinder").frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 5)
+                    Label(L10n.text("Capture region"), systemImage: "viewfinder").frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 5)
                 }.buttonStyle(.borderedProminent).tint(prominentAccent)
                 Button { model.capture(window: true) } label: {
-                    Label("Capture window", systemImage: "macwindow").frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 5)
+                    Label(L10n.text("Capture window"), systemImage: "macwindow").frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 5)
                 }
                 Button { model.importImage() } label: {
-                    Label("Import image", systemImage: "square.and.arrow.down").frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 5)
+                    Label(L10n.text("Import image"), systemImage: "square.and.arrow.down").frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 5)
                 }
             }.disabled(model.busy || model.capturing)
             VStack(alignment: .leading, spacing: 3) {
-                Text("OUTPUT FORMAT").font(.system(size: 10, weight: .semibold)).tracking(1.6).foregroundStyle(.secondary)
+                Text(L10n.text("OUTPUT FORMAT")).font(.system(size: 10, weight: .semibold)).tracking(1.6).foregroundStyle(.secondary)
                 ForEach(OutputFormat.allCases) { format in
                     Button { model.format = format } label: {
                         HStack(spacing: 10) {
@@ -118,9 +118,9 @@ struct CaptureView: View {
             Spacer(minLength: 0)
             Divider()
             Button { model.showHistory() } label: {
-                HStack { Label("History", systemImage: "clock.arrow.circlepath"); Spacer(); Text("\(model.history.count)").foregroundStyle(.secondary) }
+                HStack { Label(L10n.text("History"), systemImage: "clock.arrow.circlepath"); Spacer(); Text(L10n.text("\(model.history.count)")).foregroundStyle(.secondary) }
             }.buttonStyle(.plain)
-            Button { model.showSettings() } label: { Label("Settings", systemImage: "gearshape").foregroundStyle(.secondary) }.buttonStyle(.plain)
+            Button { model.showSettings() } label: { Label(L10n.text("Settings"), systemImage: "gearshape").foregroundStyle(.secondary) }.buttonStyle(.plain)
           }.padding(20)
         }.frame(width: 220).frame(maxHeight: .infinity)
             .background(Color(nsColor: .controlBackgroundColor).opacity(0.65))
@@ -136,15 +136,15 @@ struct CaptureView: View {
                 Image(systemName: "sparkles").font(.system(size: 24)).foregroundStyle(accent).offset(x: 60, y: -48)
             }.accessibilityHidden(true)
             VStack(spacing: 7) {
-                Text("From your screen to your next idea.").font(.system(size: 19, weight: .medium, design: .rounded))
-                Text("Turn a table into JSON, a slide into notes,\nor a diagram into editable SVG.").multilineTextAlignment(.center).foregroundStyle(.secondary).lineSpacing(4)
+                Text(L10n.text("From your screen to your next idea.")).font(.system(size: 19, weight: .medium, design: .rounded))
+                Text(L10n.text("Turn a table into JSON, a slide into notes,\nor a diagram into editable SVG.")).multilineTextAlignment(.center).foregroundStyle(.secondary).lineSpacing(4)
             }
-            Button("Capture a region") { model.capture() }.buttonStyle(.borderedProminent).tint(prominentAccent).controlSize(.large)
-            Text(model.regionShortcut.label + "  anywhere on your Mac").font(.caption.monospaced()).foregroundStyle(.secondary)
+            Button(L10n.text("Capture a region")) { model.capture() }.buttonStyle(.borderedProminent).tint(prominentAccent).controlSize(.large)
+            Text(L10n.text("\(model.regionShortcut.label)  anywhere on your Mac")).font(.caption.monospaced()).foregroundStyle(.secondary)
             HStack(spacing: 24) {
-                Label("Select a region", systemImage: "rectangle.dashed")
-                Label("Space for a window", systemImage: "macwindow")
-                Label("Esc to cancel", systemImage: "escape")
+                Label(L10n.text("Select a region"), systemImage: "rectangle.dashed")
+                Label(L10n.text("Space for a window"), systemImage: "macwindow")
+                Label(L10n.text("Esc to cancel"), systemImage: "escape")
             }.font(.caption).foregroundStyle(.secondary).padding(.top, 24)
             Spacer()
         }.frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -156,32 +156,36 @@ struct CaptureView: View {
             HStack(alignment: .top, spacing: 16) {
                 Image(nsImage: image).resizable().scaledToFit().frame(maxWidth: .infinity).frame(height: 160)
                     .padding(12).background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 12))
-                    .accessibilityLabel("Original capture")
+                    .accessibilityLabel(L10n.text("Original capture"))
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("ORIGINAL CAPTURE").font(.system(size: 10, weight: .semibold)).tracking(1)
-                    Text("Keep the image, too.").font(.callout).foregroundStyle(.secondary)
-                    Button { model.copyImage() } label: { Label("Copy image", systemImage: "doc.on.doc") }
-                    Button { model.save(image: true) } label: { Label("Save PNG…", systemImage: "square.and.arrow.down") }
-                }.frame(width: 150).padding(.top, 12)
+                    Text(L10n.text("ORIGINAL CAPTURE")).font(.system(size: 10, weight: .semibold)).tracking(1)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text(L10n.text("Keep the image, too.")).font(.callout).foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Button { model.copyImage() } label: { Label(L10n.text("Copy image"), systemImage: "doc.on.doc") }
+                    Button { model.save(image: true) } label: { Label(L10n.text("Save PNG…"), systemImage: "square.and.arrow.down") }
+                }.frame(width: 180).padding(.top, 12)
             }
             if model.format != .image {
                 if model.format == .auto {
-                    Text("AI picks the most useful format from the source: prose, tables, code, layouts or diagrams.").font(.caption).foregroundStyle(.secondary)
+                    Text(L10n.text("AI picks the most useful format from the source: prose, tables, code, layouts or diagrams.")).font(.caption).foregroundStyle(.secondary)
                 }
                 HStack {
                     Image(systemName: "text.bubble").foregroundStyle(.secondary)
-                    TextField("Optional direction — e.g. translate to English, preserve table columns…", text: $model.instruction).textFieldStyle(.plain).disabled(model.busy)
-                        .accessibilityLabel("Conversion direction")
+                    TextField(L10n.text("Optional direction — e.g. preserve table columns…"), text: $model.instruction).textFieldStyle(.plain).disabled(model.busy)
+                        .accessibilityLabel(L10n.text("Conversion direction"))
                 }.padding(12).background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 9))
+                OutputLanguagePicker(title: L10n.text("Output language"), selection: $model.outputLanguage)
+                    .disabled(model.busy)
                 HStack {
                     if model.busy {
-                        ProgressView().controlSize(.small).accessibilityLabel("Converting capture")
-                        Text("Working on your clip…").font(.callout).foregroundStyle(.secondary)
+                        ProgressView().controlSize(.small).accessibilityLabel(L10n.text("Converting capture"))
+                        Text(L10n.text("Working on your clip…")).font(.callout).foregroundStyle(.secondary)
                         Spacer()
-                        Button("Cancel") { model.cancel() }
+                        Button(L10n.text("Cancel")) { model.cancel() }
                     } else {
-                        Button { model.convert() } label: { Label("Convert with AI", systemImage: "sparkles") }.buttonStyle(.borderedProminent).tint(prominentAccent).controlSize(.large)
-                        Button("Extract text on device") { model.convert(local: true) }.help("Apple Vision OCR. No upload; ignores additional directions.")
+                        Button { model.convert() } label: { Label(L10n.text("Convert with AI"), systemImage: "sparkles") }.buttonStyle(.borderedProminent).tint(prominentAccent).controlSize(.large)
+                        Button(L10n.text("Extract text on device")) { model.convert(local: true) }.help(L10n.text("Apple Vision OCR. No upload; keeps the source language and ignores translation and additional directions."))
                         Spacer()
                     }
                 }
@@ -189,34 +193,34 @@ struct CaptureView: View {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
                     VStack(alignment: .leading, spacing: 3) {
-                        Text(model.output.isEmpty ? "RESULT" : model.resultFormat.title.uppercased()).font(.system(size: 10, weight: .semibold)).tracking(1)
+                        Text(model.output.isEmpty ? L10n.text("RESULT") : model.resultFormat.title.uppercased()).font(.system(size: 10, weight: .semibold)).tracking(1)
                         if let origin = model.resultOrigin {
                             Text(origin).font(.caption2).foregroundStyle(.secondary).lineLimit(1).help(origin)
                         }
                     }
                     Spacer()
                     if !model.savedConversions.isEmpty {
-                        Menu("Saved formats") {
+                        Menu(L10n.text("Saved formats")) {
                             ForEach(model.savedConversions) { result in
-                                Button(result.format.title) { model.useSavedConversion(result) }
+                                Button(result.variantTitle) { model.useSavedConversion(result) }
                             }
                         }.fixedSize().disabled(model.busy)
                     }
                     if !model.output.isEmpty {
-                        Button("Save…") { model.save() }
-                        Button { model.copyOutput() } label: { Label("Copy", systemImage: "doc.on.doc") }.keyboardShortcut("c", modifiers: [.command, .shift])
+                        Button(L10n.text("Save…")) { model.save() }
+                        Button { model.copyOutput() } label: { Label(L10n.text("Copy"), systemImage: "doc.on.doc") }.keyboardShortcut("c", modifiers: [.command, .shift])
                     }
                 }.padding(12)
                 Divider()
                 if model.output.isEmpty {
                     VStack(spacing: 8) {
                         Image(systemName: model.format.symbol).font(.title2).foregroundStyle(accent.opacity(0.7))
-                        Text(model.format == .image ? "Your image is ready to copy or save." : "Your \(model.format == .auto ? "automatically chosen format" : model.format.title) will appear here.").foregroundStyle(.secondary)
+                        Text(model.format == .image ? L10n.text("Your image is ready to copy or save.") : (model.format == .auto ? L10n.text("Your automatically chosen format will appear here.") : L10n.text("Your \(model.format.title) will appear here."))).foregroundStyle(.secondary)
                     }.frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     TextEditor(text: $model.output).font(.system(.body, design: .monospaced)).padding(8).scrollContentBackground(.hidden)
-                        .accessibilityLabel("Converted result")
-                        .accessibilityHint("Editable \(model.resultFormat.title) content.")
+                        .accessibilityLabel(L10n.text("Converted result"))
+                        .accessibilityHint(L10n.text("Editable \(model.resultFormat.title) content."))
                 }
             }.frame(maxHeight: .infinity).frame(minHeight: 130).background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 12))
                 .overlay { RoundedRectangle(cornerRadius: 12).stroke(Color.primary.opacity(0.08)) }
@@ -226,82 +230,95 @@ struct CaptureView: View {
 
 struct SettingsView: View {
     @ObservedObject var model: AppModel
-    @ViewState<String> private var message = ""
     @ViewState<String?> private var activeRecorder = nil
-    @ViewState<Bool> private var loginEnabled = SMAppService.mainApp.status == .enabled
     var body: some View {
         TabView(selection: $model.settingsTab) {
             ConnectionSettingsView(store: model.connections)
                 .accessibilityElement(children: .contain)
-                .accessibilityLabel("Connection settings")
-                .tabItem { Label("Connection", systemImage: "network") }.tag("connection")
+                .accessibilityLabel(L10n.text("Connection settings"))
+                .tabItem { Label(L10n.text("Connection"), systemImage: "network") }.tag("connection")
             Form {
-                Section("App status") {
-                    Label("Running in the background", systemImage: "checkmark.circle.fill").foregroundStyle(accent)
-                    Text(model.menuBarInstalled ? "Look for the viewfinder and Clip in the menu bar." : "Menu bar button could not be created. Reopen the app.").font(.caption)
-                    Text("Closing a window keeps the app running. A crowded menu bar or a menu bar manager can hide buttons; opening Smart Clipboard from Applications always brings its window back.").font(.caption).foregroundStyle(.secondary)
+                Section(L10n.text("App status")) {
+                    Label(L10n.text("Running in the background"), systemImage: "checkmark.circle.fill").foregroundStyle(accent)
+                    Text(model.menuBarInstalled ? L10n.text("Look for the viewfinder and Clip in the menu bar.") : L10n.text("Menu bar button could not be created. Reopen the app.")).font(.caption)
+                    Text(L10n.text("Closing a window keeps the app running. A crowded menu bar or a menu bar manager can hide buttons; opening Smart Clipboard from Applications always brings its window back.")).font(.caption).foregroundStyle(.secondary)
                 }
-                Section("Screen access") {
-                    Label(model.screenAccess ? "Screen Recording allowed" : "Screen Recording permission needed", systemImage: model.screenAccess ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                Section(L10n.text("Screen access")) {
+                    Label(model.screenAccess ? L10n.text("Screen Recording allowed") : L10n.text("Screen Recording permission needed"), systemImage: model.screenAccess ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
                         .foregroundStyle(model.screenAccess ? accent : .orange)
                     if !model.screenAccess {
-                        Text("Enable Smart Clipboard in Privacy & Security → Screen & System Audio Recording, then quit and reopen this app. If it is already enabled after an update, turn its permission off and on again.").font(.caption)
-                        Button("Request screen access") { model.requestScreenAccess() }
-                        Button("Open Screen Recording settings") { model.openScreenAccessSettings() }
+                        Text(L10n.text("Enable Smart Clipboard in Privacy & Security → Screen & System Audio Recording, then quit and reopen this app. If it is already enabled after an update, turn its permission off and on again.")).font(.caption)
+                        Button(L10n.text("Request screen access")) { model.requestScreenAccess() }
+                        Button(L10n.text("Open Screen Recording settings")) { model.openScreenAccessSettings() }
                     }
-                    Button("Check again") { model.refreshReadiness() }
+                    Button(L10n.text("Check again")) { model.refreshReadiness() }
                 }
-                Section("Capture shortcuts") {
-                    ShortcutRow(title: "Capture region", shortcut: model.regionShortcut, status: model.shortcutStatus(1), activeRecorder: $activeRecorder, pause: model.pauseShortcuts, resume: model.resumeShortcuts) { try model.setShortcut($0, window: false) }
-                    ShortcutRow(title: "Capture window", shortcut: model.windowShortcut, status: model.shortcutStatus(2), activeRecorder: $activeRecorder, pause: model.pauseShortcuts, resume: model.resumeShortcuts) { try model.setShortcut($0, window: true) }
-                    Button("Find available shortcuts") { model.findAvailableShortcuts() }.disabled(activeRecorder != nil)
-                    Text("Checks enabled macOS shortcuts and registrations held by other apps. macOS does not expose the owner of every shortcut or shortcuts intercepted by keyboard utilities.").font(.caption).foregroundStyle(.secondary)
-                    Text("Click a shortcut and press a combination with ⌘ or ⌃. Escape cancels. Shortcuts pause while you record. During capture, Space switches between region and window.").font(.caption).foregroundStyle(.secondary)
+                Section(L10n.text("Capture shortcuts")) {
+                    ShortcutRow(title: L10n.text("Capture region"), shortcut: model.regionShortcut, status: model.shortcutStatus(1), activeRecorder: $activeRecorder, pause: model.pauseShortcuts, resume: model.resumeShortcuts) { try model.setShortcut($0, window: false) }
+                    ShortcutRow(title: L10n.text("Capture window"), shortcut: model.windowShortcut, status: model.shortcutStatus(2), activeRecorder: $activeRecorder, pause: model.pauseShortcuts, resume: model.resumeShortcuts) { try model.setShortcut($0, window: true) }
+                    Button(L10n.text("Find available shortcuts")) { model.findAvailableShortcuts() }.disabled(activeRecorder != nil)
+                    Text(L10n.text("Checks enabled macOS shortcuts and registrations held by other apps. macOS does not expose the owner of every shortcut or shortcuts intercepted by keyboard utilities.")).font(.caption).foregroundStyle(.secondary)
+                    Text(L10n.text("Click a shortcut and press a combination with ⌘ or ⌃. Escape cancels. Shortcuts pause while you record. During capture, Space switches between region and window.")).font(.caption).foregroundStyle(.secondary)
                     Text(model.lastShortcutEvent).font(.caption.monospaced()).textSelection(.enabled)
                 }
             }.formStyle(.grouped)
                 .accessibilityElement(children: .contain)
-                .accessibilityLabel("Shortcut settings")
-                .tabItem { Label("Shortcuts", systemImage: "keyboard") }.tag("shortcuts")
-            Form {
-                Section("General") {
-                    Toggle("Launch at login", isOn: Binding(get: { loginEnabled }, set: { enabled in
-                        do { try model.setLaunchAtLogin(enabled); loginEnabled = SMAppService.mainApp.status == .enabled; message = SMAppService.mainApp.status == .requiresApproval ? "Approve Smart Clipboard in System Settings → General → Login Items." : "" }
+                .accessibilityLabel(L10n.text("Shortcut settings"))
+                .tabItem { Label(L10n.text("Shortcuts"), systemImage: "keyboard") }.tag("shortcuts")
+            GeneralSettingsView(model: model)
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel(L10n.text("General settings"))
+                .tabItem { Label(L10n.text("General"), systemImage: "slider.horizontal.3") }.tag("general")
+            HistorySettingsView(model: model)
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel(L10n.text("History settings"))
+                .tabItem { Label(L10n.text("History"), systemImage: "clock.arrow.circlepath") }.tag("history")
+            AboutView(updates: model.updates)
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel(L10n.text("About Smart Clipboard"))
+                .tabItem { Label(L10n.text("About"), systemImage: "info.circle") }.tag("about")
+        }.padding(12).frame(minWidth: 640, maxWidth: .infinity, minHeight: 550, maxHeight: .infinity).tint(accent)
+    }
+}
+
+struct GeneralSettingsView: View {
+    @ObservedObject var model: AppModel
+    @ViewState<String> private var message = ""
+    @ViewState<Bool> private var loginEnabled = SMAppService.mainApp.status == .enabled
+    var body: some View {
+Form {
+                Section(L10n.text("General")) {
+                    Toggle(L10n.text("Launch at login"), isOn: Binding(get: { loginEnabled }, set: { enabled in
+                        do { try model.setLaunchAtLogin(enabled); loginEnabled = SMAppService.mainApp.status == .enabled; message = SMAppService.mainApp.status == .requiresApproval ? L10n.text("Approve Smart Clipboard in System Settings → General → Login Items.") : "" }
                         catch { message = error.localizedDescription }
                     }))
-                    Text("Move Smart Clipboard to Applications before enabling launch at login.").font(.caption).foregroundStyle(.secondary)
+                    Text(L10n.text("Move Smart Clipboard to Applications before enabling launch at login.")).font(.caption).foregroundStyle(.secondary)
                 }
-                Section("Capture workflow") {
-                    Picker("Preferred format", selection: $model.defaultFormat) { ForEach(OutputFormat.allCases) { Text($0.title).tag($0) } }
-                    TextField("Default direction", text: $model.defaultInstruction, prompt: Text("Optional — e.g. translate to English"))
-                    Text("Every capture uses this format and direction, then copies the result. No app windows open; progress appears in the menu bar. Enable notifications below to hear or see when it is ready to paste or needs attention.").font(.caption).foregroundStyle(.secondary)
-                    Text("Auto detect lets AI choose the best format. Pass through copies the original PNG without extraction or AI. Other formats use your configured connection.").font(.caption).foregroundStyle(.secondary)
+                Section(L10n.text("Capture workflow")) {
+                    Picker(L10n.text("Preferred format"), selection: $model.defaultFormat) { ForEach(OutputFormat.allCases) { Text($0.title).tag($0) } }
+                    TextField(L10n.text("Default direction"), text: $model.defaultInstruction, prompt: Text(L10n.text("Optional — e.g. preserve table columns")))
+                    Text(L10n.text("Every capture uses this format and direction, then copies the result. No app windows open; progress appears in the menu bar. Enable notifications below to hear or see when it is ready to paste or needs attention.")).font(.caption).foregroundStyle(.secondary)
+                    Text(L10n.text("Auto detect lets AI choose the best format. Pass through copies the original PNG without extraction or AI. Other formats use your configured connection.")).font(.caption).foregroundStyle(.secondary)
                 }
-                Section("Manual conversions") {
-                    Toggle("Copy after manual conversion", isOn: $model.copyAutomatically)
+                Section(L10n.text("Languages")) {
+                    Text(L10n.text("Menus and settings follow your Mac’s preferred supported language. English is used when a translation is unavailable.")).font(.caption).foregroundStyle(.secondary)
+                    OutputLanguagePicker(title: L10n.text("Capture output"), selection: $model.defaultOutputLanguage)
+                    Text(L10n.text("Keep source language preserves the language detected in the image. Choose System language or a specific language to translate every AI capture automatically.")).font(.caption).foregroundStyle(.secondary)
+                    Text(L10n.text("This language choice takes priority over translation directions. Pass through keeps the original image; on-device text extraction keeps the source language. You can choose a different language when reopening history.")).font(.caption).foregroundStyle(.secondary)
+                }
+                Section(L10n.text("Manual conversions")) {
+                    Toggle(L10n.text("Copy after manual conversion"), isOn: $model.copyAutomatically)
                 }
                 if let notifications = model.notifications {
                     NotificationSettingsView(notifications: notifications)
                 }
                 Section("Smart Clipboard") {
-                    Text("Capture once. Use it anywhere.").font(.headline)
-                    Text("The app stays in your menu bar when you close its windows.").foregroundStyle(.secondary)
-                    Button("About Smart Clipboard…") { model.settingsTab = "about" }
+                    Text(L10n.text("Capture once. Use it anywhere.")).font(.headline)
+                    Text(L10n.text("The app stays in your menu bar when you close its windows.")).foregroundStyle(.secondary)
+                    Button(L10n.text("About Smart Clipboard…")) { model.settingsTab = "about" }
                 }
                 if !message.isEmpty { Text(message).font(.callout) }
             }.formStyle(.grouped)
-                .accessibilityElement(children: .contain)
-                .accessibilityLabel("General settings")
-                .tabItem { Label("General", systemImage: "slider.horizontal.3") }.tag("general")
-            HistorySettingsView(model: model)
-                .accessibilityElement(children: .contain)
-                .accessibilityLabel("History settings")
-                .tabItem { Label("History", systemImage: "clock.arrow.circlepath") }.tag("history")
-            AboutView(updates: model.updates)
-                .accessibilityElement(children: .contain)
-                .accessibilityLabel("About Smart Clipboard")
-                .tabItem { Label("About", systemImage: "info.circle") }.tag("about")
-        }.padding(12).frame(minWidth: 640, maxWidth: .infinity, minHeight: 550, maxHeight: .infinity).tint(accent)
     }
 }
 
@@ -322,11 +339,11 @@ struct ShortcutRow: View {
         VStack(alignment: .leading) {
             HStack {
                 Text(title); Spacer()
-                Button(recording ? "Press shortcut…" : shortcut.label) { begin() }.font(.system(.body, design: .monospaced)).disabled(activeRecorder != nil && activeRecorder != title)
+                Button(recording ? L10n.text("Press shortcut…") : shortcut.label) { begin() }.font(.system(.body, design: .monospaced)).disabled(activeRecorder != nil && activeRecorder != title)
                     .focused($recorderFocused)
-                    .accessibilityLabel("Record \(title.lowercased()) shortcut")
-                    .accessibilityValue(recording ? "Recording" : shortcut.spokenDescription)
-                    .accessibilityHint("Activate to record a key combination. Escape cancels; Tab moves to the next control. Control-Option commands pass through while VoiceOver is running.")
+                    .accessibilityLabel(L10n.text("Record \(title.lowercased()) shortcut"))
+                    .accessibilityValue(recording ? L10n.text("Recording") : shortcut.spokenDescription)
+                    .accessibilityHint(L10n.text("Activate to record a key combination. Escape cancels; Tab moves to the next control. Control-Option commands pass through while VoiceOver is running."))
             }
             Text(status).font(.caption).foregroundStyle(.secondary)
             if !error.isEmpty { Text(error).font(.caption).foregroundStyle(.red) }
@@ -352,13 +369,13 @@ struct ShortcutRow: View {
             case .assistiveNavigation: return event
             case .record: break
             }
-            guard flags.contains(.command) || flags.contains(.control) else { error = "Include Command or Control."; return nil }
+            guard flags.contains(.command) || flags.contains(.control) else { error = L10n.text("Include Command or Control."); return nil }
             var modifiers: UInt32 = 0; var label = ""
             if flags.contains(.control) { modifiers |= UInt32(controlKey); label += "⌃" }
             if flags.contains(.option) { modifiers |= UInt32(optionKey); label += "⌥" }
             if flags.contains(.shift) { modifiers |= UInt32(shiftKey); label += "⇧" }
             if flags.contains(.command) { modifiers |= UInt32(cmdKey); label += "⌘" }
-            label += event.characters(byApplyingModifiers: [])?.uppercased() ?? "Key \(event.keyCode)"
+            label += event.characters(byApplyingModifiers: [])?.uppercased() ?? L10n.text("Key \(event.keyCode)")
             do { try save(Shortcut(key: UInt32(event.keyCode), modifiers: modifiers, label: label)); end() }
             catch { self.error = error.localizedDescription; end() }
             return nil
@@ -373,19 +390,19 @@ struct HistoryView: View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Your recent clips").font(.title2.weight(.semibold))
-                    Text("Reopen a capture. Give it another format.").foregroundStyle(.secondary)
+                    Text(L10n.text("Your recent clips")).font(.title2.weight(.semibold))
+                    Text(L10n.text("Reopen a capture. Choose another format or language.")).foregroundStyle(.secondary)
                 }
                 Spacer()
-                Button("Clear history…", role: .destructive) { confirmClear = true }.disabled(model.history.isEmpty || model.busy || model.capturing)
+                Button(L10n.text("Clear history…"), role: .destructive) { confirmClear = true }.disabled(model.history.isEmpty || model.busy || model.capturing)
             }
             if let error = model.error { Text(error).font(.caption).foregroundStyle(.orange).textSelection(.enabled) }
             if model.history.isEmpty {
                 VStack(spacing: 12) {
                     Image(systemName: "clock.arrow.circlepath").font(.largeTitle).foregroundStyle(.secondary)
-                    Text(model.historyLimit == 0 ? "History is turned off" : "No saved captures yet").font(.headline)
-                    Text(model.historyLimit == 0 ? "Increase the history limit in Settings to save future captures." : "Your next capture or imported image will appear here.").foregroundStyle(.secondary)
-                    Button("History settings") { model.showSettings(tab: "history") }
+                    Text(model.historyLimit == 0 ? L10n.text("History is turned off") : L10n.text("No saved captures yet")).font(.headline)
+                    Text(model.historyLimit == 0 ? L10n.text("Increase the history limit in Settings to save future captures.") : L10n.text("Your next capture or imported image will appear here.")).foregroundStyle(.secondary)
+                    Button(L10n.text("History settings")) { model.showSettings(tab: "history") }
                 }.frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ScrollView {
@@ -396,14 +413,14 @@ struct HistoryView: View {
                                 VStack(alignment: .leading, spacing: 5) {
                                     Text(entry.title).font(.headline).lineLimit(1)
                                     Text(entry.createdAt, format: .dateTime.month(.abbreviated).day().hour().minute()).font(.caption).foregroundStyle(.secondary)
-                                    Text(entry.conversions.isEmpty ? "Original image" : entry.conversions.map { $0.format.title }.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                                    Text(entry.conversions.isEmpty ? L10n.text("Original image") : entry.conversions.map { $0.variantTitle }.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary).lineLimit(3)
                                 }.accessibilityElement(children: .combine)
                                 Spacer()
-                                Button("Open") { model.openHistory(entry) }
-                                    .accessibilityLabel("Open \(entry.title), captured \(entry.createdAt.formatted(date: .abbreviated, time: .shortened))")
-                                Button(role: .destructive) { model.deleteHistory(entry) } label: { Image(systemName: "trash") }.help("Delete this saved capture and all its formats")
-                                    .accessibilityLabel("Delete \(entry.title), captured \(entry.createdAt.formatted(date: .abbreviated, time: .shortened))")
-                                    .accessibilityHint("Deletes the original image and all its saved formats.")
+                                Button(L10n.text("Open")) { model.openHistory(entry) }
+                                    .accessibilityLabel(L10n.text("Open \(entry.title), captured \(entry.createdAt.formatted(date: .abbreviated, time: .shortened))"))
+                                Button(role: .destructive) { model.deleteHistory(entry) } label: { Image(systemName: "trash") }.help(L10n.text("Delete this saved capture and all its formats"))
+                                    .accessibilityLabel(L10n.text("Delete \(entry.title), captured \(entry.createdAt.formatted(date: .abbreviated, time: .shortened))"))
+                                    .accessibilityHint(L10n.text("Deletes the original image and all its saved formats."))
                             }.padding(12).background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 10))
                                 .disabled(model.busy || model.capturing)
                         }
@@ -411,14 +428,14 @@ struct HistoryView: View {
                 }
             }
             HStack {
-                Text("\(model.history.count) of \(model.historyLimit) clips · \(ByteCountFormatter.string(fromByteCount: model.historyBytes, countStyle: .file)) on this Mac").font(.caption).foregroundStyle(.secondary)
+                Text(L10n.text("\(model.history.count) of \(model.historyLimit) clips · \(ByteCountFormatter.string(fromByteCount: model.historyBytes, countStyle: .file)) on this Mac")).font(.caption).foregroundStyle(.secondary)
                 Spacer()
-                Button("Settings") { model.showSettings(tab: "history") }
+                Button(L10n.text("Settings")) { model.showSettings(tab: "history") }
             }
         }.padding(24).frame(minWidth: 490, minHeight: 330).tint(accent)
-            .confirmationDialog("Delete all saved captures and results?", isPresented: $confirmClear) {
-                Button("Clear history", role: .destructive) { model.clearHistory() }
-            } message: { Text("This removes the app’s saved history and closes the current clip. Exported files and the system clipboard are unchanged.") }
+            .confirmationDialog(L10n.text("Delete all saved captures and results?"), isPresented: $confirmClear) {
+                Button(L10n.text("Clear history"), role: .destructive) { model.clearHistory() }
+            } message: { Text(L10n.text("This removes the app’s saved history and closes the current clip. Exported files and the system clipboard are unchanged.")) }
     }
 }
 
@@ -439,36 +456,36 @@ struct HistorySettingsView: View {
     @ViewState<Bool> private var confirmClear = false
     var body: some View {
         Form {
-            Section("Capture history") {
+            Section(L10n.text("Capture history")) {
                 Stepper(value: $draftLimit, in: 0...HistoryStore.maximumLimit) {
                     HStack {
-                        Text("Keep up to")
-                        TextField("Clips", value: $draftLimit, format: .number)
-                            .accessibilityLabel("Maximum saved clips")
-                            .accessibilityHint("Choose zero to disable history.")
+                        Text(L10n.text("Keep up to"))
+                        TextField(L10n.text("Clips"), value: $draftLimit, format: .number)
+                            .accessibilityLabel(L10n.text("Maximum saved clips"))
+                            .accessibilityHint(L10n.text("Choose zero to disable history."))
                             .frame(width: 65)
-                        Text("clips")
+                        Text(L10n.text("clips"))
                     }
                 }.disabled(model.busy || model.capturing)
-                Button("Apply limit") { model.setHistoryLimit(draftLimit) }.disabled(model.busy || model.capturing || draftLimit == model.historyLimit || !(0...HistoryStore.maximumLimit).contains(draftLimit))
-                Text("Default: 50 clips. Choose 0 to turn history off and remove saved clips. Applying a lower limit removes the oldest captures immediately.").font(.caption).foregroundStyle(.secondary)
-                LabeledContent("Saved captures", value: "\(model.history.count)")
-                LabeledContent("Disk space", value: ByteCountFormatter.string(fromByteCount: model.historyBytes, countStyle: .file))
+                Button(L10n.text("Apply limit")) { model.setHistoryLimit(draftLimit) }.disabled(model.busy || model.capturing || draftLimit == model.historyLimit || !(0...HistoryStore.maximumLimit).contains(draftLimit))
+                Text(L10n.text("Default: 50 clips. Choose 0 to turn history off and remove saved clips. Applying a lower limit removes the oldest captures immediately.")).font(.caption).foregroundStyle(.secondary)
+                LabeledContent(L10n.text("Saved captures"), value: L10n.text("\(model.history.count)"))
+                LabeledContent(L10n.text("Disk space"), value: ByteCountFormatter.string(fromByteCount: model.historyBytes, countStyle: .file))
                 HStack {
-                    Button("Open history") { model.showHistory() }
-                    Button("Clear history…", role: .destructive) { confirmClear = true }.disabled(model.history.isEmpty || model.busy || model.capturing)
+                    Button(L10n.text("Open history")) { model.showHistory() }
+                    Button(L10n.text("Clear history…"), role: .destructive) { confirmClear = true }.disabled(model.history.isEmpty || model.busy || model.capturing)
                 }
             }
-            Section("Stored on this Mac") {
-                Text("History keeps captured and imported images and the latest result for each output format across app restarts. Reopen an entry to copy a saved result or convert the original into another format. The app does not monitor other apps’ clipboard activity.").font(.callout).foregroundStyle(.secondary)
-                Text("Files are saved in your local Application Support folder with access restricted to your macOS user. They are not separately encrypted by this app. Clearing history does not remove exported files or the system clipboard.").font(.caption).foregroundStyle(.secondary)
+            Section(L10n.text("Stored on this Mac")) {
+                Text(L10n.text("History keeps original images and the latest result for each format and language across app restarts. Reopen a capture, choose an output language, then convert with AI to save another version. Previous languages remain available under Saved formats. The app does not monitor other apps’ clipboard activity.")).font(.callout).foregroundStyle(.secondary)
+                Text(L10n.text("Files are saved in your local Application Support folder with access restricted to your macOS user. They are not separately encrypted by this app. Clearing history does not remove exported files or the system clipboard.")).font(.caption).foregroundStyle(.secondary)
             }
             if let error = model.error { Text(error).foregroundStyle(.orange).font(.caption) }
         }.formStyle(.grouped)
             .onAppear { draftLimit = model.historyLimit }
             .onChange(of: model.historyLimit) { _, limit in draftLimit = limit }
-            .confirmationDialog("Delete all saved captures and results?", isPresented: $confirmClear) {
-                Button("Clear history", role: .destructive) { model.clearHistory() }
-            } message: { Text("This removes local history and closes the current clip. This cannot be undone.") }
+            .confirmationDialog(L10n.text("Delete all saved captures and results?"), isPresented: $confirmClear) {
+                Button(L10n.text("Clear history"), role: .destructive) { model.clearHistory() }
+            } message: { Text(L10n.text("This removes local history and closes the current clip. This cannot be undone.")) }
     }
 }

@@ -1,0 +1,2 @@
+"NSScreenCaptureUsageDescription" = "Erfasst nur den von dir ausgewählten Bildschirmbereich oder das Fenster, um dessen Inhalt zu kopieren oder umzuwandeln.";
+"NSLocalNetworkUsageDescription" = "Verbindet sich mit dem von dir ausgewählten lokalen Server zur Bildverarbeitung, um Modelle anzuzeigen, die Bildverarbeitung zu testen oder ausgewählte Aufnahmen umzuwandeln.";

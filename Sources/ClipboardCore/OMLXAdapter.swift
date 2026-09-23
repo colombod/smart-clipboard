@@ -35,13 +35,13 @@ public struct OMLXAdapter: ImageProviderAdapter {
               let choice = choices.first, choice["finish_reason"] as? String == "stop",
               let message = choice["message"] as? [String: Any],
               message["role"] as? String == "assistant" else {
-            throw ClipError.message("oMLX did not finish the conversion. Try a smaller capture or another image-capable local model.")
+            throw ClipError.message(L10n.text("oMLX did not finish the conversion. Try a smaller capture or another image-capable local model."))
         }
         guard !LocalPerplexityResponse.present(message["function_call"]),
               !LocalPerplexityResponse.present(message["refusal"]),
               LocalPerplexityResponse.emptyArray(message["tool_calls"]),
               let text = message["content"] as? String else {
-            throw ClipError.message("oMLX returned a tool request or no usable conversion. The clipboard was not changed.")
+            throw ClipError.message(L10n.text("oMLX returned a tool request or no usable conversion. The clipboard was not changed."))
         }
         try LocalPerplexityResponse.validateEnvelope(text)
         return ProviderResponse(text: text, model: body["model"] as? String)
@@ -63,23 +63,23 @@ public struct OMLXAdapter: ImageProviderAdapter {
               let rawHost = parts.host, !rawHost.isEmpty,
               parts.user == nil, parts.password == nil, parts.query == nil, parts.fragment == nil,
               parts.port == nil || (1...65535).contains(parts.port!) else {
-            throw ClipError.message("Enter an oMLX server URL without a username, password, query, or fragment.")
+            throw ClipError.message(L10n.text("Enter an oMLX server URL without a username, password, query, or fragment."))
         }
         let host = rawHost.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: "[]"))
         let loopback = isLoopback(host)
         guard scheme == "https" || loopback || isPrivateLAN(host) else {
-            throw ClipError.message("Use HTTPS for a remote oMLX server. HTTP is supported only for this Mac or a private LAN address.")
+            throw ClipError.message(L10n.text("Use HTTPS for a remote oMLX server. HTTP is supported only for this Mac or a private LAN address."))
         }
         guard loopback || !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw ClipError.message("Enter the server API key before connecting to oMLX on another computer.")
+            throw ClipError.message(L10n.text("Enter the server API key before connecting to oMLX on another computer."))
         }
         // Keep the API prefix explicit so a full completion URL is never appended twice.
         let path = parts.percentEncodedPath.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
         guard path.isEmpty || path == "v1" else {
-            throw ClipError.message("The oMLX server URL should end in /v1, for example http://127.0.0.1:8000/v1.")
+            throw ClipError.message(L10n.text("The oMLX server URL should end in /v1, for example http://127.0.0.1:8000/v1."))
         }
         parts.path = "/v1/" + route
-        guard let url = parts.url else { throw ClipError.message("The oMLX server URL is invalid.") }
+        guard let url = parts.url else { throw ClipError.message(L10n.text("The oMLX server URL is invalid.")) }
         return url
     }
 
@@ -114,9 +114,9 @@ public struct OMLXAdapter: ImageProviderAdapter {
 // Both adapters return a bounded extraction envelope; the caller also checks the requested format.
 enum LocalPerplexityResponse {
     static func object(_ data: Data) throws -> [String: Any] {
-        guard data.count <= 2 * 1024 * 1024 else { throw ClipError.message("The provider response was too large. Try a smaller capture.") }
+        guard data.count <= 2 * 1024 * 1024 else { throw ClipError.message(L10n.text("The provider response was too large. Try a smaller capture.")) }
         let body = try ProviderWire.json(data)
-        guard !present(body["error"]) else { throw ClipError.message("The provider could not complete the conversion. Check the connection and selected model.") }
+        guard !present(body["error"]) else { throw ClipError.message(L10n.text("The provider could not complete the conversion. Check the connection and selected model.")) }
         return body
     }
 
@@ -131,7 +131,7 @@ enum LocalPerplexityResponse {
         guard let data = text.data(using: .utf8), data.count <= 1024 * 1024,
               let object = try? ProviderWire.json(data), Set(object.keys) == ["format", "content"],
               object["format"] is String, object["content"] is String else {
-            throw ClipError.message("The model returned an invalid conversion. Choose a model that supports image input and structured output.")
+            throw ClipError.message(L10n.text("The model returned an invalid conversion. Choose a model that supports image input and structured output."))
         }
         _ = try ConversionProtocol.decode(text, requested: .auto)
     }

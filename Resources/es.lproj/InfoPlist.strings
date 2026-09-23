@@ -1,0 +1,2 @@
+"NSScreenCaptureUsageDescription" = "Captura solo el área de la pantalla o la ventana que selecciones para copiar o convertir su contenido.";
+"NSLocalNetworkUsageDescription" = "Se conecta al servidor local de procesamiento de imágenes que elijas para mostrar los modelos, probar el procesamiento o convertir las capturas seleccionadas.";

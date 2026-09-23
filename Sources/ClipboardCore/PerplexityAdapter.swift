@@ -31,17 +31,17 @@ public struct PerplexityAdapter: ImageProviderAdapter {
               !LocalPerplexityResponse.present(body["incomplete_details"]),
               LocalPerplexityResponse.emptyArray(body["tools"]),
               let output = body["output"] as? [[String: Any]], !output.isEmpty else {
-            throw ClipError.message("Perplexity did not finish the conversion without tools. Try a smaller capture or another image-capable model.")
+            throw ClipError.message(L10n.text("Perplexity did not finish the conversion without tools. Try a smaller capture or another image-capable model."))
         }
         if let usage = body["usage"] as? [String: Any],
            let calls = usage["tool_calls_details"] as? [String: Any], !calls.isEmpty {
-            throw ClipError.message("Perplexity unexpectedly used tools. The clipboard was not changed.")
+            throw ClipError.message(L10n.text("Perplexity unexpectedly used tools. The clipboard was not changed."))
         }
         var pieces: [String] = []
         var messageCount = 0
         for item in output {
             if let status = item["status"] as? String, status != "completed" {
-                throw ClipError.message("Perplexity returned an unfinished conversion. Try again.")
+                throw ClipError.message(L10n.text("Perplexity returned an unfinished conversion. Try again."))
             }
             switch item["type"] as? String {
             case "reasoning": continue
@@ -49,19 +49,19 @@ public struct PerplexityAdapter: ImageProviderAdapter {
                 messageCount += 1
                 guard item["role"] as? String == "assistant",
                       let content = item["content"] as? [[String: Any]], !content.isEmpty else {
-                    throw ClipError.message("Perplexity returned no usable conversion.")
+                    throw ClipError.message(L10n.text("Perplexity returned no usable conversion."))
                 }
                 for part in content {
                     guard part["type"] as? String == "output_text", let text = part["text"] as? String else {
-                        throw ClipError.message("Perplexity could not return the requested conversion.")
+                        throw ClipError.message(L10n.text("Perplexity could not return the requested conversion."))
                     }
                     pieces.append(text)
                 }
             default:
-                throw ClipError.message("Perplexity returned an unexpected tool result. The clipboard was not changed.")
+                throw ClipError.message(L10n.text("Perplexity returned an unexpected tool result. The clipboard was not changed."))
             }
         }
-        guard messageCount == 1 else { throw ClipError.message("Perplexity returned an ambiguous conversion. Try again.") }
+        guard messageCount == 1 else { throw ClipError.message(L10n.text("Perplexity returned an ambiguous conversion. Try again.")) }
         let text = pieces.joined()
         try LocalPerplexityResponse.validateEnvelope(text)
         return ProviderResponse(text: text, model: body["model"] as? String)
@@ -79,7 +79,7 @@ public struct PerplexityAdapter: ImageProviderAdapter {
 
     private func requireKey(_ key: String) throws {
         guard !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw ClipError.message("Add a Perplexity API key in Settings → Connection.")
+            throw ClipError.message(L10n.text("Add a Perplexity API key in Settings → Connection."))
         }
     }
 }

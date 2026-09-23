@@ -20,11 +20,21 @@ SwiftPM fetches pinned Yams and Sparkle dependencies; their licenses are bundled
 bash Tests/ReleaseScripts/test-release.sh
 python3 Tests/ReleaseScripts/test-release-update.py
 python3 Tests/ReleaseScripts/test-compare-bundles.py
+python3 Tests/ReleaseScripts/test-localizations.py
+python3 scripts/check-localizations.py
 ```
 
 The ordinary suite uses isolated preferences/history and private pasteboards. Live providers and windowless render snapshots are opt-in; see [oMLX test evidence](testing/OMLX.md) and the [native accessibility harness](../Tests/AccessibilityUITests/README.md). Tests do not replace the real shortcut, selection, focus and paste gates in [UAT.md](UAT.md).
 
 The GitHub `macOS tests` check runs the offline suite and release guards. Durable task tracking uses Beads (`bd`); no keys, real captures, local issue database or build caches belong in source.
+
+## Interface and output languages
+
+Wrap interface literals in `L10n.text("…")`; interpolated values become positional catalog arguments and remain literal user content. Do not localize stored IDs, provider wire keys, model names or AI prompts. After adding UI text, run `python3 scripts/check-localizations.py --write-english`, translate all added keys in the four other catalogs, then run the checker. Main-bundle permission text lives in `Resources/<language>.lproj/InfoPlist.strings`.
+
+The build scripts embed the shared translation bundle and permission resources. Verify a development package with `python3 scripts/check-localizations.py --app '/path/Smart Clipboard.app'`; `BUILD_OUTPUT_DIR` lets the build script use a temporary folder without replacing existing release artifacts. [Language testing](testing/LANGUAGES.md) explains isolated rendering and local-model checks.
+
+`OutputLanguage` controls capture content independently of UI language. Targets are resolved when an operation starts. History stores a resolved language per result, with explicit null for source and `und` for pre-picker directions whose output language is unknown. The explicit null distinguishes new source-language choices from legacy history that lacks the field.
 
 ## Connections and privacy
 

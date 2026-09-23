@@ -46,7 +46,7 @@ In **Settings → General → Preferred format**, choose once:
 | Reconstruct markup or vector content | **HTML** or **SVG** |
 | Describe what is visible | **Description** |
 
-For translation, add a **Default direction**, such as “Translate to English.” You can change these preferences whenever you like.
+Captures keep the language in the image by default. To translate automatically, go to **Settings → General → Languages → Capture output** and choose **System language** or a specific language. **Default direction** is for other preferences, such as keeping table columns; the language choice takes priority over conflicting translation directions.
 
 ### 4. Capture and paste
 
@@ -65,13 +65,15 @@ In **Settings → General → Capture notifications**, enable macOS notification
 
 ## Keep useful captures
 
-Open **Clip → History** to reuse an earlier capture. Pick another format and convert the original again—there is no need to take another screenshot. Saved results can be reopened without another AI request.
+Open **Clip → History** to reuse an earlier capture. Pick another format or **Output language**, then choose **Convert with AI**. Each format and language has its own saved result, so translating into French keeps your earlier English or source-language version. **Saved formats** reopens those results without another AI request.
 
 Choose how many captures to retain in **Settings → History**, delete individual entries, or clear them all. The default is 50. Setting the limit to zero clears saved history and stops saving new captures.
 
 ## Made to stay out of the way
 
 Enable **Launch at login** in General settings to have it ready when you start your Mac. Closing Settings or History leaves the menu-bar app running. Its green capture-frame icon and windows follow macOS light and dark appearance.
+
+Menus, settings, notifications and accessibility labels follow your Mac’s preferred supported language: English, Italian, Spanish, French or German. This does not change the language of captured content. Unsupported interface languages fall back to English. Restart the app after changing its language in macOS.
 
 The app captures only when you ask. It does not continuously record your screen or monitor other apps’ clipboard contents. AI captures go to your selected provider; **Local / oMLX** on this Mac keeps image processing local. **Pass through** makes no AI request. Capture history stays on your Mac. [Privacy and storage details →](docs/USER-GUIDE.md#privacy-and-storage)
 

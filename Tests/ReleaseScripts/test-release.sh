@@ -25,6 +25,8 @@ case "$tool" in
         if [[ "$1" == build ]]; then
             if [[ " $* " == *' --show-bin-path '* ]]; then printf '%s\n' "$CASE_ROOT/bin-output"; exit; fi
             mkdir -p "$CASE_ROOT/bin-output"
+            mkdir -p "$CASE_ROOT/bin-output/SmartClipboard_ClipboardCore.bundle/en.lproj"
+            printf '"Settings" = "Settings";\n' > "$CASE_ROOT/bin-output/SmartClipboard_ClipboardCore.bundle/en.lproj/Localizable.strings"
             printf '#!/bin/sh\nexit 0\n' > "$CASE_ROOT/bin-output/SmartClipboard"
             chmod +x "$CASE_ROOT/bin-output/SmartClipboard"
             framework="$CASE_ROOT/bin-output/Sparkle.framework"
@@ -105,6 +107,7 @@ new_case() {
     cp "$REPO/scripts/build-app.sh" "$REPO/scripts/embed-sparkle.sh" "$REPO/scripts/package-release.sh" "$REPO/scripts/notarize-release.sh" "$REPO/scripts/compare-bundles.py" "$CASE_ROOT/scripts/"
     cp "$REPO/Resources/Info.plist" "$CASE_ROOT/Resources/"
     cp "$REPO/Resources/ThirdPartyNotices.txt" "$CASE_ROOT/Resources/"
+    cp -R "$REPO/Resources/en.lproj" "$CASE_ROOT/Resources/"
     cp "$REPO/docs/INSTALL.txt" "$CASE_ROOT/docs/"
     : > "$CASE_ROOT/commands.log"
 }
@@ -122,6 +125,8 @@ if ! run_release; then cat "$CASE_ROOT/output.log" >&2; exit 1; fi
 packaged_plist="$CASE_ROOT/dist/Smart Clipboard.app/Contents/Info.plist"
 /usr/bin/plutil -lint "$packaged_plist" >/dev/null
 cmp "$CASE_ROOT/Resources/Info.plist" "$packaged_plist"
+cmp "$CASE_ROOT/Resources/en.lproj/InfoPlist.strings" "$CASE_ROOT/dist/Smart Clipboard.app/Contents/Resources/en.lproj/InfoPlist.strings"
+cmp "$CASE_ROOT/bin-output/SmartClipboard_ClipboardCore.bundle/en.lproj/Localizable.strings" "$CASE_ROOT/dist/Smart Clipboard.app/Contents/Resources/SmartClipboard_ClipboardCore.bundle/en.lproj/Localizable.strings"
 [[ -n "$(/usr/libexec/PlistBuddy -c 'Print :NSLocalNetworkUsageDescription' "$packaged_plist")" ]]
 [[ "$(/usr/libexec/PlistBuddy -c 'Print :NSAppTransportSecurity:NSAllowsLocalNetworking' "$packaged_plist")" == true ]]
 if /usr/libexec/PlistBuddy -c 'Print :NSAppTransportSecurity:NSAllowsArbitraryLoads' "$packaged_plist" >/dev/null 2>&1; then

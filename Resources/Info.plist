@@ -3,6 +3,8 @@
 <plist version="1.0"><dict>
 <key>CFBundleName</key><string>Smart Clipboard</string>
 <key>CFBundleDisplayName</key><string>Smart Clipboard</string>
+<key>CFBundleDevelopmentRegion</key><string>en</string>
+<key>CFBundleLocalizations</key><array><string>en</string><string>it</string><string>es</string><string>fr</string><string>de</string></array>
 <key>CFBundleIdentifier</key><string>com.smartclipboard.app</string>
 <key>CFBundleExecutable</key><string>SmartClipboard</string>
 <key>CFBundleIconFile</key><string>AppIcon</string>

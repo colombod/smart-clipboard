@@ -9,7 +9,7 @@ import ClipboardCore
 
     func capture(window: Bool, willBegin: () -> Void) async throws -> Data? {
         guard hasAccess() || requestAccess() || hasAccess() else {
-            throw ClipError.message("macOS has not allowed Screen Recording for Smart Clipboard. Enable it in System Settings → Privacy & Security → Screen & System Audio Recording, then quit and reopen the app. If the switch is already on after an app update, turn it off and on again to refresh permission. Your capture has not started.")
+            throw ClipError.message(L10n.text("macOS has not allowed Screen Recording for Smart Clipboard. Enable it in System Settings → Privacy & Security → Screen & System Audio Recording, then quit and reopen the app. If the switch is already on after an app update, turn it off and on again to refresh permission. Your capture has not started."))
         }
         try Task.checkCancellation()
         willBegin()

@@ -7,6 +7,49 @@ import ClipboardCore
 /// Opt in with SMART_CLIPBOARD_RENDER_DIR. The host stays windowless throughout.
 /// Appearance/layout snapshots do not establish macOS Dynamic Type, live AX, or VoiceOver behavior.
 @MainActor struct ConnectionRenderTests {
+    /// Run separately with --filter translatedLanguageScreens, one locale per process.
+    @Test(.enabled(if: ProcessInfo.processInfo.environment["SMART_CLIPBOARD_LANGUAGE_RENDER"] != nil))
+    func translatedLanguageScreens() async throws {
+        let language = try #require(ProcessInfo.processInfo.environment["SMART_CLIPBOARD_LANGUAGE_RENDER"])
+        let directory = try #require(ProcessInfo.processInfo.environment["SMART_CLIPBOARD_LANGUAGE_RENDER_DIR"])
+        let originalArguments = UserDefaults.standard.volatileDomain(forName: UserDefaults.argumentDomain)
+        var arguments = originalArguments
+        arguments["AppleLanguages"] = [language]
+        UserDefaults.standard.setVolatileDomain(arguments, forName: UserDefaults.argumentDomain)
+        defer { UserDefaults.standard.setVolatileDomain(originalArguments, forName: UserDefaults.argumentDomain) }
+        try #require(L10n.text("Settings") == L10n.text("Settings", locale: Locale(identifier: language)))
+        if language != "en" { try #require(L10n.text("Settings") != "Settings") }
+        let output = URL(fileURLWithPath: directory).appendingPathComponent(language)
+        try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
+        let history = FileManager.default.temporaryDirectory.appendingPathComponent("language-render-" + UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: history) }
+        let board = NSPasteboard.withUniqueName()
+        defer { board.releaseGlobally() }
+        let defaults = RenderDefaults()
+        let model = AppModel(defaults: defaults, historyDirectory: history, registerHotkeys: false,
+                             pasteboard: board, presentsWindows: false, conversionOverride: { _, _, _, _ in
+            ConversionResult(format: .markdown, content: "# Projet de démonstration\n\nUne capture, plusieurs langues.")
+        })
+        model.notifications = .disabled(defaults: defaults)
+        model.defaultOutputLanguage = .language("fr")
+        model.defaultFormat = .markdown
+        model.processImportedImage(try syntheticCapturePNG(), source: "Synthetic language layout")
+        let deadline = Date().addingTimeInterval(5)
+        while model.busy && Date() < deadline { try await Task.sleep(for: .milliseconds(10)) }
+        try #require(!model.busy && model.error == nil)
+        for scheme in [ColorScheme.light, .dark] {
+            let suffix = scheme == .dark ? "-dark" : "-light"
+            try await render(GeneralSettingsView(model: model), name: "general" + suffix,
+                             scheme: scheme, size: NSSize(width: 800, height: 1300), to: output)
+            try await render(CaptureView(model: model), name: "capture" + suffix,
+                             scheme: scheme, size: NSSize(width: 1000, height: 850), to: output)
+            try await render(CaptureView(model: model), name: "capture-minimum" + suffix,
+                             scheme: scheme, size: NSSize(width: 900, height: 700), to: output)
+            try await render(HistoryView(model: model), name: "history" + suffix,
+                             scheme: scheme, size: NSSize(width: 640, height: 550), to: output)
+        }
+    }
+
     @Test(.enabled(if: ProcessInfo.processInfo.environment["SMART_CLIPBOARD_RENDER_DIR"] != nil))
     func settingsRenderWithoutWindows() async throws {
         let directory = try #require(ProcessInfo.processInfo.environment["SMART_CLIPBOARD_RENDER_DIR"])

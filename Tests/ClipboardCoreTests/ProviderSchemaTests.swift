@@ -49,8 +49,10 @@ struct ProviderSchemaTests {
 
     @Test func plainTextPromptUsesTabsInsteadOfMarkdownTables() {
         let prompt = ConversionProtocol.prompt(format: .text, instruction: "Preserve the source language")
-        #expect(prompt.contains("Do not paraphrase or introduce Markdown formatting or table syntax"))
-        #expect(prompt.contains("including any visible Markdown syntax"))
+        #expect(prompt.contains("Do not introduce Markdown formatting or table syntax"))
+        #expect(prompt.contains("Preserve line breaks and visible Markdown syntax"))
+        #expect(prompt.contains("When the user requests translation, translate human-readable text"))
+        #expect(prompt.contains("Otherwise preserve all literal source characters without paraphrasing"))
         #expect(prompt.contains("Use tabs and line breaks to represent drawn table columns and rows"))
         #expect(prompt.contains("The format must be text"))
         #expect(prompt.contains("Preserve the source language"))

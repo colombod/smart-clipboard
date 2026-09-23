@@ -40,7 +40,7 @@ import ClipboardCore
                 // Placeholders are only for repairing Settings; validatedProfile blocks their use.
                 activeProvider = .openai
                 profiles = AIProvider.allCases.map { ConnectionProfile(provider: $0) }
-                configurationWarning = "Saved connection settings could not be read. AI processing is paused. Select a provider and edit its connection to replace the unreadable settings."
+                configurationWarning = L10n.text("Saved connection settings could not be read. AI processing is paused. Select a provider and edit its connection to replace the unreadable settings.")
             }
         } else {
             activeProvider = defaults.string(forKey: "provider") == "codex" ? .codex : .openai
@@ -52,7 +52,7 @@ import ClipboardCore
     func validatedProfile() throws -> ConnectionProfile {
         if let configurationWarning { throw ClipError.message(configurationWarning) }
         guard let profile = profiles.first(where: { $0.provider == activeProvider && $0.id == activeProvider.rawValue }) else {
-            throw ClipError.message("Choose a valid AI connection in Settings → Connection before processing images.")
+            throw ClipError.message(L10n.text("Choose a valid AI connection in Settings → Connection before processing images."))
         }
         return profile
     }
@@ -97,7 +97,7 @@ import ClipboardCore
             defaults.set(try JSONEncoder().encode(settings), forKey: Self.settingsKey)
             configurationWarning = nil
         } catch {
-            configurationWarning = "Could not save connection settings: " + error.localizedDescription
+            configurationWarning = L10n.text("Could not save connection settings: \(error.localizedDescription)")
         }
     }
 

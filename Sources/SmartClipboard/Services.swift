@@ -50,7 +50,7 @@ final class ProcessRunner: @unchecked Sendable {
                                 if child.isRunning { kill(child.processIdentifier, SIGKILL) }
                                 child.waitUntilExit()
                                 if cancelled { throw CancellationError() }
-                                throw ClipError.message("The operation timed out. Please try again.")
+                                throw ClipError.message(L10n.text("The operation timed out. Please try again."))
                             }
                             Thread.sleep(forTimeInterval: 0.05)
                         }
@@ -73,9 +73,9 @@ enum KeyStore {
         lock.lock(); defer { lock.unlock() }
         var previousInteraction = DarwinBoolean(true)
         let previousStatus = SecKeychainGetUserInteractionAllowed(&previousInteraction)
-        guard previousStatus == errSecSuccess else { throw ClipError.message("Could not check Keychain access. Open Settings → Connection to authorize your saved key.") }
+        guard previousStatus == errSecSuccess else { throw ClipError.message(L10n.text("Could not check Keychain access. Open Settings → Connection to authorize your saved key.")) }
         let interactionStatus = SecKeychainSetUserInteractionAllowed(allowInteraction)
-        guard interactionStatus == errSecSuccess else { throw ClipError.message("Could not configure Keychain access. Open Settings → Connection to authorize your saved key.") }
+        guard interactionStatus == errSecSuccess else { throw ClipError.message(L10n.text("Could not configure Keychain access. Open Settings → Connection to authorize your saved key.")) }
         defer { SecKeychainSetUserInteractionAllowed(previousInteraction.boolValue) }
         var q = query(account: account); q[kSecReturnData as String] = true; q[kSecMatchLimit as String] = kSecMatchLimitOne
         if !allowInteraction { q[kSecUseAuthenticationUI as String] = kSecUseAuthenticationUIFail }
@@ -83,7 +83,7 @@ enum KeyStore {
         let status = SecItemCopyMatching(q as CFDictionary, &result)
         if status == errSecItemNotFound { return "" }
         guard status == errSecSuccess, let data = result as? Data else {
-            throw ClipError.message("The saved API key needs Keychain access. Open Settings → Connection and choose Authorize saved key, or save a new key.")
+            throw ClipError.message(L10n.text("The saved API key needs Keychain access. Open Settings → Connection and choose Authorize saved key, or save a new key."))
         }
         return String(data: data, encoding: .utf8) ?? ""
     }
@@ -92,7 +92,7 @@ enum KeyStore {
         let query = query(account: account)
         if key.isEmpty {
             let status = SecItemDelete(query as CFDictionary)
-            guard status == errSecSuccess || status == errSecItemNotFound else { throw ClipError.message("Could not remove the key from Keychain (\(status)).") }; return
+            guard status == errSecSuccess || status == errSecItemNotFound else { throw ClipError.message(L10n.text("Could not remove the key from Keychain (\(status)).")) }; return
         }
         let value = [kSecValueData as String: Data(key.utf8)]
         var status = SecItemUpdate(query as CFDictionary, value as CFDictionary)
@@ -100,7 +100,7 @@ enum KeyStore {
             var q = query; q[kSecValueData as String] = Data(key.utf8); q[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
             status = SecItemAdd(q as CFDictionary, nil)
         }
-        guard status == errSecSuccess else { throw ClipError.message("Could not save the key in Keychain (\(status)).") }
+        guard status == errSecSuccess else { throw ClipError.message(L10n.text("Could not save the key in Keychain (\(status)).")) }
     }
 }
 
@@ -115,13 +115,13 @@ enum CaptureService {
     static func readCaptureResult(status: Int32, output: String, destination: URL) throws -> Data? {
         // An unsuccessful command is not cancellation, even when it produced no image.
         guard status == 0 else {
-            throw ClipError.message("Screen capture failed (exit \(status)). \(output.trimmingCharacters(in: .whitespacesAndNewlines).prefix(800)) Check Screen Recording permission and reopen the app if it was just granted.")
+            throw ClipError.message(L10n.text("Screen capture failed (exit \(status)). \(output.trimmingCharacters(in: .whitespacesAndNewlines).prefix(800)) Check Screen Recording permission and reopen the app if it was just granted."))
         }
         // Escape normally exits successfully without writing a file.
         guard FileManager.default.fileExists(atPath: destination.path) else { return nil }
         let data = try Data(contentsOf: destination)
         guard let bitmap = NSBitmapImageRep(data: data), bitmap.pixelsWide > 0, bitmap.pixelsHigh > 0 else {
-            throw ClipError.message("Screen capture returned an unreadable image. Try capturing again.")
+            throw ClipError.message(L10n.text("Screen capture returned an unreadable image. Try capturing again."))
         }
         return data
     }
@@ -133,7 +133,7 @@ enum CaptureService {
             request.automaticallyDetectsLanguage = true
             try VNImageRequestHandler(data: png).perform([request])
             let text = (request.results ?? []).compactMap { $0.topCandidates(1).first?.string }.joined(separator: "\n")
-            guard !text.isEmpty else { throw ClipError.message("No readable text found in this capture.") }
+            guard !text.isEmpty else { throw ClipError.message(L10n.text("No readable text found in this capture.")) }
             return text
         }.value
     }
@@ -141,8 +141,8 @@ enum CaptureService {
 
 enum AIService {
     static func api(png: Data, key: String, model: String, format: OutputFormat, instruction: String) async throws -> ConversionResult {
-        guard !key.isEmpty else { throw ClipError.message("Add your OpenAI API key in Settings → Connection, or choose ChatGPT via Codex.") }
-        guard !model.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw ClipError.message("Enter an image-capable model in Settings.") }
+        guard !key.isEmpty else { throw ClipError.message(L10n.text("Add your OpenAI API key in Settings → Connection, or choose ChatGPT via Codex.")) }
+        guard !model.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw ClipError.message(L10n.text("Enter an image-capable model in Settings.")) }
         let profile = ConnectionProfile(provider: .openai, model: model)
         let client = ProviderClient()
         defer { client.session.invalidateAndCancel() }
@@ -151,7 +151,7 @@ enum AIService {
     static func codexPath(_ configured: String) throws -> String {
         let candidates = [configured, NSHomeDirectory() + "/.local/bin/codex", "/opt/homebrew/bin/codex", "/usr/local/bin/codex", "/Applications/Codex.app/Contents/Resources/codex"]
         guard let path = candidates.first(where: { !$0.isEmpty && FileManager.default.isExecutableFile(atPath: $0) }) else {
-            throw ClipError.message("Install the Codex CLI, or set its executable path in Settings → Connection.")
+            throw ClipError.message(L10n.text("Install the Codex CLI, or set its executable path in Settings → Connection."))
         }
         return path
     }
@@ -159,7 +159,7 @@ enum AIService {
         let path = try codexPath(executable)
         let (status, login) = try await ProcessRunner().run(path, ["login", "status"], timeout: 15)
         guard status == 0, login.localizedCaseInsensitiveContains("ChatGPT") else {
-            throw ClipError.message("Sign in with ChatGPT in Settings → Connection first. This option requires Codex access through your ChatGPT plan.")
+            throw ClipError.message(L10n.text("Sign in with ChatGPT in Settings → Connection first. This option requires Codex access through your ChatGPT plan."))
         }
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent("smart-clipboard-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
@@ -173,7 +173,7 @@ enum AIService {
         let (exit, _) = try await ProcessRunner().run(path, args, directory: folder)
         try Task.checkCancellation()
         guard exit == 0, let text = try? String(contentsOf: output, encoding: .utf8) else {
-            throw ClipError.message("Codex could not complete the conversion. Check your sign-in, plan limits, model and CLI version. Update the CLI if necessary.")
+            throw ClipError.message(L10n.text("Codex could not complete the conversion. Check your sign-in, plan limits, model and CLI version. Update the CLI if necessary."))
         }
         return try ConversionProtocol.decode(text, requested: format)
     }

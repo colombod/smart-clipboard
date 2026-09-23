@@ -1,0 +1,2 @@
+"NSLocalNetworkUsageDescription" = "Si connette al server locale di elaborazione immagini scelto per elencare i modelli, provare l’elaborazione delle immagini o convertire le acquisizioni selezionate.";
+"NSScreenCaptureUsageDescription" = "Acquisisce solo l’area dello schermo o la finestra selezionata per copiarne o convertirne il contenuto.";
