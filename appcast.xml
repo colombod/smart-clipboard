@@ -1,6 +1,40 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?><!-- sparkle-sign-warning:
 IMPORTANT: This file was signed by Sparkle. Any modifications to this file requires re-signing this file with generate_appcast or sign_update! The signed signature will be embedded at the end of this file.
---><rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0"><channel><item><title>Smart Clipboard 0.4.0 Preview</title><sparkle:version>14</sparkle:version><sparkle:shortVersionString>0.4.0</sparkle:shortVersionString><sparkle:channel>preview</sparkle:channel><sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion><sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements><pubDate>Wed, 23 Sep 2026 11:37:22 +0000</pubDate><description sparkle:format="plain-text"># Smart Clipboard 0.4.0 preview — build 14
+--><rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0"><channel><item><title>Smart Clipboard 0.4.0 Preview</title><sparkle:version>15</sparkle:version><sparkle:shortVersionString>0.4.0</sparkle:shortVersionString><sparkle:channel>preview</sparkle:channel><sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion><sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements><pubDate>Wed, 23 Sep 2026 12:21:03 +0000</pubDate><description sparkle:format="plain-text"># Smart Clipboard 0.4.0 preview — build 15
+
+Clearer capture shortcuts and illustrated help in five languages.
+
+## New capture defaults
+
+- **Region:** **⌃⌘R** — hold **Control + Command**, then press **R**.
+- **Window:** **⌃⌘W** — hold **Control + Command**, then press **W**.
+
+These replace the shifted-number defaults for fresh installations and settings without a saved binding. **Your saved shortcuts stay unchanged**, including custom keys and combinations saved by an older version. See **Settings → Shortcuts** to view or record your own choices. **Find available shortcuts** now uses matching letter keys and labels when a combination is already registered.
+
+New letter defaults are resolved from the current Latin keyboard layout when the app starts. Saved shortcuts keep their existing physical bindings. If you change keyboard layouts while the app is open, reopen it or record your preferred combination in Shortcuts.
+
+The shortcut handler registers physical key codes and modifier flags; it does not match the character typed by Shift. The new defaults remove the shifted-number instructions that caused confusion. A default can still conflict with another app or an enabled macOS shortcut; the app reports registration problems rather than silently disabling the other capture action.
+
+## Illustrated help
+
+The [getting-started page](https://colombod.github.io/smart-clipboard/) now uses real app-view screenshots with short captions. The [user guide](https://colombod.github.io/smart-clipboard/guide.html) shows preferred output, oMLX setup, offline SVG tracing, saved formats and reuse of previous captures.
+
+Use the page’s language switcher for **English, Spanish, Italian, French or German**. Screenshots show the English interface with sample data. The app itself already supports these five interface languages; this release adds translated help pages.
+
+## Still included
+
+Local SVG tracing works without AI, an API key or a model. Choose **General → SVG → Trace on device**, then Photo, Logo or Line drawing and Balanced/Detailed. AI extraction supports your configured connection, including local oMLX. Captures keep the source language unless you select translation; History retains separate format and language versions.
+
+Configure once, close Settings, capture, wait for **Clip ✓**, then paste. The update preserves your provider, history and preferences.
+
+## Preview status
+
+Automated shortcut checks cover new defaults, saved custom/older bindings, conflict handling and action routing. Documentation images are rendered from actual app views with isolated sample data; they are not evidence of a live capture. Repeated native capture, complete provider coverage and full accessibility acceptance were not rerun for this update.
+
+The [build 14 notes](https://github.com/colombod/smart-clipboard/releases/tag/v0.4.0-preview.14) record earlier installed-app, tracing, export, translation and restart checks. Those observations remain scoped to their tested builds. Known limitations remain: AI can invent details, tracing keeps backgrounds and outlines text, semantic chart reconstruction is not included, and macOS can suppress notifications during Focus or screen sharing.
+
+This is an opt-in preview. [Accessibility status](https://github.com/colombod/smart-clipboard/blob/main/docs/ACCESSIBILITY.md) · [Provider status](https://github.com/colombod/smart-clipboard/blob/main/docs/PROVIDERS.md).
+</description><enclosure url="https://github.com/colombod/smart-clipboard/releases/download/v0.4.0-preview.15/Smart-Clipboard-0.4.0-macOS-arm64.zip" sparkle:edSignature="1z2SEoOOye3u/mdhBHBrNBvVprTK2Ab3j/WG1aJP7kvknYqmATQx6LqSouskfDEA5JyLUSwdx1SUW00fZpoPAg==" length="3994537" type="application/octet-stream"></enclosure></item><item><title>Smart Clipboard 0.4.0 Preview</title><sparkle:version>14</sparkle:version><sparkle:shortVersionString>0.4.0</sparkle:shortVersionString><sparkle:channel>preview</sparkle:channel><sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion><sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements><pubDate>Wed, 23 Sep 2026 11:37:22 +0000</pubDate><description sparkle:format="plain-text"># Smart Clipboard 0.4.0 preview — build 14
 
 Turn a captured picture into SVG on your Mac without an AI account or model download. This preview also adds five interface languages and optional capture translation. Configure once, capture, wait for **Clip ✓**, then paste. App windows open only when you ask.
 
@@ -87,6 +121,6 @@ Tests used a 128 GiB Apple Silicon Mac and the unmodified official **oMLX 0.7.0.
 
 This is an opt-in preview, not a claim that every provider, output type, assistive technology or hardware configuration has passed all acceptance gates. The [UAT criteria](https://github.com/colombod/smart-clipboard/blob/7cdf6985e98da19e98de60b44247150689f35521/docs/UAT.md) distinguish automated checks, synthetic tests and actual capture evidence.
 </description><enclosure url="https://github.com/colombod/smart-clipboard/releases/download/v0.4.0-preview.11/Smart-Clipboard-0.4.0-macOS-arm64.zip" sparkle:edSignature="RvrNPN6aUEID18zw5zIYTBnQNuT+mZUzOkVyAqobLeBiJorCfrCUZ//GsqvarGDOp5Q3q5Vd+pxjU2i9f585Cg==" length="3555318" type="application/octet-stream"></enclosure></item><title>Smart Clipboard updates</title><link>https://colombod.github.io/smart-clipboard/appcast.xml</link><description>Signed Smart Clipboard releases</description></channel></rss><!-- sparkle-signatures:
-edSignature: qpXbijuS6KbqoENqVeeemrcFfsQgL/cCdZGEc1bZ43EiartDTGB64hwnCPUG1kOhzYblDBzau8GlpGSgiRDiAQ==
-length: 15982
+edSignature: WgliQE/p18KZGmodalGVrqtAaHuBa5XFDTwPEQ1n/OxPEpZuGaE8toWOWVbVTnlmdgEJovdfgzqg+dVu0FxEAg==
+length: 20169
 -->
