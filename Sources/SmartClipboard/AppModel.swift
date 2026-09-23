@@ -90,6 +90,7 @@ private enum ConversionRoute: Equatable {
     private let captureClient: CaptureClient
     private let registersHotkeys: Bool
     private let systemLanguage: () -> String
+    private let shortcutKeyResolver: (String, UInt32) -> UInt32?
     let hotkeys: HotKeyManager
     var captureReady: Bool { screenAccess && !shortcutsPaused && shortcutProblems.isEmpty && hotkeys.isRegistered(1) && hotkeys.isRegistered(2) }
     func shortcutStatus(_ id: UInt32) -> String {
@@ -102,8 +103,17 @@ private enum ConversionRoute: Equatable {
         if registersHotkeys && !shortcutsPaused { registerShortcuts() }
     }
     private func registerShortcuts() {
-        // Try each independently: a region conflict must not disable the window shortcut.
-        for (id, shortcut) in [(UInt32(1), regionShortcut), (UInt32(2), windowShortcut)] {
+        // A new default must never reserve a user's saved key for the other
+        // action. Keep both choices visible and report the default's conflict;
+        // only an explicit shortcut change/find action chooses a replacement.
+        let bindings = [(id: UInt32(1), shortcut: regionShortcut, key: "regionShortcut"),
+                        (id: UInt32(2), shortcut: windowShortcut, key: "windowShortcut")]
+        let ordered = bindings.sorted { left, right in
+            let leftSaved = Self.loadShortcut(left.key, defaults: defaults) != nil
+            let rightSaved = Self.loadShortcut(right.key, defaults: defaults) != nil
+            return leftSaved == rightSaved ? left.id < right.id : leftSaved
+        }
+        for (id, shortcut, _) in ordered {
             do { try hotkeys.register(shortcut, id: id); shortcutProblems[id] = nil }
             catch { shortcutProblems[id] = error.localizedDescription }
         }
@@ -130,7 +140,7 @@ private enum ConversionRoute: Equatable {
     private var panel: NSWindow?
     private var settings: NSWindow?
 
-    init(defaults: UserDefaults = .standard, historyDirectory: URL? = nil, registerHotkeys: Bool = true, hotkeyManager: HotKeyManager? = nil, captureClient: CaptureClient? = nil, pasteboard: NSPasteboard? = nil, presentsWindows: Bool = true, conversionOverride: ((Data, OutputFormat, String, Bool) async throws -> ConversionResult)? = nil, providerConversionOverride: ((Data, ConnectionProfile, OutputFormat, String) async throws -> ProviderConversion)? = nil, traceOverride: ((Data, TraceSettings) async throws -> VectorTraceResult)? = nil, systemLanguage: @escaping () -> String = { OutputLanguage.systemLanguageIdentifier }) {
+    init(defaults: UserDefaults = .standard, historyDirectory: URL? = nil, registerHotkeys: Bool = true, hotkeyManager: HotKeyManager? = nil, captureClient: CaptureClient? = nil, pasteboard: NSPasteboard? = nil, presentsWindows: Bool = true, conversionOverride: ((Data, OutputFormat, String, Bool) async throws -> ConversionResult)? = nil, providerConversionOverride: ((Data, ConnectionProfile, OutputFormat, String) async throws -> ProviderConversion)? = nil, traceOverride: ((Data, TraceSettings) async throws -> VectorTraceResult)? = nil, systemLanguage: @escaping () -> String = { OutputLanguage.systemLanguageIdentifier }, shortcutKeyResolver: @escaping (String, UInt32) -> UInt32? = ShortcutKeyResolver.currentKey) {
         self.pasteboard = pasteboard ?? .general
         self.presentsWindows = presentsWindows
         self.conversionOverride = conversionOverride
@@ -140,6 +150,7 @@ private enum ConversionRoute: Equatable {
         self.hotkeys = hotkeyManager ?? HotKeyManager()
         self.registersHotkeys = registerHotkeys
         self.systemLanguage = systemLanguage
+        self.shortcutKeyResolver = shortcutKeyResolver
         self.defaults = defaults
         self.connections = ConnectionStore(defaults: defaults)
         historyLimit = defaults.object(forKey: "historyLimit") == nil ? HistoryStore.defaultLimit : min(max(0, defaults.integer(forKey: "historyLimit")), HistoryStore.maximumLimit)
@@ -157,8 +168,8 @@ private enum ConversionRoute: Equatable {
             defaults.set(migratedLanguage.rawValue, forKey: "defaultOutputLanguage")
         }
         copyAutomatically = defaults.bool(forKey: "copyAutomatically")
-        regionShortcut = Self.loadShortcut("regionShortcut", defaults: defaults) ?? .region
-        windowShortcut = Self.loadShortcut("windowShortcut", defaults: defaults) ?? .window
+        regionShortcut = Self.loadShortcut("regionShortcut", defaults: defaults) ?? Shortcut.captureDefault(window: false, resolve: shortcutKeyResolver)
+        windowShortcut = Self.loadShortcut("windowShortcut", defaults: defaults) ?? Shortcut.captureDefault(window: true, resolve: shortcutKeyResolver)
         svgMethod = defaultSVGMethod
         traceSettings = defaultTraceSettings
         hotkeys.handler = { [weak self] id in
@@ -187,16 +198,14 @@ private enum ConversionRoute: Equatable {
     }
     func findAvailableShortcuts() {
         for id: UInt32 in [1, 2] where shortcutProblems[id] != nil || !hotkeys.isRegistered(id) {
-            let key = id == 1 ? Shortcut.region.key : Shortcut.window.key
-            let digit = id == 1 ? "3" : "4"
-            let options: [(UInt32, String)] = [
-                (UInt32(cmdKey | shiftKey | optionKey), "⌥⇧⌘"),
-                (UInt32(cmdKey | controlKey | shiftKey), "⌃⇧⌘"),
-                (UInt32(cmdKey | optionKey), "⌥⌘"),
-                (UInt32(controlKey | shiftKey), "⌃⇧")
+            let options = [
+                UInt32(cmdKey | controlKey),
+                UInt32(cmdKey | controlKey | shiftKey),
+                UInt32(cmdKey | optionKey),
+                UInt32(controlKey | shiftKey)
             ]
-            for (modifiers, label) in options {
-                do { try setShortcut(Shortcut(key: key, modifiers: modifiers, label: label + digit), window: id == 2); break }
+            for modifiers in options {
+                do { try setShortcut(Shortcut.captureDefault(window: id == 2, modifiers: modifiers, resolve: shortcutKeyResolver), window: id == 2); break }
                 catch { shortcutProblems[id] = error.localizedDescription }
             }
         }

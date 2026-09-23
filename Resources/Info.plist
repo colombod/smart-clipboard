@@ -10,7 +10,7 @@
 <key>CFBundleIconFile</key><string>AppIcon</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>CFBundleShortVersionString</key><string>0.4.0</string>
-<key>CFBundleVersion</key><string>14</string>
+<key>CFBundleVersion</key><string>15</string>
 <key>SUFeedURL</key><string>https://colombod.github.io/smart-clipboard/appcast.xml</string>
 <key>SUPublicEDKey</key><string>YfsoOWRziXlut1NC+vkc7QqCSSlMybzc4oZyrrqF1cQ=</string>
 <key>SUEnableAutomaticChecks</key><false/>
