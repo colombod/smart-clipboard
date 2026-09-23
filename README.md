@@ -4,13 +4,11 @@
 
 **Capture something on your screen. Paste something useful.**
 
-Turn a screenshot into editable text, notes, a table or structured data—or simply keep the image. Smart Clipboard lives in your Mac’s menu bar, uses your preferred output automatically, and stays out of the way while you work.
+Turn a screenshot into editable text, notes, a table, structured data or vector artwork—or keep the image. Smart Clipboard lives in your Mac’s menu bar, uses your preferred output automatically, and stays out of the way while you work.
 
-**[Download for Mac](https://github.com/colombod/smart-clipboard/releases)** · Apple Silicon (M1 or newer) · macOS 14+
+**[Download for Mac](https://github.com/colombod/smart-clipboard/releases/download/v0.4.0-preview.14/Smart-Clipboard-0.4.0-macOS-arm64.dmg)** · Apple Silicon (M1 or newer) · macOS 14+
 
-The current public preview is **[0.4 preview build 11](https://github.com/colombod/smart-clipboard/releases/tag/v0.4.0-preview.11)**, with local AI, multiple providers and completion notifications. It is an early release with [known limitations](docs/releases/v0.4.0-preview.md), especially local Description/SVG quality and accessibility. Official downloads are signed and notarized by Apple.
-
-**Development build 14 is not published yet.** It adds five interface languages, optional capture translation and local SVG tracing. The sections labelled development below describe those upcoming controls; they are not in the current download.
+The current public preview is **[0.4 preview build 14](https://github.com/colombod/smart-clipboard/releases/tag/v0.4.0-preview.14)**, with local SVG tracing, five interface languages, optional capture translation, multiple AI providers and completion notifications. It is an early release with [known limitations](docs/releases/v0.4.0-preview.md), especially AI Description/SVG quality and accessibility. Official downloads are signed and notarized by Apple.
 
 ## Get started
 
@@ -22,7 +20,9 @@ Look for **Clip** in the menu bar at the top of your screen. There is no Dock ic
 
 ### 2. Choose how to process your captures
 
-For AI extraction, select a connection in **Settings → Connection** and run **Test image processing**.
+For photos, logos and drawings, **SVG → Trace on device** works without AI setup. [Set up picture tracing →](#turn-a-picture-into-svg) **Pass through (image)** also needs no AI connection.
+
+For AI extraction or reconstruction, select a connection in **Settings → Connection** and run **Test image processing**.
 
 | Use this connection | If you want… |
 | --- | --- |
@@ -30,7 +30,7 @@ For AI extraction, select a connection in **Settings → Connection** and run **
 | **OpenAI, Anthropic, Google Gemini or Perplexity** | To use an image-capable model through your own provider account and API key. [Connection setup →](docs/USER-GUIDE.md#choose-another-connection) |
 | **ChatGPT via Codex** | To use an eligible ChatGPT/Codex account through the separately installed official Codex CLI. [Connection setup →](docs/USER-GUIDE.md#choose-another-connection) |
 
-You can also choose **Pass through (image)** and skip AI setup entirely. API usage is billed by your provider; a ChatGPT subscription does not include API credits. Availability depends on your account, and not every cloud route has been tested live in this preview.
+API usage is billed by your provider; a ChatGPT subscription does not include API credits. Availability depends on your account, and not every cloud route has been tested live in this preview.
 
 **Starting with oMLX?** Our smaller tested option is **Qwen3-VL-8B-Instruct-4bit** for text, tables and structured extraction. The 32B model uses substantially more memory and did not fix the Description/SVG problems in our tests. Use the [model guide](docs/USER-GUIDE.md#choose-a-local-model) for exact downloads, memory guidance and the compatible server version.
 
@@ -45,12 +45,13 @@ In **Settings → General → Preferred format**, choose once:
 | Copy words into another app | **Plain text** |
 | Keep headings, lists or tables | **Markdown** |
 | Extract a record or configuration | **JSON** or **YAML** |
-| Reconstruct markup or vector content | **HTML** or **SVG** |
+| Reconstruct web markup | **HTML** |
+| Trace a picture or reconstruct vector artwork | **SVG** — [choose a method below](#turn-a-picture-into-svg) |
 | Describe what is visible | **Description** |
 
 Use **Default direction** for preferences such as keeping table columns.
 
-**Development build 14:** captures keep the language in the image by default. To translate automatically, go to **Settings → General → Languages → Capture output** and choose **System language** or a specific language. This choice takes priority over conflicting translation directions.
+Captures keep the language in the image by default. To translate automatically, go to **Settings → General → Languages → Capture output** and choose **System language** or a specific language. This choice takes priority over conflicting translation directions.
 
 ### 4. Capture and paste
 
@@ -69,15 +70,25 @@ In **Settings → General → Capture notifications**, enable macOS notification
 
 ## Turn a picture into SVG
 
-**Development build 14; not included in the published preview build 11.** Local tracing is being added for photos, logos and line drawings. Choose **SVG → Trace on device** in General settings, pick a preset and detail level once, then use your usual capture shortcut. When it is ready, paste the SVG source or save it as an `.svg` file for a vector editor. You can also trace an earlier image from History.
+Use **Trace on device** for a scalable version of a photo, pet, logo or drawing. Choose **Reconstruct with AI** to have a model interpret and rebuild a simple diagram or illustration. AI can change or invent details; local tracing follows visible shapes and colours. AI reconstruction remains the default after upgrading, so select tracing explicitly when you want it.
 
-Tracing runs on your Mac with the app's included helper. It needs no AI account, downloaded model, server or extra setup. It follows the visible shapes and colours: text becomes outlines, the background stays, and translation and directions do not apply. **Detailed** keeps more shapes and colours but produces larger files. **Reconstruct with AI** remains the default SVG method and uses your selected AI connection. [Choose the right SVG method →](docs/USER-GUIDE.md#trace-a-picture-to-svg)
+To trace pictures with your usual capture shortcut:
+
+1. Open **Settings → General**, set **Preferred format** to **SVG**, then set **SVG method** to **Trace on device**.
+2. Choose **Photo** for photos, **Logo** for flat artwork, or **Line drawing** for clear outlines. Start with **Balanced**; **Detailed** preserves more shapes and colours and creates larger files.
+3. Close Settings, capture a rectangle or window, wait for **Clip ✓**, then paste.
+
+The clipboard contains **SVG source text**. For a vector editor, open the result in **History**, choose **Save…**, and open or import the `.svg` file. You can also trace an earlier screenshot from History and keep multiple preset/detail versions.
+
+Tracing works offline with the helper included in the app. It needs no AI account, downloaded model, server or extra setup. Words become outlines, the background stays, and translation and directions do not apply. It does not remove backgrounds automatically or recover chart data. A failed trace leaves your clipboard unchanged and does not switch to AI.
+
+For AI reconstruction, configure and test an image-capable connection, choose **SVG → Reconstruct with AI**, then capture as usual. [Step-by-step SVG guide →](docs/USER-GUIDE.md#trace-a-picture-to-svg)
 
 ## Keep useful captures
 
 Open **Clip → History** to reuse an earlier capture. Pick another format, then choose **Convert with AI**. **Saved formats** reopens existing results without another AI request.
 
-**Development build 14** adds an **Output language** choice and saves each format and language separately, so translating into French keeps your earlier English or source-language version.
+Choose an **Output language** to translate a saved capture. Each format and language is saved separately, so translating into French keeps your earlier English or source-language version.
 
 Choose how many captures to retain in **Settings → History**, delete individual entries, or clear them all. The default is 50. Setting the limit to zero clears saved history and stops saving new captures.
 
@@ -85,9 +96,9 @@ Choose how many captures to retain in **Settings → History**, delete individua
 
 Enable **Launch at login** in General settings to have it ready when you start your Mac. Closing Settings or History leaves the menu-bar app running. Its green capture-frame icon and windows follow macOS light and dark appearance.
 
-**Development build 14** adds menus, settings, notifications and accessibility labels in English, Italian, Spanish, French and German, following your Mac’s preferred supported language. This does not change the language of captured content. Unsupported interface languages fall back to English. Restart the app after changing its language in macOS.
+Menus, settings, notifications and accessibility labels use English, Italian, Spanish, French or German, following your Mac’s preferred supported language. This does not change the language of captured content. Unsupported interface languages fall back to English. Restart the app after changing its language in macOS.
 
-The app captures only when you ask. It does not continuously record your screen or monitor other apps’ clipboard contents. AI captures go to your selected provider; **Local / oMLX** on this Mac keeps image processing local. **Pass through** makes no AI request. Capture history stays on your Mac. [Privacy and storage details →](docs/USER-GUIDE.md#privacy-and-storage)
+The app captures only when you ask. It does not continuously record your screen or monitor other apps’ clipboard contents. AI captures go to your selected provider; **Local / oMLX** on this Mac keeps image processing local. **Pass through** and **Trace on device** make no AI request. Capture history stays on your Mac. [Privacy and storage details →](docs/USER-GUIDE.md#privacy-and-storage)
 
 ## Need a hand?
 
