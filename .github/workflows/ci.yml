@@ -79,3 +79,9 @@ jobs:
         run: |
           uv run --no-project python Tests/ReleaseScripts/test-localizations.py
           uv run --no-project python scripts/check-localizations.py
+
+      - name: Check illustrated help in every language
+        run: |
+          command -v pandoc >/dev/null || brew install pandoc
+          uv run --no-project python Tests/ReleaseScripts/test-help-site.py
+          uv run --no-project python scripts/build-help-site.py --ref "$GITHUB_SHA" --output "$RUNNER_TEMP/smart-clipboard-help"
