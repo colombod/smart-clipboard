@@ -4,7 +4,7 @@ Smart Clipboard stays in the menu bar. Set your connection and preferred output 
 
 The current public release in the **0.4 preview** series is **[build 11](https://github.com/colombod/smart-clipboard/releases/tag/v0.4.0-preview.11)**. If you are using 0.3.1, the preview adds local oMLX, additional providers, About, notifications and update checks. See the [preview notes](releases/v0.4.0-preview.md) for current limitations.
 
-**Development build 13 is not published yet.** It adds five interface languages, optional capture translation and local SVG tracing. Those sections below are explicitly labelled development; their controls are not available in the current public download.
+**Development build 14 is not published yet.** It adds five interface languages, optional capture translation and local SVG tracing. Those sections below are explicitly labelled development; their controls are not available in the current public download.
 
 ## Install and start
 
@@ -90,7 +90,7 @@ All AI outputs, including HTML and SVG, are copied as text. The app does not ren
 
 ## Trace a picture to SVG
 
-**Development build 13:** the following controls are not in the published preview build 11. Native capture and installation acceptance must finish before this feature is advertised as released.
+**Development build 14:** the following controls are not in the published preview build 11. Native capture and installation acceptance must finish before this feature is advertised as released.
 
 SVG has two methods:
 
@@ -117,7 +117,7 @@ For an earlier screenshot, open **Clip → History**, select the capture, choose
 
 ## Languages and translation
 
-**Development build 13:** these interface languages and translation controls are not in the published preview build 11.
+**Development build 14:** these interface languages and translation controls are not in the published preview build 11.
 
 The interface follows your Mac’s preferred supported language: English, Italian, Spanish, French or German, with English as the fallback. This includes menus, settings, notifications and accessibility labels. Restart Smart Clipboard after changing its language in macOS. Provider names, your captures and model identifiers are kept as they are.
 
@@ -147,7 +147,7 @@ If **Clip ✓** appears but you see no notification or hear no sound, macOS may 
 
 Choose **Clip → History**, open a capture, select another format, and click **Convert with AI**. The original image is reused. **Saved formats** retrieves an existing result without another AI request. Opening history does not copy anything automatically; use **Copy**, or enable **Copy after manual conversion**. **Extract text on device** uses Apple's local text recognition and returns source-language plain text without an AI connection.
 
-**Development build 13** adds **Output language** and separate saved versions for each format and language. For example, a Spanish capture can have separate Spanish, English and French plain-text results. Repeating the same format and language replaces only that version; other language versions remain saved. **Saved formats** identifies the format and language. The same development build also supports [local SVG traces](#trace-a-picture-to-svg), saved by preset and detail.
+**Development build 14** adds **Output language** and separate saved versions for each format and language. For example, a Spanish capture can have separate Spanish, English and French plain-text results. Repeating the same format and language replaces only that version; other language versions remain saved. **Saved formats** identifies the format and language. The same development build also supports [local SVG traces](#trace-a-picture-to-svg), saved by preset and detail.
 
 In **Settings → History**, choose the maximum number of saved clips and apply the limit. The default is 50; the maximum is 500. Oldest clips are removed first. Zero clears and disables history. You can delete one clip or clear all history. Deletion does not remove exported files or change what is already on the system clipboard.
 

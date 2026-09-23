@@ -36,10 +36,3 @@ struct OutputLanguagePicker: View {
         return L10n.text("System language (\(name))")
     }
 }
-
-extension SavedConversion {
-    var variantTitle: String {
-        let language = OutputLanguage.fromResolvedIdentifier(outputLanguage).displayName()
-        return L10n.text("\(format.title) — \(language)")
-    }
-}

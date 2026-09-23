@@ -10,7 +10,7 @@ Turn a screenshot into editable text, notes, a table or structured data—or sim
 
 The current public preview is **[0.4 preview build 11](https://github.com/colombod/smart-clipboard/releases/tag/v0.4.0-preview.11)**, with local AI, multiple providers and completion notifications. It is an early release with [known limitations](docs/releases/v0.4.0-preview.md), especially local Description/SVG quality and accessibility. Official downloads are signed and notarized by Apple.
 
-**Development build 13 is not published yet.** It adds five interface languages, optional capture translation and local SVG tracing. The sections labelled development below describe those upcoming controls; they are not in the current download.
+**Development build 14 is not published yet.** It adds five interface languages, optional capture translation and local SVG tracing. The sections labelled development below describe those upcoming controls; they are not in the current download.
 
 ## Get started
 
@@ -50,7 +50,7 @@ In **Settings → General → Preferred format**, choose once:
 
 Use **Default direction** for preferences such as keeping table columns.
 
-**Development build 13:** captures keep the language in the image by default. To translate automatically, go to **Settings → General → Languages → Capture output** and choose **System language** or a specific language. This choice takes priority over conflicting translation directions.
+**Development build 14:** captures keep the language in the image by default. To translate automatically, go to **Settings → General → Languages → Capture output** and choose **System language** or a specific language. This choice takes priority over conflicting translation directions.
 
 ### 4. Capture and paste
 
@@ -69,7 +69,7 @@ In **Settings → General → Capture notifications**, enable macOS notification
 
 ## Turn a picture into SVG
 
-**Development build 13; not included in the published preview build 11.** Local tracing is being added for photos, logos and line drawings. Choose **SVG → Trace on device** in General settings, pick a preset and detail level once, then use your usual capture shortcut. When it is ready, paste the SVG source or save it as an `.svg` file for a vector editor. You can also trace an earlier image from History.
+**Development build 14; not included in the published preview build 11.** Local tracing is being added for photos, logos and line drawings. Choose **SVG → Trace on device** in General settings, pick a preset and detail level once, then use your usual capture shortcut. When it is ready, paste the SVG source or save it as an `.svg` file for a vector editor. You can also trace an earlier image from History.
 
 Tracing runs on your Mac with the app's included helper. It needs no AI account, downloaded model, server or extra setup. It follows the visible shapes and colours: text becomes outlines, the background stays, and translation and directions do not apply. **Detailed** keeps more shapes and colours but produces larger files. **Reconstruct with AI** remains the default SVG method and uses your selected AI connection. [Choose the right SVG method →](docs/USER-GUIDE.md#trace-a-picture-to-svg)
 
@@ -77,7 +77,7 @@ Tracing runs on your Mac with the app's included helper. It needs no AI account,
 
 Open **Clip → History** to reuse an earlier capture. Pick another format, then choose **Convert with AI**. **Saved formats** reopens existing results without another AI request.
 
-**Development build 13** adds an **Output language** choice and saves each format and language separately, so translating into French keeps your earlier English or source-language version.
+**Development build 14** adds an **Output language** choice and saves each format and language separately, so translating into French keeps your earlier English or source-language version.
 
 Choose how many captures to retain in **Settings → History**, delete individual entries, or clear them all. The default is 50. Setting the limit to zero clears saved history and stops saving new captures.
 
@@ -85,7 +85,7 @@ Choose how many captures to retain in **Settings → History**, delete individua
 
 Enable **Launch at login** in General settings to have it ready when you start your Mac. Closing Settings or History leaves the menu-bar app running. Its green capture-frame icon and windows follow macOS light and dark appearance.
 
-**Development build 13** adds menus, settings, notifications and accessibility labels in English, Italian, Spanish, French and German, following your Mac’s preferred supported language. This does not change the language of captured content. Unsupported interface languages fall back to English. Restart the app after changing its language in macOS.
+**Development build 14** adds menus, settings, notifications and accessibility labels in English, Italian, Spanish, French and German, following your Mac’s preferred supported language. This does not change the language of captured content. Unsupported interface languages fall back to English. Restart the app after changing its language in macOS.
 
 The app captures only when you ask. It does not continuously record your screen or monitor other apps’ clipboard contents. AI captures go to your selected provider; **Local / oMLX** on this Mac keeps image processing local. **Pass through** makes no AI request. Capture history stays on your Mac. [Privacy and storage details →](docs/USER-GUIDE.md#privacy-and-storage)
 
