@@ -1,8 +1,8 @@
 {
-  "sourceRef": "v0.4.0-preview.11",
+  "sourceRef": "9e708979d49a92b2ae455aede0fb8ee3da9342d4",
   "sources": {
-    "README.md": "523831eafcf1f2d33127d8230622d5d5365155c8a9fba6d48d6e84ad48d766a4",
-    "docs/USER-GUIDE.md": "eb42ce02596ca3063b67a0dfdedeec79d1a0ec16c82aaf6bf04d89c6dfeab3b2",
+    "README.md": "d201adffd08deff026631e2b2e8a3ea775fb4eabe9401ecdad27fbd93aa459e1",
+    "docs/USER-GUIDE.md": "5bce133328706751c44be36d0f99f15e9c298fc1fdcf0daffb8ad04037c8791e",
     "docs/app-icon.png": "d9ead922fe0528e4c49b89ea5fb039f8d0a6082e71708a6c90172c3225b06e70"
   },
   "draftWithoutDemo": false
