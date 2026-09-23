@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src 'self'; media-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="description" content="Richte Smart Clipboard auf deinem Mac ein, wähle die lokale Verarbeitung oder einen Cloud-Dienst und kopiere Aufnahmen direkt in die Zwischenablage.">
+<title>Anleitung zur Einrichtung und Verwendung — Smart Clipboard</title><link rel="icon" type="image/png" href="../assets/app-icon.png"><link rel="stylesheet" href="../assets/style.css"></head>
+<body class="guide"><a class="skip" href="#main">Zum Inhalt</a>
+<header class="site-header"><a class="brand" href="index.html"><img src="../assets/app-icon.png" alt="" width="42" height="42">Smart Clipboard</a>
+<nav aria-label="Hauptnavigation"><a href="index.html">Erste Schritte</a><a href="guide.html" aria-current="page">Anleitung</a><a href="https://github.com/colombod/smart-clipboard/releases">Downloads</a></nav><nav class="language-nav" aria-label="Sprache"><span>Sprache:</span><a href="../guide.html" lang="en" hreflang="en">English</a><a href="../es/guide.html" lang="es" hreflang="es">Español</a><a href="../it/guide.html" lang="it" hreflang="it">Italiano</a><a href="../fr/guide.html" lang="fr" hreflang="fr">Français</a><a href="guide.html" lang="de" hreflang="de" aria-current="page">Deutsch</a></nav></header>
+<div class="layout"><nav class="toc" aria-label="Auf dieser Seite"><details open><summary>Auf dieser Seite</summary><ul><li><a href="#installieren-und-starten">Installieren und starten</a></li><li><a href="#aufnehmen-warten-einfügen">Aufnehmen, warten, einfügen</a></li><li><a href="#das-ausgabeformat-einmal-festlegen">Das Ausgabeformat einmal festlegen</a></li><li><a href="#lokale-bildverarbeitung-mit-omlx-einrichten">Lokale Bildverarbeitung mit oMLX einrichten</a></li><li><a href="#eine-andere-verbindung-wählen">Eine andere Verbindung wählen</a></li><li><a href="#ein-bild-als-svg-vektorisieren">Ein Bild als SVG vektorisieren</a></li><li><a href="#sprachen-und-übersetzung">Sprachen und Übersetzung</a></li><li><a href="#eine-frühere-aufnahme-erneut-verwenden">Eine frühere Aufnahme erneut verwenden</a></li><li><a href="#mitteilungen-bei-erfolg-oder-fehlern">Mitteilungen bei Erfolg oder Fehlern</a></li><li><a href="#datenschutz-und-speicherung">Datenschutz und Speicherung</a></li><li><a href="#updates">Updates</a></li><li><a href="#wenn-die-aufnahme-nicht-funktioniert">Wenn die Aufnahme nicht funktioniert</a></li></ul></details></nav>
+<main id="main" tabindex="-1"><h1 id="smart-clipboard-verwenden">Smart Clipboard verwenden</h1>
+<p><strong>Einmal einrichten. Aufnehmen. Auf Clip ✓ warten. Einfügen.</strong> Die App bleibt in der Menüleiste, bis du sie selbst öffnest.</p>
+<p>Diese bebilderte Anleitung gilt für <strong><a href="https://github.com/colombod/smart-clipboard/releases/tag/v0.4.0-preview.15">0.4 Vorabversion, Build 15</a></strong>. Die Bildschirmfotos zeigen die aktuelle Benutzeroberfläche auf Englisch mit Beispieldaten. Klicke auf ein Bild, um es zu vergrößern.</p>
+<p>Direkt zu <a href="#lokale-bildverarbeitung-mit-omlx-einrichten">lokaler KI</a>, <a href="#ein-bild-als-svg-vektorisieren">Vektorisierung</a>, <a href="#sprachen-und-übersetzung">Übersetzung</a> oder <a href="#wenn-die-aufnahme-nicht-funktioniert">Problemlösungen</a>.</p>
+<h2 id="installieren-und-starten">Installieren und starten</h2>
+<ol type="1">
+<li><a href="https://github.com/colombod/smart-clipboard/releases/download/v0.4.0-preview.15/Smart-Clipboard-0.4.0-macOS-arm64.dmg">Lade die signierte DMG-Datei herunter</a>, öffne sie und ziehe <strong>Smart Clipboard</strong> in <strong>Programme</strong>.</li>
+<li>Wirf die DMG-Datei aus, öffne die installierte App und suche nach <strong>Clip</strong> in der Menüleiste. Es gibt kein Dock-Symbol und kein Fenster, das offen bleiben muss.</li>
+<li>Öffne <strong>Clip → Einstellungen &amp; Status …</strong>, um die App einzurichten. Aktiviere unter Allgemein <strong>Bei Anmeldung starten</strong>, wenn die App beim Start deines Mac bereitstehen soll.</li>
+</ol>
+<p>Erforderlich sind Apple Silicon und macOS 14 oder neuer. Die Kurzbefehle funktionieren auch bei geschlossenen Einstellungen. <strong>Clip → Smart Clipboard beenden</strong> beendet die App.</p>
+<h2 id="aufnehmen-warten-einfügen">Aufnehmen, warten, einfügen</h2>
+<table>
+<thead>
+<tr>
+<th>Schritt</th>
+<th>So geht es</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Bereich aufnehmen</strong></td>
+<td>Drücke <strong>⌃⌘R</strong> und ziehe ein Rechteck auf.</td>
+</tr>
+<tr>
+<td><strong>Fenster aufnehmen</strong></td>
+<td>Drücke <strong>⌃⌘W</strong> und klicke auf das Fenster.</td>
+</tr>
+<tr>
+<td><strong>Warten</strong></td>
+<td>Sobald das Ergebnis kopiert wurde, wechselt <strong>Clip …</strong> zu <strong>Clip ✓</strong>.</td>
+</tr>
+<tr>
+<td><strong>Einfügen</strong></td>
+<td>Drücke <strong>⌘V</strong> in deiner Ziel-App.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>⌃⌘R</strong> bedeutet: <strong>Control + Command</strong> gedrückt halten und <strong>R</strong> drücken. Für <strong>⌃⌘W</strong> verwendest du <strong>W</strong>. Diese Standardbelegungen gelten ab Build 15. Gespeicherte Kurzbefehle haben Vorrang, auch solche aus älteren Versionen. Unter <strong>Einstellungen → Kurzbefehle</strong> kannst du sie ansehen oder eine neue Kombination aufnehmen. Die <strong>Leertaste</strong> wechselt den Auswahlmodus; <strong>Escape</strong> bricht ab. Bei einem Fehler oder Abbruch bleibt der bisherige Inhalt deiner Zwischenablage erhalten.</p>
+<p>Erlaube die Bildschirmaufnahme, wenn macOS danach fragt. Unter Kurzbefehle kannst du auch <strong>Bildschirmzugriff anfordern</strong> wählen. Öffne die App erneut, falls macOS dich dazu auffordert. Eine Aufnahme öffnet weder die Einstellungen noch den Editor.</p>
+<h2 id="das-ausgabeformat-einmal-festlegen">Das Ausgabeformat einmal festlegen</h2>
+<figure class="screenshot">
+<a href="../assets/screenshots/capture-settings.png"><img src="../assets/screenshots/capture-settings.png" alt="Allgemeine Einstellungen mit automatischer Erkennung und beibehaltener Originalsprache."></a>
+<figcaption>Einstellungen → Allgemein gilt für jede neue Aufnahme. Im Verlauf wählst du gesondert, wie gespeicherte Bilder erneut verarbeitet werden sollen.</figcaption>
+</figure>
+<table>
+<thead>
+<tr>
+<th>Bevorzugtes Format</th>
+<th>Ergebnis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Automatisch erkennen</strong></td>
+<td>Die KI wählt anhand des Bildes ein sinnvolles, bearbeitbares Format.</td>
+</tr>
+<tr>
+<td><strong>Ohne Umwandlung (Bild)</strong></td>
+<td>Das Originalbild ohne Texterkennung oder KI.</td>
+</tr>
+<tr>
+<td><strong>Reiner Text / Markdown</strong></td>
+<td>Bearbeitbarer Text, Notizen, Überschriften oder Tabellen.</td>
+</tr>
+<tr>
+<td><strong>JSON / YAML / HTML</strong></td>
+<td>Strukturierte Daten oder Auszeichnungssprache als Quelltext.</td>
+</tr>
+<tr>
+<td><strong>SVG</strong></td>
+<td>Lokale Vektorisierung von Formen oder Rekonstruktion mit KI.</td>
+</tr>
+<tr>
+<td><strong>Beschreibung</strong></td>
+<td>Eine schriftliche Beschreibung des Bildes.</td>
+</tr>
+</tbody>
+</table>
+<p>Mit <strong>Standardanweisung</strong> ergänzt du Vorgaben wie „Tabellenspalten beibehalten“. KI-Ergebnisse, HTML und SVG werden als Text kopiert. Die App stellt erzeugten HTML- oder SVG-Code nicht dar und führt ihn nicht aus. Prüfe KI-Ergebnisse, bevor du sie verwendest.</p>
+<h2 id="lokale-bildverarbeitung-mit-omlx-einrichten">Lokale Bildverarbeitung mit oMLX einrichten</h2>
+<figure class="screenshot">
+<a href="../assets/screenshots/local-connection.png"><img src="../assets/screenshots/local-connection.png" alt="Lokale oMLX-Verbindung mit einer Serveradresse auf diesem Mac und einem Qwen3-VL-Bildmodell."></a>
+<figcaption>Wähle Lokal / oMLX, gib die Adresse deines Servers ein und wähle ein Modell mit Bildunterstützung.</figcaption>
+</figure>
+<ol type="1">
+<li>Installiere und starte <a href="https://github.com/jundot/omlx">oMLX</a>. Lade für den Einstieg <strong>mlx-community/Qwen3-VL-8B-Instruct-4bit</strong> herunter.</li>
+<li>Wähle unter <strong>Einstellungen → Verbindung</strong> die Option <strong>Lokal / oMLX</strong>. Gib die Serveradresse mit <code>/v1</code> am Ende ein. Die abgebildete Adresse <code>http://127.0.0.1:8999/v1</code> ist ein Beispiel; dein Server kann einen anderen Port verwenden.</li>
+<li>Klicke auf <strong>Modelle aktualisieren</strong> und wähle das Bildmodell genau so aus, wie es in der Liste erscheint. Der Server kann den Vorsatz <code>mlx-community/</code> weglassen.</li>
+<li>Falls dein Server einen Schlüssel benötigt, gib ihn ein und wähle <strong>Schlüssel speichern</strong>. Für einen Server auf einem anderen Computer ist ein Schlüssel erforderlich. Verwende außerhalb eines privaten lokalen Netzwerks HTTPS.</li>
+<li>Klicke auf <strong>Bildverarbeitung testen</strong>. Dabei wird ein erzeugtes Beispielbild verwendet, kein Inhalt deines Bildschirms. Wähle anschließend unter Allgemein dein bevorzugtes Ausgabeformat und schließe die Einstellungen.</li>
+</ol>
+<p>Lass oMLX für die KI-Verarbeitung laufen. Smart Clipboard lädt keine Modelle herunter, startet den Server nicht und wechselt nicht zu einem Cloud-Anbieter. <strong>Auf diesem Mac vektorisieren</strong> und <strong>Ohne Umwandlung (Bild)</strong> funktionieren ohne oMLX.</p>
+<h3 id="ein-lokales-modell-auswählen">Ein lokales Modell auswählen</h3>
+<p>Beginne für Text, Tabellen und Übersetzungen mit <strong>Qwen3-VL-8B-Instruct-4bit</strong>. Das größere <strong>32B</strong>-Modell behob die Fehler bei Beschreibung und SVG in unseren Tests nicht. Für die Vektorisierung eines Bildes nutze <strong>Auf diesem Mac vektorisieren</strong>; dafür brauchst du kein Modell.</p>
+<p>Getestet wurde die offizielle Version <strong><a href="https://github.com/jundot/omlx/releases/tag/v0.7.0.dev2">oMLX 0.7.0.dev2</a></strong>. Version 0.6.4 hat mit diesem Bildmodell einen Fehler bei strukturierten Ausgaben. Ein größeres Modell behebt diesen Serverfehler nicht. Neuere Serverversionen wurden in diesen Tests nicht untersucht.</p>
+<details>
+<summary>Modellgrößen, Arbeitsspeicher und Testergebnisse</summary>
+
+<p>Die folgenden Modelle sind 4-Bit-Konvertierungen bildfähiger Qwen-Modelle von MLX Community. Kopiere die vollständige Download-ID in die Downloadfunktion von oMLX:</p>
+<table>
+<thead>
+<tr>
+<th>Download-ID und Modellbeschreibung</th>
+<th>Downloadgröße</th>
+<th>Stand vom 22. September 2026</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://huggingface.co/mlx-community/Qwen3-VL-8B-Instruct-4bit">mlx-community/Qwen3-VL-8B-Instruct-4bit</a></td>
+<td>Laut <a href="https://huggingface.co/mlx-community/Qwen3-VL-8B-Instruct-4bit/tree/main">Dateiliste des Herausgebers</a> etwa 5,78 GB.</td>
+<td>Kleineres Modell für erste lokale Tests. Text, Tabellen und strukturierte Daten funktionierten mit den getesteten synthetischen Bildern. Bei Beschreibung erfand das Modell Aussagen zur Rechtschreibung; bei SVG änderte es Seitenverhältnis, Ränder oder Layout. Es hat die Qualitätsabnahme über alle Formate hinweg nicht bestanden.</td>
+</tr>
+<tr>
+<td><a href="https://huggingface.co/mlx-community/Qwen3-VL-32B-Instruct-4bit">mlx-community/Qwen3-VL-32B-Instruct-4bit</a></td>
+<td>Verifizierter Download: 19.636.446.591 Bytes in 19 Dateien, etwa 19,64 GB / 18,29 GiB.</td>
+<td>Mit oMLX 0.7.0.dev2 getestet. Die Testwerte blieben erhalten, aber bei Beschreibung erfand das Modell Details zur Ausrichtung. Bei SVG verwendete es eine falsche Zeichenfläche und fügte eine Tabellenzeile hinzu. Sechs Varianten der Anweisungen verbesserten die Abmessungen der Zeichenfläche, behoben aber die Fehler in Inhalt und Layout nicht. Es hat die Qualitätsabnahme über alle Formate hinweg nicht bestanden.</td>
+</tr>
+</tbody>
+</table>
+<p>Der gemessene 32B-Download entspricht <a href="https://huggingface.co/mlx-community/Qwen3-VL-32B-Instruct-4bit/tree/6e5644d3ea4b953b5221ffd02339bf897041038a">Revision <code>6e5644d</code> des Herausgebers</a>. Diese Größen betreffen den Speicherplatz auf der Festplatte, nicht den Arbeitsspeicher beim Betrieb.</p>
+<p><strong>Schätzungen für die Speicherplanung:</strong> Plane mindestens 16 GB gemeinsamen Arbeitsspeicher für das 8B-Modell oder 48 GB für 32B ein, dazu Reserven für größere Bilder, Kontext und andere Apps. Das sind vorsichtige Schätzungen, keine bestätigten Mindestanforderungen oder Geschwindigkeitsgarantien. Die dokumentierten Tests liefen auf einem Mac mit 128 GiB; Macs mit weniger Arbeitsspeicher wurden nicht geprüft. Halte zusätzlichen Festplattenspeicher für Server-Caches frei. Beginne mit einem kleinen, nicht vertraulichen Beispiel und prüfe das Ergebnis, bevor du dich auf eines der Modelle verlässt.</p>
+<p>Beobachtete Ergebnisse und den Unterschied zwischen automatisierten Prüfungen und visueller Qualität findest du in den <a href="https://github.com/colombod/smart-clipboard/blob/e2676a812aec6921b12868dad737c83bf9a4a0d7/docs/testing/OMLX.md">lokalen Testnachweisen</a>. Beschreibung und KI-SVG bleiben in dieser Vorabversion experimentell; die Qualitätsabnahme über alle Formate hinweg ist nicht bestanden.</p>
+</details>
+
+<h2 id="eine-andere-verbindung-wählen">Eine andere Verbindung wählen</h2>
+<p>Wähle für <strong>OpenAI</strong>, <strong>Anthropic</strong>, <strong>Google Gemini</strong> oder <strong>Perplexity</strong> den Anbieter unter Verbindung aus, gib seinen API-Schlüssel ein und klicke auf <strong>Schlüssel speichern</strong>. Wähle ein Modell mit Bildunterstützung und führe <strong>Bildverarbeitung testen</strong> aus. API-Zugriff und Abrechnung sind von privaten Chat-Abonnements getrennt. Für jeden Anbieter werden Einstellungen und Schlüssel getrennt gespeichert.</p>
+<p>Für <strong>ChatGPT über Codex</strong> folge <strong>Codex CLI installieren / aktualisieren ↗</strong> und wähle danach <strong>Mit ChatGPT anmelden</strong>. Lass <strong>Ausführbare Codex-Datei</strong> zur automatischen Erkennung leer und teste nach der Anmeldung die Bildverarbeitung. Erforderlich sind ein Konto mit Codex-Zugriff und eine kompatible offizielle CLI. Die Nutzung unterliegt den Grenzen deines Abonnements.</p>
+<p>Falls ein gespeicherter Schlüssel nach einem Update eine Freigabe benötigt, wähle ausdrücklich <strong>Gespeicherten Schlüssel freigeben</strong>. Hintergrundaufnahmen öffnen niemals einen Schlüsselbunddialog. Nicht alle Cloud-Verbindungen wurden in dieser Vorabversion mit echten Anfragen überprüft; siehe <a href="https://github.com/colombod/smart-clipboard/blob/e2676a812aec6921b12868dad737c83bf9a4a0d7/docs/PROVIDERS.md">Verbindungsstatus</a>.</p>
+<h2 id="ein-bild-als-svg-vektorisieren">Ein Bild als SVG vektorisieren</h2>
+<figure class="screenshot">
+<a href="../assets/screenshots/svg-tracing.png"><img src="../assets/screenshots/svg-tracing.png" alt="SVG-Verarbeitung mit lokaler Vektorisierung, Vorlage Foto und Detailgrad Ausgewogen."></a>
+<figcaption>Wähle Auf diesem Mac vektorisieren ausdrücklich aus. Nach einem Upgrade bleibt Mit KI rekonstruieren die voreingestellte SVG-Methode.</figcaption>
+</figure>
+<h3 id="fotos-logos-und-zeichnungen-auf-dem-mac-vektorisieren">Fotos, Logos und Zeichnungen auf dem Mac vektorisieren</h3>
+<ol type="1">
+<li>Wähle unter <strong>Einstellungen → Allgemein</strong> zuerst <strong>Bevorzugtes Format → SVG</strong> und dann <strong>SVG-Methode → Auf diesem Mac vektorisieren</strong>.</li>
+<li>Wähle passend zum Bild <strong>Foto</strong>, <strong>Logo</strong> oder <strong>Strichzeichnung</strong>.</li>
+<li>Beginne mit dem Detailgrad <strong>Ausgewogen</strong>. <strong>Detailliert</strong> erhält mehr Formen und Farben, erzeugt aber größere Dateien.</li>
+<li>Schließe die Einstellungen, nimm auf, warte auf <strong>Clip ✓</strong> und füge das Ergebnis ein.</li>
+</ol>
+<p>Die Vektorisierung funktioniert offline mit der enthaltenen VTracer-Komponente. Du brauchst weder API-Schlüssel noch Modell, Server oder zusätzliche Installation. Sie folgt sichtbaren Formen, erhält den Hintergrund und wandelt Wörter in Pfade um. Sie übersetzt nicht, entfernt keine Hintergründe und gewinnt keine Daten aus Diagrammen zurück. Anweisungen werden nicht angewendet. Schlägt die Vektorisierung fehl, wird niemals automatisch zu KI gewechselt.</p>
+<p><strong>Für ein Vektorprogramm:</strong> Öffne die Aufnahme im <strong>Verlauf</strong>, wähle <strong>Sichern …</strong> und öffne oder importiere dann die <code>.svg</code>-Datei. Beim Einfügen in einen Texteditor siehst du SVG-Quelltext. Für große SVG-Dateien zeigt Smart Clipboard eine kompakte Zusammenfassung an; das vollständige Ergebnis bleibt zum Kopieren oder Sichern verfügbar.</p>
+<h3 id="eine-frühere-aufnahme-vektorisieren">Eine frühere Aufnahme vektorisieren</h3>
+<p>Öffne <strong>Clip → Verlauf → Öffnen</strong>, wähle <strong>SVG → Auf diesem Mac vektorisieren</strong>, lege Vorlage und Detailgrad fest und klicke auf <strong>Als SVG vektorisieren</strong>. Verwende anschließend <strong>Kopieren</strong> oder <strong>Sichern …</strong>. Jede Kombination aus Methode, Vorlage und Detailgrad behält ihr eigenes gespeichertes Ergebnis. Diese manuellen Entscheidungen ändern deine Einstellungen für automatische Aufnahmen nicht.</p>
+<h3 id="mit-deiner-ki-verbindung-rekonstruieren">Mit deiner KI-Verbindung rekonstruieren</h3>
+<p>Wähle <strong>SVG → Mit KI rekonstruieren</strong>, damit dein eingerichtetes Modell ein Diagramm oder eine Illustration interpretiert und nachbildet. Dabei können Anweisungen und Sprachwünsche berücksichtigt werden, aber das Modell kann Details verändern oder erfinden. Teste zuerst deine KI-Verbindung und vergleiche das Ergebnis mit dem Original.</p>
+<h2 id="sprachen-und-übersetzung">Sprachen und Übersetzung</h2>
+<p>Wähle unter <strong>Allgemein → Sprachen → Aufnahmeergebnis</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Auswahl</th>
+<th>Ergebnis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Originalsprache beibehalten</strong></td>
+<td>Die im Bild erkannte Sprache bleibt erhalten. Dies ist die Voreinstellung.</td>
+</tr>
+<tr>
+<td><strong>Systemsprache</strong></td>
+<td>KI-Aufnahmen werden in die bevorzugte Sprache deines Mac übersetzt.</td>
+</tr>
+<tr>
+<td><strong>Eine bestimmte Sprache</strong></td>
+<td>Die Übersetzung erfolgt unabhängig von der Sprache des Mac.</td>
+</tr>
+</tbody>
+</table>
+<p>Eine ausdrückliche Sprachwahl hat Vorrang vor Übersetzungsanweisungen. Bei älteren Einstellungen kann <strong>Gespeicherte Anweisungen verwenden</strong> angezeigt werden, bis du eine Sprache wählst. Änderungen gelten ab der nächsten Aufnahme. Die Qualität hängt vom Modell ab; prüfe Übersetzungen und extrahierte Werte.</p>
+<p>Die Sprache der Benutzeroberfläche wird getrennt davon durch macOS bestimmt. Unterstützt werden Englisch, Italienisch, Spanisch, Französisch und Deutsch; andernfalls wird Englisch verwendet. Starte die App neu, nachdem du ihre Oberflächensprache geändert hast. <strong>Ohne Umwandlung (Bild)</strong>, lokale Vektorisierung und <strong>Text auf dem Gerät erkennen</strong> übersetzen nicht. Bei Beschreibungen mit beibehaltener Originalsprache wird Englisch verwendet, wenn kein lesbarer Text die Sprache erkennen lässt.</p>
+<h2 id="eine-frühere-aufnahme-erneut-verwenden">Eine frühere Aufnahme erneut verwenden</h2>
+<figure class="screenshot">
+<a href="../assets/screenshots/history.png"><img src="../assets/screenshots/history.png" alt="Verlauf mit Beispielaufnahmen und getrennt gespeicherten Format- und Sprachversionen."></a>
+<figcaption>Original und gespeicherte Versionen bleiben zusammen. Das Öffnen des Verlaufs ändert die Zwischenablage nicht.</figcaption>
+</figure>
+<p>Wähle <strong>Öffnen</strong>, ein anderes Format oder eine andere <strong>Ausgabesprache</strong> und dann <strong>Mit KI umwandeln</strong>. Für die Texterkennung ohne Internet wähle <strong>Text auf dem Gerät erkennen</strong>, für Vektorgrafiken <strong>Als SVG vektorisieren</strong>. <strong>Gespeicherte Formate</strong> lädt ein früheres Ergebnis ohne erneute Verarbeitung.</p>
+<figure class="screenshot">
+<a href="../assets/screenshots/result.png"><img src="../assets/screenshots/result.png" alt="Gespeicherte Beispielnotiz neben ihrem bearbeitbaren Markdown-Ergebnis mit Sprachwahl sowie Kopieren und Sichern."></a>
+<figcaption>Dieses Fenster öffnet sich nur auf deinen Wunsch. Bei normalen Aufnahmen wird das Ergebnis direkt im Hintergrund kopiert.</figcaption>
+</figure>
+<p>Wähle <strong>Kopieren</strong>, um das Ergebnis in die Zwischenablage zu legen, oder aktiviere <strong>Nach manueller Umwandlung kopieren</strong>. Eine erneute Umwandlung in dasselbe Format und dieselbe Sprache ersetzt nur diese Version; die anderen bleiben erhalten.</p>
+<p>Unter <strong>Einstellungen → Verlauf</strong> kannst du das Limit festlegen, einzelne Einträge löschen oder den ganzen Verlauf leeren. Voreingestellt sind 50 Aufnahmen, möglich sind bis zu 500. Null leert und deaktiviert den Verlauf. Das Löschen des Verlaufs entfernt keine exportierten Dateien und ändert die Zwischenablage nicht.</p>
+<h2 id="mitteilungen-bei-erfolg-oder-fehlern">Mitteilungen bei Erfolg oder Fehlern</h2>
+<p>Wähle unter <strong>Allgemein → Aufnahmemitteilungen</strong> die Option <strong>Mitteilungen aktivieren</strong> und erlaube die macOS-Anfrage. Aktiviere Mitteilungen bei Erfolg, bei Fehlern oder für beides; ein Ton ist optional. Mitteilungen enthalten nur Status und Format. Smart Clipboard öffnet sich nur, wenn du darauf klickst.</p>
+<table>
+<thead>
+<tr>
+<th>Status</th>
+<th>Bedeutung</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Clip …</strong></td>
+<td>Eine Aufnahme oder Umwandlung läuft.</td>
+</tr>
+<tr>
+<td><strong>Clip ✓</strong></td>
+<td>Das Ergebnis liegt in deiner Zwischenablage.</td>
+</tr>
+<tr>
+<td><strong>Clip !</strong></td>
+<td>Öffne das Menü, um das Problem nachzulesen.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Kein Banner, aber Clip ✓?</strong> Du kannst einfügen. Ein Fokus oder eine Bildschirmfreigabe bzw. -aufzeichnung kann Hinweise verbergen oder stummschalten, auch wenn Mitteilungen aktiviert sind. Smart Clipboard respektiert diese Einstellungen. Siehe <a href="#wenn-die-aufnahme-nicht-funktioniert">Problemlösungen</a>.</p>
+<h2 id="datenschutz-und-speicherung">Datenschutz und Speicherung</h2>
+<p>Die App nimmt nur den Bereich oder das Fenster auf, den bzw. das du auswählst. Sie überwacht weder Bildschirm noch Zwischenablage fortlaufend. KI-Aufnahmen werden an deinen ausgewählten Anbieter gesendet. oMLX unter <code>127.0.0.1</code> verarbeitet sie auf diesem Mac; bei einem entfernten Server wird die Aufnahme dorthin gesendet. Für die Speicherung in der Cloud gelten die Richtlinien des Anbieters.</p>
+<p>Lokale Vektorisierung, <strong>Ohne Umwandlung (Bild)</strong> und Apples Texterkennung benötigen keinen KI-Anbieter. Schlüssel liegen im macOS-Schlüsselbund; ChatGPT-Zugangsdaten bleiben bei Codex.</p>
+<p>Der Verlauf wird unter <code>~/Library/Application Support/Smart Clipboard/History/</code> gespeichert. Der Zugriff ist auf deinen Mac-Benutzer beschränkt, die Daten sind aber nicht gesondert verschlüsselt. Exportierte Dateien und der Inhalt der Zwischenablage sind unabhängig vom Verlauf.</p>
+<h2 id="updates">Updates</h2>
+<p>Verwende <strong>Clip → Nach Updates suchen …</strong> oder die Seite <strong>Info</strong>. Optionale tägliche Prüfungen zeigen einen Hinweis im Menü, öffnen aber nicht automatisch ein Updatefenster. Einstellungen, Verlauf und ausgewählte Verbindung bleiben bei Updates erhalten.</p>
+<p>Standardmäßig werden stabile Versionen angeboten. Wähle <strong>Info → Versionen → Stabile Versionen und Vorabversionen</strong>, um Vorabversionen wie Build 15 zu erhalten. Ältere Apps ohne Updatefunktion müssen einmal manuell durch die App aus der offiziellen DMG-Datei ersetzt werden.</p>
+<h2 id="wenn-die-aufnahme-nicht-funktioniert">Wenn die Aufnahme nicht funktioniert</h2>
+<table>
+<thead>
+<tr>
+<th>Problem</th>
+<th>Das kannst du prüfen</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Kein Clip-Menü</td>
+<td>Öffne die installierte App. Eine volle Menüleiste kann Einträge verbergen.</td>
+</tr>
+<tr>
+<td>Kurzbefehl reagiert nicht</td>
+<td>Prüfe unter <strong>Einstellungen → Kurzbefehle</strong> die Berechtigung und mögliche Belegungskonflikte.</td>
+</tr>
+<tr>
+<td>Bildschirmzugriff wird weiterhin als erforderlich angezeigt</td>
+<td>Beende die App und öffne sie erneut. Für alte Entwicklungsversionen siehe die Schritte unten.</td>
+</tr>
+<tr>
+<td>Lokaler Server oder Modell nicht verfügbar</td>
+<td>Starte oMLX, prüfe den Port, aktualisiere die Modellliste und wähle ein Modell mit Bildunterstützung.</td>
+</tr>
+<tr>
+<td>Wiederholter Text oder unvollständige Umwandlung</td>
+<td>Prüfe die oMLX-Version. Version 0.6.4 hat den oben beschriebenen Fehler.</td>
+</tr>
+<tr>
+<td>Ein Bild wird statt Text eingefügt</td>
+<td>Ändere <strong>Bevorzugtes Format</strong> von Ohne Umwandlung zu Automatisch erkennen oder einem Textformat.</td>
+</tr>
+<tr>
+<td>Der vorherige Inhalt der Zwischenablage wird eingefügt</td>
+<td>Warte auf <strong>Clip ✓</strong>. Bei einem Fehler bleibt der alte Inhalt erhalten.</td>
+</tr>
+<tr>
+<td>Kein Fertig-Banner oder Ton</td>
+<td>Prüfe Fokus und Bildschirmfreigabe bzw. -aufzeichnung. <strong>Clip ✓</strong> bedeutet weiterhin, dass du einfügen kannst.</td>
+</tr>
+</tbody>
+</table>
+<details>
+<summary>Berechtigung zur Bildschirmaufnahme nach einer alten Entwicklungsversion wiederherstellen</summary>
+
+<p>Schalte unter <strong>Systemeinstellungen → Datenschutz &amp; Sicherheit → Aufnahme von Bildschirm &amp; Systemaudio</strong> nur Smart Clipboard aus und wieder ein. Bestätige das Beenden und erneute Öffnen, wenn macOS es anbietet. Entferne bei Bedarf den alten Eintrag und füge <code>/Applications/Smart Clipboard.app</code> mit <strong>+</strong> erneut hinzu. Falls macOS den Eintrag nicht entfernen lässt, hole dir Hilfe für ein Zurücksetzen nur dieser App-Berechtigung. Setze nicht die Berechtigungen anderer Apps zurück. Gespeicherte Einstellungen und der Verlauf bleiben erhalten.</p>
+</details>
+
+<details>
+<summary>Warum Mitteilungen bei einer Bildschirmfreigabe verschwinden können</summary>
+
+<p>macOS kann Banner und Töne unterdrücken, während ein Bildschirm geteilt, gespiegelt oder aufgezeichnet wird, auch ohne aktiven Fokus. Beende diese Sitzung und versuche es erneut. Mitteilungen während einer Freigabe zu erlauben ist eine systemweite Datenschutzentscheidung und für gewöhnliche Aufnahmen nicht erforderlich. Die Erlaubnis zur Bildschirmaufnahme für Smart Clipboard bedeutet allein nicht, dass die App deinen Bildschirm fortlaufend aufzeichnet.</p>
+</details>
+
+<p><a href="https://github.com/colombod/smart-clipboard/issues/new">Melde ein Problem</a> mit Build-Nummer, macOS-Version, Anbieter und Modell sowie der Fehlermeldung im Menü. Lass Schlüssel und private Bildschirmfotos weg. Der <a href="https://github.com/colombod/smart-clipboard/blob/e2676a812aec6921b12868dad737c83bf9a4a0d7/docs/ACCESSIBILITY.md">Stand der Barrierefreiheit</a> und die <a href="https://github.com/colombod/smart-clipboard/blob/e2676a812aec6921b12868dad737c83bf9a4a0d7/docs/releases/v0.4.0-preview.md">Einschränkungen der Vorabversion</a> beschreiben bekannte Lücken.</p>
+</main></div>
+<footer class="site-footer">Smart Clipboard für Mac · <a href="https://github.com/colombod/smart-clipboard/issues/new">Problem melden</a> · <a href="https://github.com/colombod/smart-clipboard">Quellcode und Entwicklung</a></footer>
+</body></html>

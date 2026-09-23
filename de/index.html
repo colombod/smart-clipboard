@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src 'self'; media-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="description" content="Richte Smart Clipboard auf deinem Mac ein, wähle die lokale Verarbeitung oder einen Cloud-Dienst und kopiere Aufnahmen direkt in die Zwischenablage.">
+<title>Smart Clipboard — Erfassen, umwandeln, einfügen</title><link rel="icon" type="image/png" href="../assets/app-icon.png"><link rel="stylesheet" href="../assets/style.css"></head>
+<body class="home"><a class="skip" href="#main">Zum Inhalt</a>
+<header class="site-header"><a class="brand" href="index.html"><img src="../assets/app-icon.png" alt="" width="42" height="42">Smart Clipboard</a>
+<nav aria-label="Hauptnavigation"><a href="index.html" aria-current="page">Erste Schritte</a><a href="guide.html">Anleitung</a><a href="https://github.com/colombod/smart-clipboard/releases">Downloads</a></nav><nav class="language-nav" aria-label="Sprache"><span>Sprache:</span><a href="../index.html" lang="en" hreflang="en">English</a><a href="../es/index.html" lang="es" hreflang="es">Español</a><a href="../it/index.html" lang="it" hreflang="it">Italiano</a><a href="../fr/index.html" lang="fr" hreflang="fr">Français</a><a href="index.html" lang="de" hreflang="de" aria-current="page">Deutsch</a></nav></header>
+<div class="layout"><nav class="toc" aria-label="Auf dieser Seite"><details open><summary>Auf dieser Seite</summary><ul><li><a href="#erste-schritte">Erste Schritte</a></li><li><a href="#wähle-was-du-einfügen-möchtest">Wähle, was du einfügen möchtest</a></li><li><a href="#ein-bild-in-svg-umwandeln">Ein Bild in SVG umwandeln</a></li><li><a href="#eine-aufnahme-erneut-verwenden">Eine Aufnahme erneut verwenden</a></li><li><a href="#erkennen-wann-das-ergebnis-bereit-ist">Erkennen, wann das Ergebnis bereit ist</a></li><li><a href="#brauchst-du-hilfe">Brauchst du Hilfe?</a></li></ul></details></nav>
+<main id="main" tabindex="-1"><h1 id="smart-clipboard">Smart Clipboard</h1>
+<img src="../assets/app-icon.png" alt="Smart-Clipboard-Symbol mit Aufnahmerahmen" width="100">
+
+<p><strong>Auf dem Bildschirm aufnehmen. Als nützlichen Inhalt einfügen.</strong></p>
+<p>Eine unaufdringliche App in der Menüleiste deines Mac, die Bildschirmfotos in Text, Tabellen, strukturierte Daten oder SVG umwandelt. Lege deine Wünsche einmal fest. Danach kannst du aufnehmen und einfügen, ohne die App zu öffnen.</p>
+<p><strong><a href="https://github.com/colombod/smart-clipboard/releases/download/v0.4.0-preview.15/Smart-Clipboard-0.4.0-macOS-arm64.dmg">Für Mac herunterladen</a></strong> · Apple Silicon · macOS 14 oder neuer · Signiert und von Apple notarisiert</p>
+<p>Aktuelle Version: <strong><a href="https://github.com/colombod/smart-clipboard/releases/tag/v0.4.0-preview.15">0.4 Vorabversion, Build 15</a></strong>. <a href="https://github.com/colombod/smart-clipboard/blob/e2676a812aec6921b12868dad737c83bf9a4a0d7/docs/releases/v0.4.0-preview.md">Bekannte Einschränkungen der Vorabversion</a>.</p>
+<h2 id="erste-schritte">Erste Schritte</h2>
+<ol type="1">
+<li><strong>Installieren:</strong> Öffne die DMG-Datei und ziehe Smart Clipboard in <strong>Programme</strong>. Starte die App und suche nach <strong>Clip</strong> in der Menüleiste.</li>
+<li><strong>Einmal einrichten:</strong> Öffne <strong>Clip → Einstellungen &amp; Status …</strong>. Wähle unter <strong>Allgemein</strong> das Ausgabeformat und richte bei Bedarf eine KI-Verbindung ein.</li>
+<li><strong>Aufnehmen und einfügen:</strong> Schließe die Einstellungen, drücke <strong>⌃⌘R</strong>, markiere einen Bereich und warte auf <strong>Clip ✓</strong>. Drücke dann <strong>⌘V</strong> in deiner Ziel-App.</li>
+</ol>
+<p>Mit <strong>⌃⌘W</strong> nimmst du ein Fenster auf. Die <strong>Leertaste</strong> wechselt den Auswahlmodus; <strong>Escape</strong> bricht ab. Deine gespeicherten Kurzbefehle haben Vorrang. Erlaube die Bildschirmaufnahme, wenn macOS danach fragt.</p>
+<h2 id="wähle-was-du-einfügen-möchtest">Wähle, was du einfügen möchtest</h2>
+<figure class="screenshot">
+<a href="../assets/screenshots/capture-settings.png"><img src="../assets/screenshots/capture-settings.png" alt="Allgemeine Einstellungen mit automatischer Formaterkennung und beibehaltener Originalsprache."></a>
+<figcaption>Wähle das gewünschte Ergebnis einmal aus. Während der Arbeit können die Einstellungen geschlossen bleiben. Klicke auf ein Bildschirmfoto, um es zu vergrößern. Die abgebildete Benutzeroberfläche ist auf Englisch.</figcaption>
+</figure>
+<ul>
+<li><strong>Automatisch erkennen:</strong> Die KI wählt ein sinnvolles Format.</li>
+<li><strong>Reiner Text, Markdown, HTML, JSON oder YAML:</strong> Wähle ein bestimmtes bearbeitbares Ergebnis.</li>
+<li><strong>Ohne Umwandlung (Bild):</strong> Behalte das Bild ohne KI-Verarbeitung.</li>
+<li><strong>SVG:</strong> Vektorisiere Formen auf dem Mac oder rekonstruiere sie mit KI.</li>
+</ul>
+<p>Für die KI-Verarbeitung verwendest du dein eigenes Cloud-Konto oder <strong>Lokal / oMLX</strong>. <a href="guide.html#lokale-bildverarbeitung-mit-omlx-einrichten">Verbindung einrichten →</a></p>
+<h2 id="ein-bild-in-svg-umwandeln">Ein Bild in SVG umwandeln</h2>
+<figure class="screenshot">
+<a href="../assets/screenshots/svg-tracing.png"><img src="../assets/screenshots/svg-tracing.png" alt="SVG-Einstellungen mit lokaler Vektorisierung, Vorlage Foto und Detailgrad Ausgewogen."></a>
+<figcaption>Allgemein → SVG → Auf diesem Mac vektorisieren. Kein Konto, Modell oder Server erforderlich.</figcaption>
+</figure>
+<p>Wähle <strong>Foto</strong>, <strong>Logo</strong> oder <strong>Strichzeichnung</strong> und nimm wie gewohnt auf. <strong>Ausgewogen</strong> hält die Dateien kleiner; <strong>Detailliert</strong> erhält mehr Formen und Farben. Füge den SVG-Quelltext ein oder verwende <strong>Verlauf → Öffnen → Sichern …</strong>, um das Ergebnis in einem Vektorprogramm zu öffnen.</p>
+<p>Die Vektorisierung erhält den Hintergrund und wandelt Wörter in Pfade um. Für eine Rekonstruktion durch ein Modell wähle <strong>Mit KI rekonstruieren</strong>. <a href="guide.html#ein-bild-als-svg-vektorisieren">Anleitung zur Vektorisierung →</a></p>
+<h2 id="eine-aufnahme-erneut-verwenden">Eine Aufnahme erneut verwenden</h2>
+<figure class="screenshot">
+<a href="../assets/screenshots/history.png"><img src="../assets/screenshots/history.png" alt="Verlauf mit Beispielaufnahmen und getrennt gespeicherten Versionen als Text, Markdown und auf Französisch."></a>
+<figcaption>Öffne den Verlauf nur bei Bedarf. Verwende das Original erneut, ohne ein weiteres Bildschirmfoto aufzunehmen.</figcaption>
+</figure>
+<p>Wähle ein anderes Format oder eine andere Sprache und starte die Umwandlung. <strong>Gespeicherte Formate</strong> öffnet frühere Ergebnisse; <strong>Kopieren</strong> legt eines davon in die Zwischenablage. Unter <strong>Einstellungen → Verlauf</strong> kannst du das Speicherlimit festlegen oder gespeicherte Aufnahmen löschen.</p>
+<h2 id="erkennen-wann-das-ergebnis-bereit-ist">Erkennen, wann das Ergebnis bereit ist</h2>
+<p><strong>Clip …</strong> bedeutet, dass die Verarbeitung läuft. Bei <strong>Clip ✓</strong> kannst du einfügen. <strong>Clip !</strong> weist auf ein Problem hin: Öffne das Menü, um es nachzulesen.</p>
+<p>Unter <strong>Allgemein</strong> kannst du Mitteilungen bei Erfolg oder Fehlern sowie einen Ton aktivieren. Ein Fokus oder eine Bildschirmfreigabe kann diese Hinweise unterdrücken; der Status im Menü bleibt sichtbar. <a href="guide.html#mitteilungen-bei-erfolg-oder-fehlern">Hilfe zu Mitteilungen →</a></p>
+<h2 id="brauchst-du-hilfe">Brauchst du Hilfe?</h2>
+<p><a href="guide.html">Bebilderte Anleitung</a> · <a href="guide.html#ein-lokales-modell-auswählen">Lokale Modelle</a> · <a href="guide.html#sprachen-und-übersetzung">Übersetzung</a> · <a href="guide.html#wenn-die-aufnahme-nicht-funktioniert">Probleme beheben</a></p>
+<p>Die App folgt dem hellen oder dunklen Erscheinungsbild von macOS und unterstützt Englisch, Italienisch, Spanisch, Französisch und Deutsch. Aufnahmen behalten ihre Originalsprache, solange du keine Übersetzung aktivierst. Lokale Vektorisierung funktioniert offline; KI-Aufnahmen werden an deine ausgewählte Verbindung gesendet. <a href="guide.html#datenschutz-und-speicherung">Datenschutz und Speicherung</a>.</p>
+<p><em>Die Bildschirmfotos zeigen die aktuellen Ansichten mit Beispieldaten. Dies ist eine Vorabversion: Prüfe die KI-Ergebnisse. Die Überprüfung aller Cloud-Verbindungen und die vollständige <a href="https://github.com/colombod/smart-clipboard/blob/e2676a812aec6921b12868dad737c83bf9a4a0d7/docs/ACCESSIBILITY.md">Abnahme der Barrierefreiheit</a> stehen noch aus.</em></p>
+<p><a href="https://github.com/colombod/smart-clipboard/issues/new">Problem melden</a> · <a href="https://github.com/colombod/smart-clipboard/blob/e2676a812aec6921b12868dad737c83bf9a4a0d7/docs/DEVELOPING.md">Entwicklerdokumentation</a></p>
+</main></div>
+<footer class="site-footer">Smart Clipboard für Mac · <a href="https://github.com/colombod/smart-clipboard/issues/new">Problem melden</a> · <a href="https://github.com/colombod/smart-clipboard">Quellcode und Entwicklung</a></footer>
+</body></html>

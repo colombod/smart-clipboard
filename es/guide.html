@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src 'self'; media-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="description" content="Configura Smart Clipboard en tu Mac, elige el procesamiento local o en la nube y envía las capturas directamente al portapapeles.">
+<title>Guía de configuración y uso — Smart Clipboard</title><link rel="icon" type="image/png" href="../assets/app-icon.png"><link rel="stylesheet" href="../assets/style.css"></head>
+<body class="guide"><a class="skip" href="#main">Ir al contenido</a>
+<header class="site-header"><a class="brand" href="index.html"><img src="../assets/app-icon.png" alt="" width="42" height="42">Smart Clipboard</a>
+<nav aria-label="Navegación principal"><a href="index.html">Primeros pasos</a><a href="guide.html" aria-current="page">Guía de uso</a><a href="https://github.com/colombod/smart-clipboard/releases">Descargas</a></nav><nav class="language-nav" aria-label="Idioma"><span>Idioma:</span><a href="../guide.html" lang="en" hreflang="en">English</a><a href="guide.html" lang="es" hreflang="es" aria-current="page">Español</a><a href="../it/guide.html" lang="it" hreflang="it">Italiano</a><a href="../fr/guide.html" lang="fr" hreflang="fr">Français</a><a href="../de/guide.html" lang="de" hreflang="de">Deutsch</a></nav></header>
+<div class="layout"><nav class="toc" aria-label="En esta página"><details open><summary>En esta página</summary><ul><li><a href="#instalar-y-empezar">Instalar y empezar</a></li><li><a href="#capturar-esperar-pegar">Capturar, esperar, pegar</a></li><li><a href="#elegir-el-formato">Elegir el formato</a></li><li><a href="#configurar-omlx">Configurar oMLX</a></li><li><a href="#otras-conexiones">Otras conexiones</a></li><li><a href="#vectorizar-una-imagen">Vectorizar una imagen</a></li><li><a href="#idiomas-y-traducción">Idiomas y traducción</a></li><li><a href="#reutilizar-capturas">Reutilizar capturas</a></li><li><a href="#notificaciones">Notificaciones</a></li><li><a href="#privacidad-y-almacenamiento">Privacidad y almacenamiento</a></li><li><a href="#actualizaciones">Actualizaciones</a></li><li><a href="#si-la-captura-no-funciona">Si la captura no funciona</a></li></ul></details></nav>
+<main id="main" tabindex="-1"><h1 id="usar-smart-clipboard">Usar Smart Clipboard</h1>
+<p><strong>Configura una vez. Captura. Espera a Clip ✓. Pega.</strong> La app permanece en la barra de menús hasta que quieras abrirla.</p>
+<p>Guía de <strong><a href="https://github.com/colombod/smart-clipboard/releases/tag/v0.4.0-preview.15">0.4 preliminar, compilación 15</a></strong>. Las imágenes muestran vistas actuales en inglés con datos de ejemplo; selecciónalas para ampliarlas.</p>
+<p>Ir a <a href="#configurar-omlx">IA local</a>, <a href="#vectorizar-una-imagen">vectorización</a>, <a href="#idiomas-y-traducción">traducción</a> o <a href="#si-la-captura-no-funciona">solución de problemas</a>.</p>
+<h2 id="instalar-y-empezar">Instalar y empezar</h2>
+<ol type="1">
+<li><a href="https://github.com/colombod/smart-clipboard/releases/download/v0.4.0-preview.15/Smart-Clipboard-0.4.0-macOS-arm64.dmg">Descarga el DMG firmado</a>, ábrelo y arrastra <strong>Smart Clipboard</strong> a <strong>Aplicaciones</strong>.</li>
+<li>Expulsa el DMG, abre la app instalada y busca <strong>Clip</strong> en la barra de menús. No hay icono en el Dock ni ventana que debas mantener abierta.</li>
+<li>Abre <strong>Clip → Ajustes y estado…</strong>. Activa <strong>Abrir al iniciar sesión</strong> en General si quieres que esté lista al arrancar el Mac.</li>
+</ol>
+<p>Requiere Apple Silicon y macOS 14 o posterior. Cerrar los ajustes no desactiva las funciones rápidas; <strong>Clip → Salir de Smart Clipboard</strong> cierra la app.</p>
+<h2 id="capturar-esperar-pegar">Capturar, esperar, pegar</h2>
+<table>
+<thead>
+<tr>
+<th>Paso</th>
+<th>Qué hacer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Capturar un área</strong></td>
+<td>Pulsa <strong>⌃⌘R</strong> y arrastra un rectángulo.</td>
+</tr>
+<tr>
+<td><strong>Capturar una ventana</strong></td>
+<td>Pulsa <strong>⌃⌘W</strong> y haz clic en la ventana.</td>
+</tr>
+<tr>
+<td><strong>Esperar</strong></td>
+<td><strong>Clip …</strong> cambia a <strong>Clip ✓</strong> cuando el resultado está copiado.</td>
+</tr>
+<tr>
+<td><strong>Pegar</strong></td>
+<td>Pulsa <strong>⌘V</strong> en la app de destino.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>⌃⌘R</strong> significa mantener pulsadas <strong>Control + Comando</strong> y pulsar <strong>R</strong>; <strong>⌃⌘W</strong> usa <strong>W</strong>. Son los valores predeterminados desde la compilación 15. Las funciones rápidas guardadas tienen prioridad, incluidas las de versiones anteriores. Puedes verlas o grabar otras en <strong>Ajustes → Funciones rápidas</strong>. <strong>Espacio</strong> cambia de modo y <strong>Escape</strong> cancela. Un error o una cancelación conserva el contenido anterior del portapapeles.</p>
+<p>Permite la grabación de pantalla cuando macOS la solicite, o usa <strong>Solicitar acceso a la pantalla</strong> en Funciones rápidas. Vuelve a abrir la app si macOS lo pide. Una captura no abre los ajustes ni el editor.</p>
+<h2 id="elegir-el-formato">Elegir el formato</h2>
+<figure class="screenshot">
+<a href="../assets/screenshots/capture-settings.png"><img src="../assets/screenshots/capture-settings.png" alt="Ajustes generales con detección automática y conservación del idioma original."></a>
+<figcaption>Ajustes → General se aplica a las nuevas capturas. El historial tiene opciones independientes para las imágenes guardadas.</figcaption>
+</figure>
+<table>
+<thead>
+<tr>
+<th>Formato preferido</th>
+<th>Resultado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Detección automática</strong></td>
+<td>La IA elige un formato editable a partir de la imagen.</td>
+</tr>
+<tr>
+<td><strong>Sin conversión (imagen)</strong></td>
+<td>Imagen original, sin extracción ni IA.</td>
+</tr>
+<tr>
+<td><strong>Texto sin formato / Markdown</strong></td>
+<td>Texto, notas, títulos o tablas editables.</td>
+</tr>
+<tr>
+<td><strong>JSON / YAML / HTML</strong></td>
+<td>Datos estructurados o código de marcado.</td>
+</tr>
+<tr>
+<td><strong>SVG</strong></td>
+<td>Vectorización local de formas o reconstrucción con IA.</td>
+</tr>
+<tr>
+<td><strong>Descripción</strong></td>
+<td>Una descripción escrita de la imagen.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Instrucción predeterminada</strong> permite añadir indicaciones como «Conserva las columnas de la tabla». Los resultados de IA, HTML y SVG se copian como texto; la app no representa ni ejecuta ese código. Revisa los resultados antes de usarlos.</p>
+<h2 id="configurar-omlx">Configurar oMLX</h2>
+<figure class="screenshot">
+<a href="../assets/screenshots/local-connection.png"><img src="../assets/screenshots/local-connection.png" alt="Conexión local oMLX con dirección del servidor y modelo de visión Qwen3-VL."></a>
+<figcaption>Selecciona Local / oMLX, introduce la dirección de tu servidor y elige un modelo capaz de leer imágenes.</figcaption>
+</figure>
+<ol type="1">
+<li>Instala e inicia <a href="https://github.com/jundot/omlx">oMLX</a>. Para empezar, descarga <strong>mlx-community/Qwen3-VL-8B-Instruct-4bit</strong>.</li>
+<li>En <strong>Ajustes → Conexión</strong>, elige <strong>Local / oMLX</strong>. La dirección debe terminar en <code>/v1</code>; <code>http://127.0.0.1:8999/v1</code> es un ejemplo, no un puerto universal.</li>
+<li>Pulsa <strong>Actualizar modelos</strong> y elige el identificador exacto del modelo de visión. El servidor puede omitir el prefijo <code>mlx-community/</code>.</li>
+<li>Si requiere una clave, introdúcela y pulsa <strong>Guardar clave</strong>. Un servidor en otro ordenador requiere clave; usa HTTPS fuera de una red local privada.</li>
+<li>Pulsa <strong>Probar procesamiento de imágenes</strong>. La prueba usa una imagen generada, no tu pantalla. Elige después el formato en General y cierra los ajustes.</li>
+</ol>
+<p>Mantén oMLX abierto para la extracción con IA. Smart Clipboard no descarga modelos, inicia el servidor ni cambia a un proveedor en la nube si falla. <strong>Vectorizar en el dispositivo</strong> y <strong>Sin conversión</strong> funcionan sin oMLX.</p>
+<h3 id="elegir-un-modelo-local">Elegir un modelo local</h3>
+<p>Empieza por <strong>Qwen3-VL-8B-Instruct-4bit</strong> para texto, tablas y traducción. El modelo <strong>32B</strong> no solucionó los errores de Descripción/SVG en nuestras pruebas. Para vectorizar imágenes, usa <strong>Vectorizar en el dispositivo</strong>: no necesita modelo.</p>
+<p>El servidor probado es la versión oficial <strong><a href="https://github.com/jundot/omlx/releases/tag/v0.7.0.dev2">oMLX 0.7.0.dev2</a></strong>. La 0.6.4 tiene un error de salida estructurada con este modelo; uno más grande no lo corrige. Estas pruebas no cubren versiones posteriores del servidor.</p>
+<details>
+<summary>Tamaño, memoria y resultados de las pruebas</summary>
+
+<p>Son conversiones de MLX Community a 4 bits de modelos Qwen con visión. Usa el identificador completo en el descargador de oMLX:</p>
+<table>
+<thead>
+<tr>
+<th>Modelo</th>
+<th>Descarga</th>
+<th>Resultados a 22 de septiembre de 2026</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://huggingface.co/mlx-community/Qwen3-VL-8B-Instruct-4bit">mlx-community/Qwen3-VL-8B-Instruct-4bit</a></td>
+<td>Unos 5,78 GB según la <a href="https://huggingface.co/mlx-community/Qwen3-VL-8B-Instruct-4bit/tree/main">lista del editor</a>.</td>
+<td>Texto, tablas y datos estructurados funcionaron con las imágenes sintéticas probadas. Descripción inventó observaciones ortográficas; SVG alteró proporciones, bordes o diseño.</td>
+</tr>
+<tr>
+<td><a href="https://huggingface.co/mlx-community/Qwen3-VL-32B-Instruct-4bit">mlx-community/Qwen3-VL-32B-Instruct-4bit</a></td>
+<td>Descarga verificada: 19.636.446.591 bytes en 19 archivos; unos 19,64 GB / 18,29 GiB.</td>
+<td>Con oMLX 0.7.0.dev2 conservó los valores, pero inventó alineaciones en Descripción y añadió una fila y un lienzo incorrecto en SVG. Seis pruebas de instrucciones mejoraron las dimensiones sin corregir contenido y diseño.</td>
+</tr>
+</tbody>
+</table>
+<p>La descarga de 32B corresponde a la <a href="https://huggingface.co/mlx-community/Qwen3-VL-32B-Instruct-4bit/tree/6e5644d3ea4b953b5221ffd02339bf897041038a">revisión <code>6e5644d</code></a>. Estos tamaños son de disco, no de memoria en uso.</p>
+<p><strong>Estimaciones de memoria:</strong> calcula al menos 16 GB de memoria unificada para 8B o 48 GB para 32B, más margen para imágenes, contexto y otras apps. Son estimaciones prudentes, no mínimos comprobados ni garantías de velocidad. Las pruebas usaron un Mac de 128 GiB; no se han validado equipos con menos memoria. Deja espacio para las cachés y empieza con una imagen pequeña sin datos privados.</p>
+<p>Ninguno ha superado la evaluación de calidad de todos los formatos. Descripción y SVG siguen siendo experimentales. Consulta las <a href="https://github.com/colombod/smart-clipboard/blob/e2676a812aec6921b12868dad737c83bf9a4a0d7/docs/testing/OMLX.md">pruebas locales</a> para distinguir resultados automáticos y calidad visual.</p>
+</details>
+
+<h2 id="otras-conexiones">Otras conexiones</h2>
+<p>Para <strong>OpenAI</strong>, <strong>Anthropic</strong>, <strong>Google Gemini</strong> o <strong>Perplexity</strong>, selecciona el proveedor en Conexión, introduce la clave API, pulsa <strong>Guardar clave</strong>, elige un modelo con visión y ejecuta <strong>Probar procesamiento de imágenes</strong>. El acceso y la facturación de la API son independientes de las suscripciones de chat. Cada proveedor conserva sus propios ajustes y clave.</p>
+<p>Para <strong>ChatGPT mediante Codex</strong>, instala o actualiza Codex CLI y pulsa <strong>Iniciar sesión con ChatGPT</strong>. Deja <strong>Ejecutable de Codex</strong> vacío para la detección automática y ejecuta la prueba de imagen. Necesitas una cuenta de Codex apta y la CLI oficial compatible; se aplican los límites de la suscripción.</p>
+<p>Si una clave guardada necesita permiso tras una actualización, pulsa <strong>Autorizar clave guardada</strong>. Las capturas en segundo plano no abren diálogos del Llavero. No todas las conexiones en la nube se han probado en uso real; consulta el <a href="https://github.com/colombod/smart-clipboard/blob/e2676a812aec6921b12868dad737c83bf9a4a0d7/docs/PROVIDERS.md">estado de los proveedores</a>.</p>
+<h2 id="vectorizar-una-imagen">Vectorizar una imagen</h2>
+<figure class="screenshot">
+<a href="../assets/screenshots/svg-tracing.png"><img src="../assets/screenshots/svg-tracing.png" alt="Vectorización local configurada con Foto y detalle Equilibrado."></a>
+<figcaption>Elige Vectorizar en el dispositivo. Reconstruir con IA sigue siendo el método predeterminado tras actualizar.</figcaption>
+</figure>
+<h3 id="fotos-logotipos-y-dibujos">Fotos, logotipos y dibujos</h3>
+<ol type="1">
+<li>En <strong>Ajustes → General</strong>, elige <strong>Formato preferido → SVG</strong> y <strong>Método de SVG → Vectorizar en el dispositivo</strong>.</li>
+<li>Selecciona <strong>Foto</strong>, <strong>Logotipo</strong> o <strong>Dibujo de líneas</strong> según la imagen.</li>
+<li>Empieza con <strong>Equilibrado</strong>. <strong>Detallado</strong> conserva más formas y colores, pero genera archivos más grandes.</li>
+<li>Cierra los ajustes, captura, espera a <strong>Clip ✓</strong> y pega.</li>
+</ol>
+<p>Funciona sin conexión con el componente VTracer incluido: no necesita clave, modelo, servidor ni instalación adicional. Sigue las formas visibles, conserva el fondo y convierte las palabras en contornos. No traduce, elimina fondos ni recupera datos de gráficos. Las instrucciones no se aplican y un fallo no cambia a IA.</p>
+<p><strong>Para usar un editor vectorial:</strong> abre la captura en <strong>Historial</strong>, pulsa <strong>Guardar…</strong> e importa el archivo <code>.svg</code>. En un editor de texto se pega el código SVG. Los SVG grandes muestran un resumen en la app, pero <strong>Copiar</strong> y <strong>Guardar…</strong> conservan todo el resultado.</p>
+<h3 id="vectorizar-una-captura-guardada">Vectorizar una captura guardada</h3>
+<p>Abre <strong>Clip → Historial → Abrir</strong>, elige <strong>SVG → Vectorizar en el dispositivo</strong>, ajusta el preajuste y detalle y pulsa <strong>Vectorizar a SVG</strong>. Usa <strong>Copiar</strong> o <strong>Guardar…</strong>. Cada combinación de método, preajuste y detalle tiene su propio resultado. Estas opciones manuales no cambian las preferencias de captura automática.</p>
+<h3 id="reconstruir-con-ia">Reconstruir con IA</h3>
+<p>Elige <strong>SVG → Reconstruir con IA</strong> para que tu modelo interprete y reconstruya un diagrama o ilustración. Puede seguir instrucciones e idioma, pero también cambiar o inventar detalles. Prueba primero la conexión y compara con el original.</p>
+<h2 id="idiomas-y-traducción">Idiomas y traducción</h2>
+<p>En <strong>General → Idiomas → Resultado de la captura</strong>, elige:</p>
+<table>
+<thead>
+<tr>
+<th>Opción</th>
+<th>Resultado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Conservar idioma original</strong></td>
+<td>Mantiene el idioma detectado. Es el valor predeterminado.</td>
+</tr>
+<tr>
+<td><strong>Idioma del sistema</strong></td>
+<td>Traduce las capturas con IA al idioma preferido del Mac.</td>
+</tr>
+<tr>
+<td><strong>Un idioma concreto</strong></td>
+<td>Traduce con independencia del idioma del Mac.</td>
+</tr>
+</tbody>
+</table>
+<p>La elección explícita tiene prioridad sobre las instrucciones de traducción. Los ajustes antiguos pueden mostrar <strong>Usar instrucciones guardadas</strong> hasta que elijas un idioma. Los cambios se aplican a la siguiente captura. Revisa traducciones y valores extraídos: la calidad depende del modelo.</p>
+<p>La interfaz sigue por separado el idioma de macOS: inglés, italiano, español, francés o alemán, con inglés como alternativa. Reinicia la app tras cambiar su idioma. <strong>Sin conversión</strong>, la vectorización local y <strong>Extraer texto en el dispositivo</strong> no traducen. Una descripción en modo de idioma original usa inglés si no hay texto legible que permita identificar el idioma.</p>
+<h2 id="reutilizar-capturas">Reutilizar capturas</h2>
+<figure class="screenshot">
+<a href="../assets/screenshots/history.png"><img src="../assets/screenshots/history.png" alt="Historial con capturas de ejemplo y versiones separadas por formato e idioma."></a>
+<figcaption>El original y sus versiones permanecen juntos. Abrir el historial no cambia el portapapeles.</figcaption>
+</figure>
+<p>Pulsa <strong>Abrir</strong>, elige otro formato o <strong>Idioma de salida</strong> y pulsa <strong>Convertir con IA</strong>. Para OCR sin conexión, usa <strong>Extraer texto en el dispositivo</strong>; para vectores, <strong>Vectorizar a SVG</strong>. <strong>Formatos guardados</strong> carga un resultado sin repetir el procesamiento.</p>
+<figure class="screenshot">
+<a href="../assets/screenshots/result.png"><img src="../assets/screenshots/result.png" alt="Nota de ejemplo con resultado Markdown editable y controles de idioma, copia y guardado."></a>
+<figcaption>Esta ventana solo se abre cuando lo pides. Las capturas normales se copian en segundo plano.</figcaption>
+</figure>
+<p>Pulsa <strong>Copiar</strong> o activa <strong>Copiar tras la conversión manual</strong>. Repetir el mismo formato e idioma sustituye solo esa versión; las demás permanecen.</p>
+<p>En <strong>Ajustes → Historial</strong>, fija el límite (50 por defecto, hasta 500), borra una entrada o vacía todo. Cero borra y desactiva el historial. No se eliminan archivos exportados ni se cambia el portapapeles.</p>
+<h2 id="notificaciones">Notificaciones</h2>
+<p>En <strong>General → Notificaciones de captura</strong>, pulsa <strong>Activar notificaciones</strong> y permite la solicitud de macOS. Elige éxito, error o ambos; el sonido es opcional. Los avisos solo incluyen estado y formato. La app se abre únicamente si haces clic en ellos.</p>
+<table>
+<thead>
+<tr>
+<th>Estado</th>
+<th>Significado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Clip …</strong></td>
+<td>Captura o conversión en curso.</td>
+</tr>
+<tr>
+<td><strong>Clip ✓</strong></td>
+<td>Resultado en el portapapeles.</td>
+</tr>
+<tr>
+<td><strong>Clip !</strong></td>
+<td>Abre el menú para leer el problema.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>¿Clip ✓ sin aviso?</strong> Ya puedes pegar. Un modo de concentración o la pantalla compartida o grabada puede silenciar los avisos aunque estén activados. La app respeta esos ajustes. Consulta la <a href="#si-la-captura-no-funciona">solución de problemas</a>.</p>
+<h2 id="privacidad-y-almacenamiento">Privacidad y almacenamiento</h2>
+<p>La app solo captura el área o ventana solicitada; no vigila continuamente la pantalla ni el portapapeles. Las capturas con IA van al proveedor elegido. oMLX en <code>127.0.0.1</code> procesa en este Mac; un servidor remoto recibe la imagen allí. La conservación en la nube depende del proveedor.</p>
+<p>La vectorización local, el modo sin conversión y el OCR de Apple no necesitan proveedor de IA. Las claves se guardan en el Llavero de macOS; Codex conserva las credenciales de ChatGPT.</p>
+<p>El historial está en <code>~/Library/Application Support/Smart Clipboard/History/</code>, limitado a tu usuario del Mac, sin cifrado adicional. Los archivos exportados y el portapapeles son independientes del historial.</p>
+<h2 id="actualizaciones">Actualizaciones</h2>
+<p>Usa <strong>Clip → Buscar actualizaciones…</strong> o <strong>Acerca de</strong>. Las comprobaciones diarias opcionales añaden un aviso al menú sin abrir ventanas. Conservan preferencias, historial y conexión.</p>
+<p>Por defecto se ofrecen versiones estables. Elige <strong>Acerca de → Versiones → Versiones estables y preliminares</strong> para recibir versiones como la compilación 15. Las apps antiguas sin actualizador necesitan una sustitución manual desde el DMG oficial.</p>
+<h2 id="si-la-captura-no-funciona">Si la captura no funciona</h2>
+<table>
+<thead>
+<tr>
+<th>Síntoma</th>
+<th>Qué revisar</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>No aparece Clip</td>
+<td>Abre la app instalada; una barra llena puede ocultar iconos.</td>
+</tr>
+<tr>
+<td>La función rápida no responde</td>
+<td>Revisa permisos y conflictos en <strong>Ajustes → Funciones rápidas</strong>.</td>
+</tr>
+<tr>
+<td>Sigue pidiendo acceso a la pantalla</td>
+<td>Cierra y abre la app. Para versiones antiguas de desarrollo, consulta los pasos siguientes.</td>
+</tr>
+<tr>
+<td>Servidor o modelo no disponible</td>
+<td>Inicia oMLX, confirma el puerto, actualiza modelos y elige uno con visión.</td>
+</tr>
+<tr>
+<td>Texto repetido o conversión incompleta</td>
+<td>Comprueba oMLX; la versión 0.6.4 tiene el error descrito arriba.</td>
+</tr>
+<tr>
+<td>Pega una imagen en vez de texto</td>
+<td>Cambia <strong>Formato preferido</strong> de Sin conversión a Detección automática o texto.</td>
+</tr>
+<tr>
+<td>Pega el contenido anterior</td>
+<td>Espera a <strong>Clip ✓</strong>. Un fallo conserva el portapapeles anterior.</td>
+</tr>
+<tr>
+<td>No hay aviso ni sonido</td>
+<td>Revisa concentración y pantalla compartida o grabada. <strong>Clip ✓</strong> sigue indicando que puedes pegar.</td>
+</tr>
+</tbody>
+</table>
+<details>
+<summary>Recuperar el permiso tras una versión de desarrollo antigua</summary>
+
+<p>En <strong>Ajustes del Sistema → Privacidad y seguridad → Grabación de pantalla y audio del sistema</strong>, desactiva y activa solo Smart Clipboard; acepta cerrar y volver a abrir cuando se ofrezca. Si hace falta, elimina la entrada antigua y añade <code>/Applications/Smart Clipboard.app</code> con <strong>+</strong>. Si macOS no deja quitarla, solicita ayuda para restablecer solo esta app; no restablezcas permisos de otras apps. Ajustes e historial se conservan.</p>
+</details>
+
+<details>
+<summary>Por qué desaparecen los avisos al compartir pantalla</summary>
+
+<p>macOS puede ocultar avisos y sonidos al compartir, duplicar o grabar la pantalla, incluso sin un modo de concentración. Detén esa sesión y prueba de nuevo. Permitir avisos mientras compartes es una decisión de privacidad de todo el sistema, no un requisito de captura. El permiso de grabación de Smart Clipboard no significa que grabe continuamente.</p>
+</details>
+
+<p><a href="https://github.com/colombod/smart-clipboard/issues/new">Informa de un problema</a> con la compilación, versión de macOS, proveedor/modelo y error del menú. No incluyas claves ni capturas privadas. Consulta también el <a href="https://github.com/colombod/smart-clipboard/blob/e2676a812aec6921b12868dad737c83bf9a4a0d7/docs/ACCESSIBILITY.md">estado de accesibilidad</a> y las <a href="https://github.com/colombod/smart-clipboard/blob/e2676a812aec6921b12868dad737c83bf9a4a0d7/docs/releases/v0.4.0-preview.md">limitaciones de la versión preliminar</a>.</p>
+</main></div>
+<footer class="site-footer">Smart Clipboard para Mac · <a href="https://github.com/colombod/smart-clipboard/issues/new">Informar de un problema</a> · <a href="https://github.com/colombod/smart-clipboard">Código y desarrollo</a></footer>
+</body></html>

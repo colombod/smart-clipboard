@@ -1,9 +1,36 @@
 {
-  "sourceRef": "9e708979d49a92b2ae455aede0fb8ee3da9342d4",
+  "sourceRef": "e2676a812aec6921b12868dad737c83bf9a4a0d7",
   "sources": {
-    "README.md": "d201adffd08deff026631e2b2e8a3ea775fb4eabe9401ecdad27fbd93aa459e1",
-    "docs/USER-GUIDE.md": "5bce133328706751c44be36d0f99f15e9c298fc1fdcf0daffb8ad04037c8791e",
-    "docs/app-icon.png": "d9ead922fe0528e4c49b89ea5fb039f8d0a6082e71708a6c90172c3225b06e70"
+    "README.md": "2128c1626eb349f08c746f4d6edaceee38b64b034f279efb3b2ca59a6f2e2dde",
+    "docs/USER-GUIDE.md": "1ce4a7ed743ef4345fe8074ca42ce0c11ec83d56f8de4c5d60639383263845e0",
+    "docs/locales/es/README.md": "1fbbd956332a7fa4f39548822177db1d0ecaeebadf0614a7d183d0f5e1ed78aa",
+    "docs/locales/es/USER-GUIDE.md": "1099fa8a930855ff0b2e73936b5b1ec49641c82e4e80a76a6824ded7a36e616e",
+    "docs/locales/it/README.md": "8e1f9d7ee84023b28b7d9e4e2aaa80264b272d0178f19705d10cfe5db40a794d",
+    "docs/locales/it/USER-GUIDE.md": "afff1d6abcbcb29ca8422cf8e286106f4f59ef3a0be0390d0079a327e771c7ec",
+    "docs/locales/fr/README.md": "5a27688d7b7a4b80547be057c5fc881ceccd87e190d935ff1708a02f0791a97d",
+    "docs/locales/fr/USER-GUIDE.md": "eb8366523af0d17b8f8dd78fc24cd4f2dfcaf6078bf1c4f234ecf5936bf1cc2d",
+    "docs/locales/de/README.md": "2bb5c872248a642837bfe0ca57198fda65561364abc839a69cbc6618f99e2be2",
+    "docs/locales/de/USER-GUIDE.md": "2beb7a458df972cf531bec2e60e9e45a718ce5aa7790c0dc6f357dc63aab10f5",
+    "docs/app-icon.png": "d9ead922fe0528e4c49b89ea5fb039f8d0a6082e71708a6c90172c3225b06e70",
+    "docs/images/capture-settings.png": "763ecc38876f8389a0b69725295723a97c575ba970cee98aa62ae7052d080e67",
+    "docs/images/svg-tracing.png": "a619a183d48325be62e1615db3a98b9c801adaf49d8f8481ee4b9e6e43af217e",
+    "docs/images/history.png": "03e6cdfb62065ac2ba3bb815ee1fca109d185586800e791a7fb456dab53f538f",
+    "docs/images/local-connection.png": "960585a321a793f5186d3439f51b353fe254f5484baeb808caa2609e928efe18",
+    "docs/images/result.png": "6cc4805d117dcf06c7cb46b772aed47303768f6ecdaa73a85ab0c4a16c8894c5"
   },
-  "draftWithoutDemo": false
+  "draftWithoutDemo": false,
+  "languages": [
+    "en",
+    "es",
+    "it",
+    "fr",
+    "de"
+  ],
+  "screenshots": {
+    "assets/screenshots/capture-settings.png": "763ecc38876f8389a0b69725295723a97c575ba970cee98aa62ae7052d080e67",
+    "assets/screenshots/svg-tracing.png": "a619a183d48325be62e1615db3a98b9c801adaf49d8f8481ee4b9e6e43af217e",
+    "assets/screenshots/history.png": "03e6cdfb62065ac2ba3bb815ee1fca109d185586800e791a7fb456dab53f538f",
+    "assets/screenshots/local-connection.png": "960585a321a793f5186d3439f51b353fe254f5484baeb808caa2609e928efe18",
+    "assets/screenshots/result.png": "6cc4805d117dcf06c7cb46b772aed47303768f6ecdaa73a85ab0c4a16c8894c5"
+  }
 }

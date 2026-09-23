@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src 'self'; media-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="description" content="Configura Smart Clipboard sul Mac, scegli l’elaborazione locale o nel cloud e copia le acquisizioni direttamente negli appunti.">
+<title>Smart Clipboard — Acquisisci, converti e incolla</title><link rel="icon" type="image/png" href="../assets/app-icon.png"><link rel="stylesheet" href="../assets/style.css"></head>
+<body class="home"><a class="skip" href="#main">Vai al contenuto</a>
+<header class="site-header"><a class="brand" href="index.html"><img src="../assets/app-icon.png" alt="" width="42" height="42">Smart Clipboard</a>
+<nav aria-label="Navigazione principale"><a href="index.html" aria-current="page">Per iniziare</a><a href="guide.html">Guida all’uso</a><a href="https://github.com/colombod/smart-clipboard/releases">Download</a></nav><nav class="language-nav" aria-label="Lingua"><span>Lingua:</span><a href="../index.html" lang="en" hreflang="en">English</a><a href="../es/index.html" lang="es" hreflang="es">Español</a><a href="index.html" lang="it" hreflang="it" aria-current="page">Italiano</a><a href="../fr/index.html" lang="fr" hreflang="fr">Français</a><a href="../de/index.html" lang="de" hreflang="de">Deutsch</a></nav></header>
+<div class="layout"><nav class="toc" aria-label="In questa pagina"><details open><summary>In questa pagina</summary><ul><li><a href="#per-iniziare">Per iniziare</a></li><li><a href="#scegli-cosa-incollare">Scegli cosa incollare</a></li><li><a href="#trasforma-unimmagine-in-svg">Trasforma un’immagine in SVG</a></li><li><a href="#riutilizza-una-schermata">Riutilizza una schermata</a></li><li><a href="#scopri-quando-è-pronto">Scopri quando è pronto</a></li><li><a href="#serve-una-mano">Serve una mano?</a></li></ul></details></nav>
+<main id="main" tabindex="-1"><h1 id="smart-clipboard">Smart Clipboard</h1>
+<img src="../assets/app-icon.png" alt="Icona di Smart Clipboard con cornice di acquisizione" width="100">
+
+<p><strong>Cattura ciò che vedi. Incolla ciò che ti serve.</strong></p>
+<p>Un’app discreta nella barra dei menu del Mac che trasforma le schermate in testo, tabelle, dati strutturati o SVG. Scegli le preferenze una volta, poi acquisisci e incolla senza aprire l’app.</p>
+<p><strong><a href="https://github.com/colombod/smart-clipboard/releases/download/v0.4.0-preview.15/Smart-Clipboard-0.4.0-macOS-arm64.dmg">Scarica per Mac</a></strong> · Apple Silicon · macOS 14 o successivo · Firmata e autenticata da Apple</p>
+<p>Versione attuale: <strong><a href="https://github.com/colombod/smart-clipboard/releases/tag/v0.4.0-preview.15">0.4 in anteprima, build 15</a></strong>. <a href="https://github.com/colombod/smart-clipboard/blob/e2676a812aec6921b12868dad737c83bf9a4a0d7/docs/releases/v0.4.0-preview.md">Limiti noti dell’anteprima</a>.</p>
+<h2 id="per-iniziare">Per iniziare</h2>
+<ol type="1">
+<li><strong>Installa:</strong> apri il DMG e trascina Smart Clipboard in <strong>Applicazioni</strong>. Avvia l’app e cerca <strong>Clip</strong> nella barra dei menu.</li>
+<li><strong>Configura una volta:</strong> apri <strong>Clip → Impostazioni e stato…</strong>. Scegli il formato in <strong>Generali</strong> e, se serve, una connessione IA.</li>
+<li><strong>Acquisisci e incolla:</strong> chiudi le impostazioni, premi <strong>⌃⌘R</strong>, seleziona un’area, attendi <strong>Clip ✓</strong> e premi <strong>⌘V</strong> nell’app di destinazione.</li>
+</ol>
+<p>Usa <strong>⌃⌘W</strong> per una finestra. <strong>Spazio</strong> cambia modalità di selezione; <strong>Esc</strong> annulla. Le abbreviazioni salvate hanno la precedenza. Consenti la registrazione dello schermo quando macOS lo richiede.</p>
+<h2 id="scegli-cosa-incollare">Scegli cosa incollare</h2>
+<figure class="screenshot">
+<a href="../assets/screenshots/capture-settings.png"><img src="../assets/screenshots/capture-settings.png" alt="Impostazioni generali con rilevamento automatico e mantenimento della lingua originale."></a>
+<figcaption>Scegli il risultato una volta. Le impostazioni possono restare chiuse mentre lavori. Seleziona un’immagine per ingrandirla; le schermate della guida mostrano l’interfaccia in inglese.</figcaption>
+</figure>
+<ul>
+<li><strong>Rilevamento automatico:</strong> lascia scegliere all’IA un formato utile.</li>
+<li><strong>Testo semplice, Markdown, HTML, JSON o YAML:</strong> scegli un risultato modificabile preciso.</li>
+<li><strong>Solo immagine:</strong> conserva l’immagine senza IA.</li>
+<li><strong>SVG:</strong> vettorizza le forme sul Mac o ricostruisci con l’IA.</li>
+</ul>
+<p>Per l’elaborazione IA usa il tuo account di un servizio cloud oppure <strong>Locale / oMLX</strong>. <a href="guide.html#configurare-omlx">Configurare la connessione →</a></p>
+<h2 id="trasforma-unimmagine-in-svg">Trasforma un’immagine in SVG</h2>
+<figure class="screenshot">
+<a href="../assets/screenshots/svg-tracing.png"><img src="../assets/screenshots/svg-tracing.png" alt="Impostazioni SVG con vettorizzazione sul dispositivo, profilo Foto e dettaglio Bilanciato."></a>
+<figcaption>Generali → SVG → Vettorizza sul dispositivo. Non servono account, modelli o server.</figcaption>
+</figure>
+<p>Scegli <strong>Foto</strong>, <strong>Logo</strong> o <strong>Disegno al tratto</strong>, poi acquisisci come sempre. <strong>Bilanciato</strong> contiene le dimensioni del file; <strong>Dettagliato</strong> conserva più forme e colori. Incolla il codice SVG oppure usa <strong>Cronologia → Apri → Salva…</strong> per importarlo in un editor vettoriale.</p>
+<p>La vettorizzazione mantiene lo sfondo e trasforma le parole in contorni. Per usare un modello scegli <strong>Ricostruisci con l’IA</strong>. <a href="guide.html#creare-svg-dalle-immagini">Guida alla vettorizzazione →</a></p>
+<h2 id="riutilizza-una-schermata">Riutilizza una schermata</h2>
+<figure class="screenshot">
+<a href="../assets/screenshots/history.png"><img src="../assets/screenshots/history.png" alt="Cronologia con schermate di esempio e versioni separate in testo, Markdown e francese."></a>
+<figcaption>Apri la cronologia solo quando serve. Riutilizza l’originale senza acquisirlo di nuovo.</figcaption>
+</figure>
+<p>Scegli un altro formato o una lingua e converti. <strong>Formati salvati</strong> riapre i risultati precedenti; <strong>Copia</strong> li mette negli appunti. Imposta il limite o cancella le schermate in <strong>Impostazioni → Cronologia</strong>.</p>
+<h2 id="scopri-quando-è-pronto">Scopri quando è pronto</h2>
+<p><strong>Clip …</strong> indica un’elaborazione in corso. <strong>Clip ✓</strong> significa che puoi incollare. <strong>Clip !</strong> segnala un problema: apri il menu per leggerlo.</p>
+<p>In <strong>Generali</strong> puoi attivare notifiche di completamento o errore e il suono. Una modalità Full immersion o la condivisione dello schermo può sopprimere gli avvisi; lo stato nel menu resta disponibile. <a href="guide.html#notifiche">Aiuto per le notifiche →</a></p>
+<h2 id="serve-una-mano">Serve una mano?</h2>
+<p><a href="guide.html">Guida illustrata</a> · <a href="guide.html#scegliere-un-modello-locale">Modelli locali</a> · <a href="guide.html#lingue-e-traduzione">Traduzione</a> · <a href="guide.html#se-la-cattura-non-funziona">Risoluzione dei problemi</a></p>
+<p>L’app segue l’aspetto chiaro o scuro di macOS e supporta inglese, italiano, spagnolo, francese e tedesco. Le schermate mantengono la lingua originale, salvo attivare la traduzione. La vettorizzazione locale funziona offline; le immagini elaborate dall’IA vanno alla connessione scelta. <a href="guide.html#privacy-e-archiviazione">Privacy</a>.</p>
+<p><em>Le immagini mostrano le viste attuali con dati di esempio. È un’anteprima: controlla i risultati dell’IA. La verifica di tutti i servizi cloud e la <a href="https://github.com/colombod/smart-clipboard/blob/e2676a812aec6921b12868dad737c83bf9a4a0d7/docs/ACCESSIBILITY.md">valutazione completa dell’accessibilità</a> non sono ancora concluse.</em></p>
+<p><a href="https://github.com/colombod/smart-clipboard/issues/new">Segnala un problema</a> · <a href="https://github.com/colombod/smart-clipboard/blob/e2676a812aec6921b12868dad737c83bf9a4a0d7/docs/DEVELOPING.md">Guida per sviluppatori</a></p>
+</main></div>
+<footer class="site-footer">Smart Clipboard per Mac · <a href="https://github.com/colombod/smart-clipboard/issues/new">Segnala un problema</a> · <a href="https://github.com/colombod/smart-clipboard">Codice sorgente e sviluppo</a></footer>
+</body></html>
